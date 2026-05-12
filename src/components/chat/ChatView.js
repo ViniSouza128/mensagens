@@ -643,33 +643,44 @@ export default function ChatView({ chatId }) {
     if (files.length) openQueue(files);
   }
 
+  // ──────────────────────────────────────────────────────────────────────
+  // RULES OF HOOKS: todos os hooks devem ser chamados em TODA render, na
+  // mesma ordem. Por isso esses ficam ANTES do early return `if (!chat)`.
+  // Se forem depois do return, na 1ª render `chat` é null → return → hooks
+  // não rodam; na 2ª render `chat` é objeto → hooks rodam → ordem mudou →
+  // React quebra. Isso já estourou em produção (commit anterior).
+  // ──────────────────────────────────────────────────────────────────────
+
+  // Bot está "ocupado" se o partner é um bot AI E ele aparece na lista de typing.
+  // Cálculo derivado direto (não-hook), pode ficar antes ou depois do return.
+  const botBusyEntry = chat?.partner?.is_bot
+    ? typing.find((e) => e.name === (chat.partner.name || chat.partner.username))
+    : null;
+  const botBusy = !!botBusyEntry;
+  const botBusyLabel = botBusyEntry?.thinking ? 'pensando' : 'escrevendo';
+
+  // Ref para "quando o lock entrou em ação" — usado pelo ElapsedTimer no
+  // Composer (atualiza X.Xs a cada 250ms). É um hook → SEMPRE chamado.
+  const lockedSinceRef = useRef(null);
+  if (botBusy && !lockedSinceRef.current) lockedSinceRef.current = Date.now();
+  if (!botBusy && lockedSinceRef.current) lockedSinceRef.current = null;
+
+  // Cancela resposta do bot em andamento. Hook → SEMPRE chamado.
+  const cancelBotReply = useCallback(() => {
+    if (!chatId) return;
+    api.post(`/api/chats/${chatId}/bot-abort`, {}).catch(() => {});
+  }, [chatId]);
+
+  // ──────────────────────────────────────────────────────────────────────
+  // Daqui pra baixo já pode ter early return — nenhum hook depois disso.
+  // ──────────────────────────────────────────────────────────────────────
+
   if (!chat) {
     return <div className={styles.loading} aria-busy="true">Carregando…</div>;
   }
 
   const currentPreview = previewQueue[0] || null;
   // (legado: era usado para grid template rows; agora .wrap usa flex column)
-
-  // Bot está "ocupado" se o partner é um bot AI E ele aparece na lista de typing.
-  // Quando ocupado, bloqueamos o Composer pra evitar mandar nova msg no meio
-  // da resposta multi-balão. typing.stop libera.
-  const botBusyEntry = chat?.partner?.is_bot
-    ? typing.find((e) => e.name === (chat.partner.name || chat.partner.username))
-    : null;
-  const botBusy = !!botBusyEntry;
-  const botBusyLabel = botBusyEntry?.thinking ? 'pensando' : 'escrevendo';
-  // Quando o lock entrou em ação? Ref pra ElapsedTimer no Composer.
-  const lockedSinceRef = useRef(null);
-  if (botBusy && !lockedSinceRef.current) lockedSinceRef.current = Date.now();
-  if (!botBusy && lockedSinceRef.current) lockedSinceRef.current = null;
-
-  // Cancela resposta do bot em andamento. Usuário aperta "parar" no
-  // lock banner. Endpoint aborta o stream Ollama; o que já chegou é
-  // persistido com flag bot_cancelled=true.
-  const cancelBotReply = useCallback(() => {
-    if (!chatId) return;
-    api.post(`/api/chats/${chatId}/bot-abort`, {}).catch(() => {});
-  }, [chatId]);
 
   // Shared drawer props
   const drawerProps = {
