@@ -12,6 +12,7 @@ import {
   LogoutIcon, ShieldIcon, BellIcon, CogIcon, EditIcon, CheckIcon,
   XIcon, UserIcon, LockIcon, AlertIcon, SunIcon, MoonIcon,
 } from '@/components/icons/Icons';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import useDragScroll from '@/hooks/useDragScroll';
 import styles from './settings.module.css';
 
@@ -124,6 +125,7 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const themeCtx = useTheme();
   const [tab, setTab] = useState('account');
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const tabsRef = useDragScroll();
 
   if (!user) return <div className={styles.loading} aria-live="polite">Carregando…</div>;
@@ -199,10 +201,21 @@ export default function SettingsPage() {
       </main>
 
       <div className={styles.footer}>
-        <Button variant="ghost" danger onClick={logout}>
+        <Button variant="ghost" danger onClick={() => setShowLogoutConfirm(true)}>
           <LogoutIcon size={16} aria-hidden="true" /> Sair desta conta
         </Button>
       </div>
+
+      <ConfirmModal
+        open={showLogoutConfirm}
+        title="Sair da conta?"
+        message="Você será desconectado e precisará entrar novamente."
+        confirmLabel="Sair"
+        cancelLabel="Cancelar"
+        danger
+        onConfirm={logout}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </div>
   );
 }

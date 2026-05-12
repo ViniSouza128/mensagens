@@ -8,6 +8,7 @@ import {
   CogIcon, ShieldIcon, LogoutIcon, ChevronRightIcon,
 } from '@/components/icons/Icons';
 import Avatar from '@/components/ui/Avatar';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import { api } from '@/services/api';
 import styles from './Sidebar.module.css';
 
@@ -45,6 +46,7 @@ export default function Sidebar() {
   const router = useRouter();
   const { user, requestsCount } = useApp();
   const [expanded, setExpanded] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Persist preference
   useEffect(() => {
@@ -67,6 +69,7 @@ export default function Sidebar() {
   }
 
   return (
+    <>
     <nav
       className={[styles.nav, expanded ? styles.expanded : ''].join(' ')}
       aria-label="Navegação principal"
@@ -88,7 +91,7 @@ export default function Sidebar() {
           <Item href="/admin" label="Admin" icon={<ShieldIcon />} active={isActive('/admin')} expanded={expanded} />
         ) : null}
         <Item href="/settings" label="Configurações" icon={<CogIcon />} active={isActive('/settings')} expanded={expanded} />
-        <Item label="Sair" icon={<LogoutIcon />} onClick={logout} expanded={expanded} />
+        <Item label="Sair" icon={<LogoutIcon />} onClick={() => setShowLogoutConfirm(true)} expanded={expanded} />
         <button
           type="button"
           className={[styles.item, styles.collapseBtn].join(' ')}
@@ -104,5 +107,17 @@ export default function Sidebar() {
         </button>
       </div>
     </nav>
+
+    <ConfirmModal
+      open={showLogoutConfirm}
+      title="Sair da conta?"
+      message="Você será desconectado e precisará entrar novamente."
+      confirmLabel="Sair"
+      cancelLabel="Cancelar"
+      danger
+      onConfirm={logout}
+      onCancel={() => setShowLogoutConfirm(false)}
+    />
+    </>
   );
 }
