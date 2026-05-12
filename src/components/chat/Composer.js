@@ -28,7 +28,7 @@ const EMOJI_CATEGORIES = [
 
 function draftKey(chatId) { return `mensagens.draft.${chatId}`; }
 
-export default function Composer({ chat, me, reply, onCancelReply, onSend, onPreview }) {
+export default function Composer({ chat, me, reply, onCancelReply, onSend, onPreview, locked = false, lockedLabel = null }) {
   const [text, setText] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
   const [showAttach, setShowAttach] = useState(false);
@@ -126,6 +126,11 @@ export default function Composer({ chat, me, reply, onCancelReply, onSend, onPre
   }
 
   function submit() {
+    // Lock ativo (ex.: bot LLM mid-resposta multi-balão): NÃO enfileira nem
+    // envia — apenas ignora. O usuário vê o aviso visual `lockedLabel` e
+    // continua livre pra editar o texto. Decisão: NÃO mandar quando bot
+    // termina, porque a resposta dele pode mudar o que o humano quer falar.
+    if (locked) return;
     const body = text.trim();
     if (!body) return;
     onSend({ body, attachments: [] });
@@ -339,64 +344,80 @@ export default function Composer({ chat, me, reply, onCancelReply, onSend, onPre
           </button>
         </div>
       ) : (
-        <div className={styles.bar}>
-          {/* Esquerda: anexar + emoji (lado a lado) */}
-          <div className={styles.left} style={{ position: 'relative' }}>
-            <IconButton label="Anexar" onClick={() => setShowAttach((s) => !s)}><PaperclipIcon /></IconButton>
-            <div className={styles.emojiArea}>
-              <IconButton label="Emoji" onClick={() => setShowEmoji((s) => !s)}><SmileIcon /></IconButton>
-              {showEmoji ? (
-                <EmojiPanel
-                  onPick={(e) => insertEmoji(e)}
-                  onClose={() => setShowEmoji(false)}
-                />
-              ) : null}
+        <>
+          {/* Banner explicando o lock — aparece logo acima da barra quando
+              o partner é um bot LLM e está gerando resposta. NÃO enfileira
+              o envio: o usuário pode mudar de ideia depois do que o bot
+              respondeu, então preferimos exigir clique ativo de novo. */}
+          {locked && lockedLabel ? (
+            <div className={styles.lockBanner} role="status" aria-live="polite">
+              <span className={styles.lockDot} aria-hidden />
+              {lockedLabel}
             </div>
-            <AttachMenu open={showAttach} onClose={() => setShowAttach(false)} onPick={onAttachPick} />
-            <input ref={fileRef} type="file" hidden multiple onChange={(e) => handleFiles(e.target.files)} />
-            <input ref={imgRef} type="file" hidden multiple accept="image/*,video/*" onChange={(e) => handleFiles(e.target.files)} />
-          </div>
+          ) : null}
+          <div className={[styles.bar, locked ? styles.barLocked : ''].join(' ')}>
+            {/* Esquerda: anexar + emoji (lado a lado) */}
+            <div className={styles.left} style={{ position: 'relative' }}>
+              <IconButton label="Anexar" onClick={() => setShowAttach((s) => !s)} disabled={locked}><PaperclipIcon /></IconButton>
+              <div className={styles.emojiArea}>
+                <IconButton label="Emoji" onClick={() => setShowEmoji((s) => !s)} disabled={locked}><SmileIcon /></IconButton>
+                {showEmoji && !locked ? (
+                  <EmojiPanel
+                    onPick={(e) => insertEmoji(e)}
+                    onClose={() => setShowEmoji(false)}
+                  />
+                ) : null}
+              </div>
+              <AttachMenu open={showAttach && !locked} onClose={() => setShowAttach(false)} onPick={onAttachPick} />
+              <input ref={fileRef} type="file" hidden multiple onChange={(e) => handleFiles(e.target.files)} />
+              <input ref={imgRef} type="file" hidden multiple accept="image/*,video/*" onChange={(e) => handleFiles(e.target.files)} />
+            </div>
 
-          {/* Centro: textarea */}
-          <div className={styles.center}>
-            <textarea
-              ref={taRef}
-              className={styles.input}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={onKey}
-              onPaste={onPaste}
-              placeholder="Mensagem"
-              rows={1}
-              aria-label="Mensagem"
-            />
-          </div>
+            {/* Centro: textarea. Mantemos editável quando locked pra usuário
+                poder ajustar o texto ENQUANTO o bot responde; o envio é que
+                fica bloqueado. */}
+            <div className={styles.center}>
+              <textarea
+                ref={taRef}
+                className={styles.input}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onKeyDown={onKey}
+                onPaste={onPaste}
+                placeholder={locked ? 'Aguarde o bot terminar para enviar…' : 'Mensagem'}
+                rows={1}
+                aria-label="Mensagem"
+              />
+            </div>
 
-          {/* Direita: enviar OU mic (câmera vive na lista de anexos) */}
-          <div className={styles.right}>
-            {text.trim() ? (
-              <button
-                type="button"
-                className={styles.sendBtn}
-                onClick={submit}
-                aria-label="Enviar mensagem"
-                title="Enviar"
-              >
-                <SendIcon size={18} />
-              </button>
-            ) : (
-              <button
-                type="button"
-                className={styles.micBtn}
-                onClick={startRecording}
-                aria-label="Gravar mensagem de voz"
-                title="Gravar áudio"
-              >
-                <MicIcon size={18} />
-              </button>
-            )}
+            {/* Direita: enviar OU mic. Quando locked, fica visualmente desativado. */}
+            <div className={styles.right}>
+              {text.trim() ? (
+                <button
+                  type="button"
+                  className={styles.sendBtn}
+                  onClick={submit}
+                  aria-label={locked ? 'Aguarde o bot terminar' : 'Enviar mensagem'}
+                  title={locked ? 'Aguarde o bot terminar' : 'Enviar'}
+                  disabled={locked}
+                >
+                  <SendIcon size={18} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.micBtn}
+                  onClick={startRecording}
+                  aria-label="Gravar mensagem de voz"
+                  title="Gravar áudio"
+                  disabled={locked}
+                >
+                  <MicIcon size={18} />
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {showCamera ? (

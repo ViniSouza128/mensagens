@@ -248,8 +248,9 @@
 }
 .edited { font-style: italic; }
 
-/* Tempo de "pensamento" do bot LLM. Aparece à esquerda do horário só em
-   mensagens cujo `extra.bot_reply_ms` foi preenchido (1º chunk da resposta). */
+/* Tempo de "pensamento" do bot LLM por balão. Aparece à esquerda do horário
+   em mensagens cujo `extra.bot_reply_ms` foi preenchido (todos os balões de
+   resposta de um bot). */
 .botTiming {
   display: inline-flex;
   align-items: center;
@@ -262,6 +263,14 @@
   color: var(--accent);
   border-radius: var(--radius-pill);
   font-variant-numeric: tabular-nums;
+}
+/* Badge "total" — só no último balão de uma resposta multi-balão.
+   Visual ligeiramente mais forte para destacar do per-balão. */
+.botTotalTiming {
+  background: color-mix(in oklab, var(--accent) 18%, transparent);
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.4px;
 }
 .starBadge {
   position: absolute;

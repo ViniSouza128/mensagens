@@ -26,7 +26,7 @@ Itens previstos para próximas iterações, agrupados por tema. Tudo aqui é inc
 
 A versão atual já entrega 5 personas com modelos diversos (Zezé / Mara / Hermes / Aurora / Doc Byte). Próximos passos previstos:
 
-- **Streaming de tokens** — trocar `/api/chat` (não-streaming) por streaming, retransmitindo deltas via SSE. Daria efeito "letra por letra" em vez de só "está pensando…". Trade-off: complexidade no orquestrador (chunk-buffering por sentença) e mais eventos no fanout.
+- ~~**Streaming de tokens**~~ — ✅ feito. Hoje os tokens chegam via SSE `bot.stream` e o front mostra um "ghost bubble" crescendo em tempo real. Multi-bubble com split on-the-fly em `\n\n`. Cada balão tem timing próprio + total no último.
 - **Memória persistente por bot** — hoje cada turno relê as últimas 20 mensagens do chat (`CONTEXT_WINDOW` em `bots.js`). Para conversas longas, treinar um resumidor rotativo (a cada N mensagens, resume em uma `system` injectável) ou usar `/api/embeddings` do Ollama + RAG sobre o histórico.
 - **Cancelamento explícito** — se o usuário envia uma 2ª mensagem antes do bot terminar de responder, abortar o request Ollama em andamento e re-prompt com o novo turno. Já temos `AbortSignal` no cliente Ollama; falta o tracking por chat.
 - **Painel admin** — CRUD de bots (criar/editar persona, model, temperature) via UI em vez de só `personas.js`. Útil quando outros admins quiserem variantes sem mexer no código.

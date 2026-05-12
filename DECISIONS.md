@@ -65,6 +65,21 @@ Resumo das principais escolhas técnicas e o porquê de cada uma.
 - Imagens usam `loading="lazy"` por padrão.
 - O cliente memoriza o último estado de scroll por chat para não pular ao voltar de outras telas.
 
+## Streaming + UX dos bots LLM
+
+- **Streaming de tokens** (`ollamaChatStream` em `server/llm/ollama.js`) — POST com `stream:true` + `think:false`. O parser lê NDJSON token-a-token e dispara `onDelta(piece)` por chunk. O orquestrador acumula em `bubbleBuf` e publica eventos SSE `bot.stream` debounced em 80ms — agrupa rajadas curtas, mantém UX fluida sem inundar o socket. UI mantém um "ghost bubble" com cursor piscando que cresce em tempo real até virar mensagem real (via `bot.stream.end` + `message.new`).
+- **Multi-bubble on the fly** — em vez de esperar a resposta inteira pra dividir em parágrafos, o orquestrador detecta `\n\n` (ou tamanho > 600 chars com corte em sentença) NO MEIO do stream. Quando acha um separador, faz flush do trecho como mensagem real e abre um novo bubble pro resto. Resultado: respostas longas chegam como **vários balões aparecendo em sequência**, cada um com seu próprio streaming.
+- **3 estados de "está digitando"** (helpers dedicados em `bots.js`):
+  - `publishThinking()` — typing.start, thinking=true — front: **"pensando…"** — antes do 1º token
+  - `publishWriting()` — typing.start, thinking=false — front: **"escrevendo…"** — token streaming
+  - `publishTypingStop()` — typing.stop — front esconde o indicador
+  Helpers separados evitam ambiguidade: antes `thinking=false` significava "stop" E "escrevendo" — bug latente.
+- **Cronometria por balão + total** — primeiro balão mede do início da chamada Ollama até a primeira quebra; balões seguintes medem do flush anterior. Último balão recebe `bot_total_ms` (soma absoluta do turno). Front renderiza `1.4s` antes do horário em cada balão e `total 6.0s` (badge mais forte) só no último. Útil pra ver onde o tempo foi gasto numa resposta multi-balão.
+- **Bloqueio de input enquanto bot responde** — quando o partner é bot E está no array `typing` do front, o Composer entra em modo `locked`: banner explicativo aparece acima da barra ("Aurora está escrevendo… aguarde para enviar"), botão de envio fica `disabled` e o textarea muda o placeholder. **Não enfileira**: a decisão consciente é exigir clique ativo de novo, porque a resposta do bot pode mudar o que o humano quer falar. Texto digitado é preservado durante o lock.
+- **Limpar conversa** (POST `/api/chats/[id]/clear`) — apaga todas as mensagens do chat (cascata SQL cuida de receipts/reactions/attachments/edits/stars). Para bots LLM, a janela de contexto vive no DB (orquestrador relê últimas N mensagens para montar o prompt) — sem mensagens = bot esquece tudo. Publica `chat.cleared` via SSE para todos os membros recarregarem.
+- **Sanitização de histórico** — respostas antigas do bot que vazaram identidade técnica (`I am Gemma`, `meu nome é Qwen`, etc) são detectadas via regex e REMOVIDAS do contexto enviado ao Ollama, junto com a pergunta que as disparou. Sem isso, modelos pequenos viam o histórico polúido e continuavam respondendo errado mesmo com few-shot decente.
+- **Foto de perfil clicável** — avatar no painel de informações vira botão; clique abre o `Lightbox` (mesmo componente das mídias) com zoom/swipe nativos. Bug pré-existente também corrigido: o drawer lia `chat.avatar` em vez de `chat.avatar_path`, ignorando o caminho correto.
+
 ## Bots LLM (Ollama)
 
 - **Usuários-bot são usuários "de verdade"** (linha em `users` com `is_bot=1` e colunas `bot_model` / `bot_system_prompt` / `bot_temperature` / `bot_max_tokens` / `bot_tagline`). Vantagem: reutilizam todo o fluxo de mensageria — chat direct, SSE, status de leitura, reactions, pin, search — sem caminho paralelo. Custo: ocupam contagem na tabela `users` mas isso é irrelevante na escala alvo.

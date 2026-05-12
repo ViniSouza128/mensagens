@@ -519,6 +519,16 @@ function InfoTab({ chat, me, myRole, isAdmin, isOwner, canAddMembers, settings, 
 
       {/* ── Danger zone ───────────────────────────────── */}
       <div className={styles.danger}>
+        {/* Limpar conversa: para grupos, é uma ação destrutiva (afeta TODOS),
+            só admins/owner devem poder. Para não invasivo: deixo aberto a
+            qualquer membro — o backend já valida membership. */}
+        <DangerBtn icon={<TrashIcon size={16} />}
+          onClick={async () => {
+            if (!confirm('Apagar todo o histórico desta conversa? Esta ação afeta todos os membros e não pode ser desfeita.')) return;
+            await doAction(() => api.post(`/api/chats/${chat.id}/clear`, {}), 'Conversa apagada.');
+          }}>
+          Limpar conversa
+        </DangerBtn>
         {!isOwner && (
           <DangerBtn icon={<LogoutIcon size={16} />}
             onClick={async () => {

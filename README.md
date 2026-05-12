@@ -16,7 +16,7 @@ Mensageiro web moderno, completo e escalável construído com **Next.js 14 (App 
 - **Busca global** com SQLite FTS5 (`unicode61 remove_diacritics 2`) — usuários, chats, mensagens (com `<mark>`) e arquivos, sem distinção de acentos/maiúsculas.
 - **Configurações** — privacidade (visto/foto/bio: todos/contatos/ninguém), notificações, tema/cor/fonte/papel de parede, qualidade de mídia, auto-download, enviar com Enter.
 - **Painel administrativo** (visível apenas para admins) — visão geral, usuários (buscar, promover, suspender, banir, reintegrar), denúncias com contexto **15 anteriores + 5 posteriores** ao alvo, log de auditoria, log de erros.
-- **Bots LLM locais (Ollama)** — 5 usuários-bot com personas distintas (`Zezé`, `Mara`, `Hermes`, `Aurora`, `Doc Byte`) que respondem em tempo real usando modelos rodando em `127.0.0.1:11434`. Bots aparecem na lista de "Nova conversa" e no header da conversa com badge **AI**; o indicador "está pensando…" cobre a latência do modelo. Personas, prompts e modelos vivem em `src/server/llm/personas.js` e são propagados ao banco via `npm run seed` (upsert idempotente).
+- **Bots LLM locais (Ollama) com streaming** — 5 usuários-bot com personas distintas (`Zezé`, `Mara`, `Hermes`, `Aurora`, `Clarice`) que respondem em tempo real usando modelos rodando em `127.0.0.1:11434`. Tokens chegam ao vivo via SSE (`bot.stream`) e aparecem letra-por-letra num "ghost bubble" antes de virarem mensagens reais — mesma sensação que o ChatGPT. Indicador troca entre **"pensando…"** (antes do 1º token) e **"escrevendo…"** (durante streaming). Respostas longas viram múltiplos balões separados, cada um com **tempo por balão** + **total** ao fim. Composer fica **bloqueado** enquanto o bot termina a resposta — não enfileira, exige clique ativo. **"Limpar conversa"** apaga histórico e (para bots) reseta a janela de contexto. Personas, prompts e modelos vivem em `src/server/llm/personas.js`; foto de perfil baixada do DiceBear pelo seed.
 - **Performance** — virtualização leve, infinite scroll, lazy loading, UI otimista, EventSource (SSE) para realtime.
 - **Acessibilidade** — navegação por teclado, foco visível, rótulos ARIA em todos os controles, contraste adequado nos dois temas.
 - **PWA base** — manifesto, ícones SVG vetoriais, theme-color por modo.
@@ -61,7 +61,9 @@ O seed cria 5 usuários-bot que respondem automaticamente quando alguém manda D
 | Mara      | `jaahas/qwen3.5-uncensored:4b`                    | Amiga sarcástica sem filtro     | ~3.5 GB |
 | Hermes    | `igorls/gemma-4-E4B-it-heretic-GGUF:q4_k_m`       | Filósofo provocador (uncensored) | ~5 GB |
 | Aurora    | `mistral-small3.2:24b`                            | Assistente equilibrada           | ~15 GB |
-| Doc Byte  | `qwen3-coder:30b`                                 | Dev sênior, especializado (lento) | ~18 GB (offload p/ CPU se >VRAM) |
+| Clarice   | `command-r:35b`                                   | Escritora — texto, prosa, poesia (lenta) | ~18 GB (offload p/ CPU se >VRAM) |
+
+Todos os bots têm regras rígidas no system prompt para **sempre responder em pt-br** (exceto se o usuário pedir outro idioma explicitamente). Cada turno é cronometrado: o front mostra **`1.4s`** à esquerda do horário em cada balão e uma badge adicional **`total 6.0s`** no último balão da resposta.
 
 Encontre os bots em **Nova conversa → seção "Bots AI (Ollama local)"**, ou apenas busque pelo nome. Cada bot é um usuário real do sistema: você pode reagir, fixar, encaminhar suas mensagens normalmente.
 

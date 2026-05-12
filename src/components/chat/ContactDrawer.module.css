@@ -6,6 +6,42 @@
   padding: 16px 12px 20px;
   border-bottom: 1px solid var(--border);
 }
+
+/* Botão em volta do avatar — clica e abre o Lightbox em tela cheia.
+   Quando não tem foto (apenas placeholder), o botão fica desabilitado e
+   sem cursor pointer pra não enganar o usuário. */
+.avatarBtn {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: zoom-in;
+  border-radius: 50%;
+  transition: transform var(--t-fast);
+}
+.avatarBtn:hover:not(:disabled) { transform: scale(1.03); }
+.avatarBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.avatarBtn:disabled { cursor: default; }
+
+/* Card de confirmação para "Limpar conversa". Aparece no rodapé do drawer
+   substituindo a lista de ações quando o usuário clica em Limpar. */
+.confirmCard {
+  margin: 12px;
+  padding: 12px;
+  border: 1px solid var(--danger, #c33);
+  background: color-mix(in oklab, var(--danger, #c33) 6%, transparent);
+  border-radius: 12px;
+}
+.confirmText {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.confirmActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
 .name {
   margin: 8px 0 2px;
   font-size: 18px;

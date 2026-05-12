@@ -43,6 +43,10 @@ export default function ChatView({ chatId }) {
   const [reply, setReply] = useState(null);
   const [previewQueue, setPreviewQueue] = useState([]);
   const [typing, setTyping] = useState([]);
+  // Bubble "fantasma" que recebe o stream de tokens do bot em tempo real.
+  // Forma: { idx, name, content } | null. Limpa quando `bot.stream.end` chega
+  // (a mensagem real entrou via message.new) ou quando o turno acaba.
+  const [streamingBubble, setStreamingBubble] = useState(null);
   const [lightbox, setLightbox] = useState(null);
   const [dropping, setDropping] = useState(false);
   const [details, setDetails] = useState(null);
@@ -154,6 +158,8 @@ export default function ChatView({ chatId }) {
     setChatSearch(false);
     setHighlightedMsgId(null);
     setDrawerOpen(false);
+    setStreamingBubble(null);
+    setTyping([]);
     lastReadMsgIdRef.current = null;
     markChatRead(chatId);
     loadChat();
@@ -208,6 +214,8 @@ export default function ChatView({ chatId }) {
         if (ev.user_id === user?.id) return;
         const name = ev.user_name || 'Alguém';
         setTyping((prev) => prev.filter((e) => e.name !== name));
+        // Limpa qualquer ghost bubble pendente do bot no fim do turno.
+        setStreamingBubble((cur) => (cur?.name === name ? null : cur));
         // Belt-and-suspenders: o evento `message.new` do bot pode chegar
         // antes do `typing.stop` (caso normal) ou se perder se a SSE bagunçar
         // entre os dois. Fazemos um fetch curtinho APÓS o stop pra garantir
@@ -223,6 +231,19 @@ export default function ChatView({ chatId }) {
             return [...prev, ...missing].sort((a, b) => (a.created_at || 0) - (b.created_at || 0));
           });
         }).catch(() => {});
+      } else if (ev.type === 'bot.stream') {
+        // Stream de tokens do bot LLM em tempo real. Substitui o ghost
+        // bubble pelo conteúdo acumulado-do-bubble-atual.
+        setStreamingBubble({
+          idx: ev.bubble_idx || 0,
+          name: ev.user_name || 'Bot',
+          senderId: ev.user_id,
+          content: ev.content || '',
+        });
+      } else if (ev.type === 'bot.stream.end') {
+        // Bubble foi persistido como mensagem real. Limpa o ghost; o
+        // message.new (que já chegou ou está prestes a chegar) vai assumir.
+        setStreamingBubble((cur) => (cur && cur.idx === ev.bubble_idx ? null : cur));
       } else if (ev.type === 'chat.pins' || ev.type === 'chat.updated') {
         loadChat();
       } else if (ev.type === 'chat.deleted') {
@@ -558,6 +579,15 @@ export default function ChatView({ chatId }) {
   const currentPreview = previewQueue[0] || null;
   // (legado: era usado para grid template rows; agora .wrap usa flex column)
 
+  // Bot está "ocupado" se o partner é um bot AI E ele aparece na lista de typing.
+  // Quando ocupado, bloqueamos o Composer pra evitar mandar nova msg no meio
+  // da resposta multi-balão. typing.stop libera.
+  const botBusyEntry = chat?.partner?.is_bot
+    ? typing.find((e) => e.name === (chat.partner.name || chat.partner.username))
+    : null;
+  const botBusy = !!botBusyEntry;
+  const botBusyLabel = botBusyEntry?.thinking ? 'pensando' : 'escrevendo';
+
   // Shared drawer props
   const drawerProps = {
     open: drawerOpen,
@@ -597,6 +627,7 @@ export default function ChatView({ chatId }) {
           hasMore={hasMore}
           loading={loading}
           typing={typing}
+          streamingBubble={streamingBubble}
           onLoadMore={handleLoadMore}
           onReply={startReply}
           onEdit={saveEdit}
@@ -622,6 +653,8 @@ export default function ChatView({ chatId }) {
           onCancelReply={() => setReply(null)}
           onSend={send}
           onPreview={(items) => openQueue(Array.isArray(items) ? items : [items])}
+          locked={botBusy}
+          lockedLabel={botBusy ? `${chat.partner?.name || 'O bot'} está ${botBusyLabel}… aguarde para enviar` : null}
         />
         {dropping ? (
           <div className={styles.dropOverlay} aria-hidden>

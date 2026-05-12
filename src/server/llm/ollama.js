@@ -104,6 +104,104 @@ export async function ollamaChat({
 }
 
 /**
+ * Versão streaming do /api/chat. Lê o body como NDJSON e chama `onDelta(text)`
+ * para cada chunk recebido. Devolve uma Promise que resolve no fim com o texto
+ * completo concatenado (útil para fallback / logging).
+ *
+ * O Ollama retorna linhas tipo:
+ *   {"message":{"content":"Olá"},"done":false}\n
+ *   {"message":{"content":" mundo"},"done":false}\n
+ *   {"done":true,...}\n
+ *
+ * Algumas linhas vêm em pedaços (chunked transfer); o parser acumula bytes
+ * até achar `\n` e processa linha-a-linha.
+ *
+ * @param {object} args (mesmos de ollamaChat, +)
+ * @param {(text: string) => void} args.onDelta — chamado para cada token novo
+ *                                                 (o conteúdo incremental, NÃO o acumulado)
+ * @returns {Promise<string>} texto completo da resposta
+ */
+export async function ollamaChatStream({
+  model,
+  messages,
+  temperature = 0.8,
+  maxTokens = 256,
+  timeoutMs = DEFAULT_TIMEOUT,
+  signal = null,
+  onDelta,
+}) {
+  const ctrl = new AbortController();
+  const onAbort = () => ctrl.abort();
+  if (signal) {
+    if (signal.aborted) ctrl.abort();
+    else signal.addEventListener('abort', onAbort, { once: true });
+  }
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+
+  try {
+    const url = `${DEFAULT_HOST.replace(/\/$/, '')}/api/chat`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        messages,
+        stream: true,
+        think: false,
+        options: {
+          temperature,
+          num_predict: maxTokens,
+          num_ctx: 4096,
+        },
+        keep_alive: '5m',
+      }),
+      signal: ctrl.signal,
+    });
+
+    if (!res.ok || !res.body) {
+      const body = !res.ok ? await res.text().catch(() => '') : '';
+      throw new Error(`ollama_http_${res.status}: ${body.slice(0, 200)}`);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let full = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      // Processa linhas completas (NDJSON delimitado por \n)
+      let nl;
+      while ((nl = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, nl).trim();
+        buffer = buffer.slice(nl + 1);
+        if (!line) continue;
+        let evt;
+        try { evt = JSON.parse(line); } catch { continue; }
+        const piece = evt?.message?.content;
+        if (typeof piece === 'string' && piece.length > 0) {
+          full += piece;
+          try { onDelta?.(piece); } catch { /* ignora erro do callback */ }
+        }
+        if (evt?.done) {
+          // Stream encerrado pelo lado do Ollama. Saímos do loop externo.
+          return full.trim();
+        }
+      }
+    }
+    return full.trim();
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error('ollama_timeout');
+    throw err;
+  } finally {
+    clearTimeout(timer);
+    if (signal) signal.removeEventListener('abort', onAbort);
+  }
+}
+
+/**
  * Verifica rapidamente se o Ollama está respondendo (não checa modelos).
  * Útil para painel admin / página de status.
  */

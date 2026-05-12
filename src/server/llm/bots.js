@@ -1,90 +1,50 @@
 // Orquestrador: dispara resposta de um bot quando um usuário humano
 // manda mensagem num chat direto com ele.
 //
-// Fluxo:
-//  1. `maybeBotReply(chatId, recipientBotId, fromUserId)` é chamado fire-and-forget
-//     no fim de `sendMessage()`. NUNCA bloqueia o request HTTP do usuário.
-//  2. Carrega últimas N mensagens do chat e converte em `messages` Ollama
-//     (sender == bot ? 'assistant' : 'user').
-//  3. Publica `typing.start` (com flag `thinking:true`) para o usuário humano.
-//  4. Chama o Ollama com o system prompt da persona.
-//  5. Quebra a resposta em 1-3 chunks (parágrafos curtos), com pequenos delays
-//     entre eles para simular digitação humana.
-//  6. Envia cada chunk via `sendMessage()` (com senderId = bot).
+// Fluxo (v2, streaming):
+//  1. `maybeBotReply` é chamado fire-and-forget no fim de `sendMessage()`.
+//     Não bloqueia o request HTTP do usuário.
+//  2. Carrega últimas N mensagens do chat (com sanitização de leaks) +
+//     few-shot da persona e monta o array Ollama.
+//  3. Publica `typing.start` (`thinking:true`) — front mostra "pensando…".
+//  4. Abre stream do Ollama (`ollamaChatStream`) — tokens chegam ao vivo.
+//  5. Para CADA token novo:
+//     - Acumula em `bubbleBuf`.
+//     - Publica `bot.stream` com texto-acumulado-do-bubble (front mostra
+//       o balão crescendo em tempo real).
+//     - Se detectar `\n\n` no buffer: corta o trecho antes do `\n\n`,
+//       persiste como mensagem real via `sendMessage()` (com timing),
+//       reinicia `bubbleBuf` para o trecho depois do `\n\n`.
+//  6. Quando o stream do Ollama termina, persiste o último bubble com
+//     `bot_total_ms` (tempo total da resposta inteira).
 //  7. Publica `typing.stop` no fim.
 //
-// Falhas (Ollama offline, timeout, modelo ausente) registram no error_log e
-// mandam uma mensagem curta de fallback ao usuário — para ele não ficar
-// achando que o bot ignorou.
+// Erros (Ollama offline, timeout, etc) registram no error_log e mandam uma
+// mensagem curta de fallback ao usuário — para ele não ficar achando que o
+// bot ignorou.
 
 import { getDb } from '@/database/db';
-import { ollamaChat } from '@/server/llm/ollama';
+import { ollamaChatStream } from '@/server/llm/ollama';
 import { publish } from '@/server/events';
 import { logger } from '@/server/logger';
 import { getBotByUsername } from '@/server/llm/personas';
 
 // Quantas mensagens recentes mandar como contexto para o modelo.
-// 20 é equilibrado: cabe em num_ctx=4096 mesmo com mensagens longas,
-// e dá memória de curto prazo suficiente para uma conversa fluida.
 const CONTEXT_WINDOW = 20;
 
-// Máximo de mensagens (chunks) que um bot pode mandar em uma resposta.
-// Evita modelo verborrágico encher a tela.
-const MAX_CHUNKS = 3;
+// Máximo de bubbles que um bot pode emitir em uma resposta. Evita modelo
+// verborrágico explodir a tela. Se o output tiver mais que isso, juntamos
+// no último.
+const MAX_BUBBLES = 4;
 
-// Delay base + por caractere para simular digitação. Calibrado para parecer
-// natural sem fazer o usuário esperar demais.
-const TYPING_DELAY_BASE_MS = 350;
-const TYPING_DELAY_PER_CHAR_MS = 18;
-const TYPING_DELAY_MAX_MS = 2200;
+// Tamanho máximo (caracteres) de um bubble antes de forçar quebra mesmo sem
+// `\n\n`. Evita um único parágrafo gigante engolir tudo.
+const MAX_BUBBLE_CHARS = 600;
 
-/**
- * Quebra a resposta da LLM em 1..MAX_CHUNKS mensagens.
- *
- * Estratégia:
- *  - Respeita linhas em branco (\\n\\n) que o próprio modelo colocou — esse é
- *    o sinal canônico para "manda como mensagem separada".
- *  - Se algum chunk passar de 400 chars, parte em sentenças (`. ` / `? ` / `! `).
- *  - Truncar para no máximo MAX_CHUNKS chunks (junta o excedente no último).
- */
-function splitIntoChunks(text) {
-  if (!text) return [];
-  const collapsed = String(text).replace(/\r\n/g, '\n').trim();
-  // Primeiro corte: parágrafos separados por linha em branco.
-  let chunks = collapsed.split(/\n{2,}/).map((c) => c.trim()).filter(Boolean);
-
-  // Sub-divide chunks longos por sentença.
-  const out = [];
-  for (const c of chunks) {
-    if (c.length <= 400) { out.push(c); continue; }
-    // Divide em sentenças preservando pontuação.
-    const sentences = c.match(/[^.!?]+[.!?]?\s*/g) || [c];
-    let buf = '';
-    for (const s of sentences) {
-      if ((buf + s).length > 320 && buf) { out.push(buf.trim()); buf = ''; }
-      buf += s;
-    }
-    if (buf.trim()) out.push(buf.trim());
-  }
-
-  // Aplica limite de chunks (junta extras no último).
-  if (out.length > MAX_CHUNKS) {
-    const tail = out.slice(MAX_CHUNKS - 1).join(' ').trim();
-    return [...out.slice(0, MAX_CHUNKS - 1), tail];
-  }
-  return out.filter(Boolean);
-}
-
-/** Tempo plausível de "digitação" para um chunk. */
-function typingDelayMs(text) {
-  const len = (text || '').length;
-  return Math.min(TYPING_DELAY_MAX_MS, TYPING_DELAY_BASE_MS + len * TYPING_DELAY_PER_CHAR_MS);
-}
-
-/** Sleep com cancelamento (não usado hoje, mas pronto para AbortSignal futuro). */
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
-}
+// Debounce de SSE `bot.stream` — não vale a pena mandar um evento por token
+// quando 5 chegam em 30ms; agrupa em janela curta. Mantém UX fluida sem
+// inundar o socket.
+const STREAM_DEBOUNCE_MS = 80;
 
 // Padrões que indicam que o modelo "vazou" sua identidade técnica em uma
 // resposta passada (e.g. "I am Gemma, a large language model"). Quando uma
@@ -107,17 +67,7 @@ function looksLikeIdentityLeak(body) {
 
 /**
  * Monta o array de mensagens (system + few-shot + histórico) para mandar ao
- * Ollama.
- *
- * Few-shot priming: pares user/assistant injetados ANTES do histórico real.
- * Necessário para modelos minúsculos (gemma3:270m) que não conseguem manter
- * a persona apenas pelo system prompt — eles defaultam pra "I am Gemma".
- * Imitação > instrução para LLMs pequenas.
- *
- * Sanitização: respostas anteriores do bot que vazaram a identidade técnica
- * (vide IDENTITY_LEAK_PATTERNS) são filtradas — junto com a pergunta que as
- * disparou — para não envenenar o contexto. Mensagens humanas nunca são
- * filtradas.
+ * Ollama. Filtra respostas antigas do próprio bot que vazaram identidade.
  */
 function buildOllamaMessages(bot, chatId, fewShot = []) {
   const db = getDb();
@@ -133,8 +83,7 @@ function buildOllamaMessages(bot, chatId, fewShot = []) {
     .reverse();
 
   // Identifica índices a remover: cada resposta de bot que parece um leak
-  // descarta também a pergunta humana imediatamente anterior (para evitar
-  // pares Q→A ainda associando "qual seu nome?" com "I am Gemma").
+  // descarta também a pergunta humana imediatamente anterior.
   const drop = new Set();
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
@@ -151,22 +100,18 @@ function buildOllamaMessages(bot, chatId, fewShot = []) {
     }))
     .filter(Boolean);
 
-  // Expande few_shot [{user,assistant}, ...] em sequência alternada user/assistant.
   const fewShotTurns = (fewShot || []).flatMap((ex) => [
     { role: 'user', content: ex.user },
     { role: 'assistant', content: ex.assistant },
   ]);
 
   return [
-    { role: 'system', content: bot.bot_system_prompt || 'Você é um assistente útil.' },
+    { role: 'system', content: bot.bot_system_prompt || 'Você é um assistente útil. Sempre responda em português brasileiro.' },
     ...fewShotTurns,
     ...history,
   ];
 }
 
-/**
- * Carrega bot pelo id e devolve só se for um bot ativo.
- */
 function loadBot(userId) {
   const u = getDb()
     .prepare('SELECT id, name, username, is_bot, bot_model, bot_system_prompt, bot_temperature, bot_max_tokens, status FROM users WHERE id = ?')
@@ -175,9 +120,6 @@ function loadBot(userId) {
   return u;
 }
 
-/**
- * Identifica o outro membro de um chat direct. Retorna o ID ou null.
- */
 function getDirectOther(chatId, senderId) {
   return getDb()
     .prepare('SELECT user_id FROM chat_members WHERE chat_id = ? AND user_id != ? AND left_at IS NULL')
@@ -186,15 +128,6 @@ function getDirectOther(chatId, senderId) {
 
 /**
  * Ponto de entrada. Chamado fire-and-forget no fim de `sendMessage()`.
- *
- * Decide internamente se há algo a fazer (chat é direct + recipient é bot).
- * Pega o `sendMessage` por injeção para evitar dependência circular com
- * `handlers/messages.js`.
- *
- * @param {object} args
- * @param {string} args.chatId
- * @param {string} args.senderId — quem mandou a última mensagem (humano)
- * @param {function} args.sendMessage — referência para `sendMessage` do handler
  */
 export function maybeBotReply({ chatId, senderId, sendMessage }) {
   const db = getDb();
@@ -207,120 +140,206 @@ export function maybeBotReply({ chatId, senderId, sendMessage }) {
   const bot = loadBot(otherId);
   if (!bot) return;
 
-  // Se o "remetente" já é um bot (ex.: bot respondendo a bot via algum
-  // futuro fluxo), não dispara recursão infinita.
+  // Anti-loop: bot respondendo a bot não dispara nova resposta.
   const sender = db.prepare('SELECT is_bot FROM users WHERE id = ?').get(senderId);
   if (sender?.is_bot) return;
 
-  // Fire-and-forget. Erros são logados internamente.
   runBotReply({ chatId, bot, sendMessage }).catch((err) => {
-    logger.error(`bot ${bot.username} reply failed`, { err: err?.message, chatId });
+    logger.error(`bot ${bot.username} reply failed (outer)`, { err: err?.message, chatId });
+    try { publishTypingStop(chatId, bot); } catch { /* noop */ }
   });
 }
 
 /**
- * Loop principal de resposta. Não bloqueia o request HTTP do usuário.
+ * Loop principal: streaming do Ollama, multi-bubble com timing por bubble
+ * e total no último.
  */
 async function runBotReply({ chatId, bot, sendMessage }) {
-  // Indica "X está pensando" — front-end troca o label de "digitando" para
-  // "pensando" quando o evento traz `thinking: true`. TTL longo (90s) porque
-  // modelos como qwen3-coder:30b podem levar dezenas de segundos.
-  publishTyping(chatId, bot, true, 90_000);
+  // Estado "está pensando" (front mostra "pensando…") com TTL longo. Vai virar
+  // "escrevendo…" assim que chegar o primeiro token (publishTyping com
+  // thinking:false).
+  publishThinking(chatId, bot);
 
-  // Cronometra o tempo total de pensamento (chamada Ollama). Esse valor vai
-  // dentro do `extra` da mensagem (campo `bot_reply_ms`) — o front mostra
-  // "2.3s" à esquerda do horário. Captado por chunk: o primeiro chunk carrega
-  // o tempo de raciocínio completo; chunks seguintes (se houver) zeram, pois
-  // não houve nova chamada ao modelo.
-  const tStart = Date.now();
-  let reply;
+  const tStart = Date.now();   // início absoluto da resposta (pra bot_total_ms)
+  let bubbleStart = tStart;    // início deste bubble (pra bot_reply_ms por bubble)
+  let bubbleBuf = '';
+  let bubbleIdx = 0;
+  let firstTokenSeen = false;
+  let lastStreamPublishedAt = 0;
+  let lastStreamLen = 0;
+
+  // Publica `bot.stream` com o texto-acumulado-do-bubble. Debounced.
+  // Front-end mostra um "ghost bubble" em tempo real.
+  const publishStream = (forceFlush = false) => {
+    const now = Date.now();
+    if (!forceFlush && now - lastStreamPublishedAt < STREAM_DEBOUNCE_MS) return;
+    if (!forceFlush && bubbleBuf.length === lastStreamLen) return;
+    lastStreamPublishedAt = now;
+    lastStreamLen = bubbleBuf.length;
+    publish(getRecipientIds(chatId, bot.id), {
+      type: 'bot.stream',
+      chat_id: chatId,
+      user_id: bot.id,
+      user_name: bot.name || bot.username,
+      bubble_idx: bubbleIdx,
+      content: bubbleBuf,
+    });
+  };
+
+  // Persiste um bubble. `isFinal` indica se é o último — só ele recebe
+  // `bot_total_ms`. Retorna a mensagem persistida (id, etc).
+  const flushBubble = (isFinal) => {
+    const body = bubbleBuf.trim();
+    if (!body) return null;
+    const replyMs = Date.now() - bubbleStart;
+    const extra = {
+      bot: true,
+      bot_reply_ms: replyMs,
+      bot_bubble_idx: bubbleIdx,
+    };
+    if (isFinal) extra.bot_total_ms = Date.now() - tStart;
+    try {
+      sendMessage({
+        chatId,
+        senderId: bot.id,
+        type: 'text',
+        body,
+        extra,
+      });
+    } catch (err) {
+      logger.error(`bot ${bot.username} sendMessage failed`, { err: err?.message });
+    }
+    // Após persistir o bubble, manda evento limpando o stream daquele índice
+    // (front vai substituir o ghost pelo message.new que já chegou).
+    publish(getRecipientIds(chatId, bot.id), {
+      type: 'bot.stream.end',
+      chat_id: chatId,
+      user_id: bot.id,
+      bubble_idx: bubbleIdx,
+    });
+    bubbleIdx++;
+    bubbleBuf = '';
+    bubbleStart = Date.now();
+    lastStreamLen = 0;
+  };
+
   try {
-    // Few-shot vive em personas.js (não no DB) — busca por username, idempotente.
     const persona = getBotByUsername(bot.username);
     const messages = buildOllamaMessages(bot, chatId, persona?.few_shot || []);
-    reply = await ollamaChat({
+
+    await ollamaChatStream({
       model: bot.bot_model,
       messages,
       temperature: bot.bot_temperature ?? 0.8,
       maxTokens: bot.bot_max_tokens ?? 256,
+      onDelta: (delta) => {
+        // No primeiro token, troca o indicador de "pensando" para "escrevendo"
+        // (publish typing.start com thinking:false) — UX dá o feedback de que
+        // o bot saiu do "thinking" e está produzindo.
+        if (!firstTokenSeen) {
+          firstTokenSeen = true;
+          publishWriting(chatId, bot);
+        }
+
+        bubbleBuf += delta;
+
+        // Detecta corte de bubble: `\n\n` (preferencial), ou tamanho excessivo
+        // forçando split em pontuação no fim de uma sentença.
+        let cut = bubbleBuf.indexOf('\n\n');
+        if (cut < 0 && bubbleBuf.length > MAX_BUBBLE_CHARS) {
+          // Tenta cortar no fim de uma sentença (último ". " antes do limite)
+          const slice = bubbleBuf.slice(0, MAX_BUBBLE_CHARS);
+          const sentenceCut = Math.max(
+            slice.lastIndexOf('. '),
+            slice.lastIndexOf('! '),
+            slice.lastIndexOf('? '),
+          );
+          if (sentenceCut > 100) cut = sentenceCut + 1; // +1 inclui o '.'
+        }
+
+        if (cut >= 0 && bubbleIdx < MAX_BUBBLES - 1) {
+          // Flusha o trecho antes do corte. O resto fica no buf para
+          // virar o próximo bubble (ou continuar acumulando).
+          const before = bubbleBuf.slice(0, cut);
+          const after = bubbleBuf.slice(cut).replace(/^\n+/, '');
+          bubbleBuf = before;
+          flushBubble(false);
+          bubbleBuf = after;
+          // Antes do próximo bubble, ressinaliza typing (sem thinking).
+          publishWriting(chatId, bot, 30_000);
+          if (after) publishStream(true);
+        } else {
+          publishStream(false);
+        }
+      },
     });
   } catch (err) {
-    publishTyping(chatId, bot, false);
+    publishTypingStop(chatId, bot);
     logger.error(`bot ${bot.username} ollama call failed`, { err: err?.message, model: bot.bot_model });
-    // Fallback curto pra não deixar o usuário no vácuo. Também marca como
-    // mensagem de bot (extra.bot=true) e inclui tempo decorrido até o erro,
-    // pra UI poder exibir info diferente em caso de falha.
     try {
       sendMessage({
         chatId,
         senderId: bot.id,
         type: 'text',
         body: '[modelo offline no momento — tenta de novo daqui a pouco]',
-        extra: { bot: true, bot_reply_ms: Date.now() - tStart, bot_error: true },
+        extra: { bot: true, bot_reply_ms: Date.now() - tStart, bot_total_ms: Date.now() - tStart, bot_error: true },
       });
     } catch { /* noop */ }
     return;
   }
-  const thinkMs = Date.now() - tStart;
 
-  const chunks = splitIntoChunks(reply);
-  if (chunks.length === 0) {
-    publishTyping(chatId, bot, false);
-    return;
-  }
-
-  // Manda cada chunk com delay simulando digitação. Continua publicando
-  // typing.start entre chunks para o indicador não sumir.
-  for (let i = 0; i < chunks.length; i++) {
-    const chunk = chunks[i];
-    await sleep(typingDelayMs(chunk));
+  // Stream encerrado. Persiste o último bubble (com bot_total_ms).
+  if (bubbleBuf.trim()) {
+    flushBubble(true);
+  } else if (bubbleIdx === 0) {
+    // Stream terminou e nada foi gerado — bot ficou em silêncio. Manda fallback.
     try {
-      // Só o primeiro chunk carrega bot_reply_ms (= tempo total que a LLM
-      // levou pra raciocinar). Chunks subsequentes são apenas split visual
-      // da mesma resposta — recebem bot:true mas sem o duration.
       sendMessage({
         chatId,
         senderId: bot.id,
         type: 'text',
-        body: chunk,
-        extra: i === 0 ? { bot: true, bot_reply_ms: thinkMs } : { bot: true },
+        body: '...',
+        extra: { bot: true, bot_reply_ms: Date.now() - tStart, bot_total_ms: Date.now() - tStart, bot_empty: true },
       });
-    } catch (err) {
-      logger.error(`bot ${bot.username} sendMessage failed`, { err: err?.message });
-      break;
-    }
-    // Antes do próximo chunk, ressinaliza "digitando" (sem flag thinking — agora
-    // a mensagem chegou e o bot está só compondo a próxima).
-    if (i < chunks.length - 1) {
-      publishTyping(chatId, bot, false /* não é mais pensando */, 8000);
-    }
+    } catch { /* noop */ }
   }
-  publishTyping(chatId, bot, false);
+  publishTypingStop(chatId, bot);
+}
+
+function getRecipientIds(chatId, excludeUserId) {
+  return getDb()
+    .prepare('SELECT user_id FROM chat_members WHERE chat_id = ? AND user_id != ? AND left_at IS NULL')
+    .all(chatId, excludeUserId)
+    .map((r) => r.user_id);
 }
 
 /**
- * Publica `typing.start` ou `typing.stop` para o(s) humano(s) do chat.
+ * 3 estados visíveis no front:
+ *   - "pensando…"   (typing.start, thinking=true)   — antes do 1º token
+ *   - "escrevendo…" (typing.start, thinking=false)  — token streaming
+ *   - sem indicador (typing.stop)                    — fim
  *
- * @param {string} chatId
- * @param {object} bot — row do bot (precisa de id e name)
- * @param {boolean} thinking — true=mostra "está pensando", false=indicador some
- * @param {number} [ttlMs=6000] — quanto tempo o front mantém o indicador antes de auto-clear
+ * Helpers dedicados pra não confundir flags.
  */
-function publishTyping(chatId, bot, thinking, ttlMs = 6000) {
-  const db = getDb();
-  const recipients = db
-    .prepare('SELECT user_id FROM chat_members WHERE chat_id = ? AND user_id != ? AND left_at IS NULL')
-    .all(chatId, bot.id)
-    .map((r) => r.user_id);
-  if (!recipients.length) return;
+function publishThinking(chatId, bot, ttlMs = 90_000) {
+  emitTyping(chatId, bot, 'typing.start', { thinking: true, ttl_ms: ttlMs });
+}
+function publishWriting(chatId, bot, ttlMs = 60_000) {
+  emitTyping(chatId, bot, 'typing.start', { thinking: false, ttl_ms: ttlMs });
+}
+function publishTypingStop(chatId, bot) {
+  emitTyping(chatId, bot, 'typing.stop', { thinking: false, ttl_ms: 0 });
+}
 
+function emitTyping(chatId, bot, type, extra) {
+  const recipients = getRecipientIds(chatId, bot.id);
+  if (!recipients.length) return;
   publish(recipients, {
-    type: thinking ? 'typing.start' : 'typing.stop',
+    type,
     chat_id: chatId,
     user_id: bot.id,
     user_name: bot.name || bot.username,
-    thinking: !!thinking,
-    ttl_ms: ttlMs,
+    ...extra,
   });
 }
 

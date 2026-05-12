@@ -12,7 +12,7 @@ import styles from './ChatThread.module.css';
 const GROUP_WINDOW_MS = 5 * 60 * 1000;
 
 export default function ChatThread({
-  chat, me, messages, hasMore, onLoadMore, loading, typing,
+  chat, me, messages, hasMore, onLoadMore, loading, typing, streamingBubble,
   onReply, onEdit, onDelete, onReact, onStar, onPin, onForward, onRetry, onDetails, onOpenPreview, onReport,
   selectionMode, selected, onToggleSelect, onStartSelection,
   highlightedMsgId,
@@ -197,10 +197,21 @@ export default function ChatThread({
         {messages.length === 0 && !loading ? (
           <EmptyChat chat={chat} />
         ) : null}
+        {streamingBubble?.content ? (
+          // Ghost bubble: bot está enviando tokens em tempo real.
+          // Renderiza um balão "incompleto" com o conteúdo acumulado-até-agora.
+          // Some quando o bubble vira mensagem real (bot.stream.end + message.new).
+          <div className={styles.streamGhostRow} data-streaming-bubble>
+            <div className={styles.streamGhostBubble}>
+              <div className={styles.streamGhostText}>{streamingBubble.content}</div>
+              <span className={styles.streamGhostCursor} aria-hidden />
+            </div>
+          </div>
+        ) : null}
         {typing?.length ? (
           // `typing` agora é uma lista de objetos { name, thinking } (bots LLM
-          // mandam `thinking=true` enquanto chamam o Ollama). Aceita strings
-          // antigas também — TypingIndicator normaliza.
+          // mandam `thinking=true` enquanto chamam o Ollama, false enquanto
+          // escrevem). Aceita strings antigas também — TypingIndicator normaliza.
           <TypingIndicator entries={typing} />
         ) : null}
       </div>

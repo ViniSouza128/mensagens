@@ -250,16 +250,26 @@ function MessageBubble({
           {!editing ? (
             <div className={styles.meta}>
               {msg.edited_at ? <span className={styles.edited}>editada</span> : null}
-              {/* Para mensagens de bot LLM, mostra o tempo de "pensamento"
-                  à ESQUERDA do horário. Vem de `extra.bot_reply_ms` injetado
-                  pelo orquestrador (src/server/llm/bots.js). Chunks seguintes
-                  do mesmo turno não têm o campo, ficam só com hora normal. */}
+              {/* Em mensagens de bot LLM:
+                  - `bot_reply_ms`: tempo gasto neste balão específico (1.4s)
+                    → renderiza à esquerda do horário em TODOS os balões.
+                  - `bot_total_ms`: tempo total da resposta inteira (todos os
+                    balões juntos) → SÓ no último balão da resposta, como
+                    badge adicional com label "total". */}
               {msg.bot_reply_ms ? (
                 <span
                   className={styles.botTiming}
-                  title={`Modelo levou ${formatBotMs(msg.bot_reply_ms)} para pensar a resposta`}
+                  title={`Este balão levou ${formatBotMs(msg.bot_reply_ms)} para ser gerado`}
                 >
                   {formatBotMs(msg.bot_reply_ms)}
+                </span>
+              ) : null}
+              {msg.bot_total_ms ? (
+                <span
+                  className={[styles.botTiming, styles.botTotalTiming].join(' ')}
+                  title={`Resposta inteira (todos os balões) levou ${formatBotMs(msg.bot_total_ms)}`}
+                >
+                  total {formatBotMs(msg.bot_total_ms)}
                 </span>
               ) : null}
               <span className={styles.time}>{formatTime(msg.created_at)}</span>

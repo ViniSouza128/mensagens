@@ -23,6 +23,50 @@
   -webkit-overflow-scrolling: touch;
 }
 .sentinel { height: 1px; flex-shrink: 0; }
+
+/* Ghost bubble do streaming do bot LLM. Mostra os tokens chegando ao vivo
+   antes de virar mensagem real. Visualmente igual a uma mensagem "theirs"
+   mas com cursor piscando no fim. */
+.streamGhostRow {
+  display: flex;
+  justify-content: flex-start;
+  padding: 2px 14px;
+}
+.streamGhostBubble {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  max-width: 70%;
+  padding: 8px 12px;
+  background: var(--bubble-in);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  border-bottom-left-radius: 4px;
+  box-shadow: var(--bubble-shadow);
+  font-size: var(--text-chat-body);
+  color: var(--text);
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  animation: streamFadeIn 200ms ease-out both;
+}
+.streamGhostText { display: inline; }
+.streamGhostCursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 3px;
+  background: var(--accent);
+  vertical-align: text-bottom;
+  animation: streamBlink 0.9s steps(2, end) infinite;
+}
+@keyframes streamFadeIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes streamBlink {
+  to { opacity: 0; }
+}
 /* Quando há poucas mensagens, empurra-as para a base do scroll
    (estilo iMessage/WhatsApp). Auto-margin no primeiro item após o sentinel
    colapsa para 0 quando o conteúdo já transborda, então o scroll continua natural. */
