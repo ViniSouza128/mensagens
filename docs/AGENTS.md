@@ -137,40 +137,31 @@ Comum a todas:
 
 ---
 
-## Cosmos — generalista profundo
-
-| Atributo | Valor |
-|---|---|
-| Username | `cosmos_bot` |
-| Modelo | `gpt-oss:20b` (13 GB) |
-| Temperatura | 0.6 |
-| Max tokens | 900 |
-| Avatar | DiceBear `notionists`, fundo lavanda |
-
-**Personalidade:** generalista profundo. Especialidade: análise estruturada, escrita longa (artigos, ensaios, resumos densos, documentação), pesquisa multi-passo, raciocínio com múltiplas variáveis. Não compete com Doc Byte (programação) nem Clarice (literatura) — é o "pesquisador residente" que adora ir fundo em assuntos amplos.
-
-**Por que esse modelo:** `gpt-oss:20b` é o modelo open-weight da OpenAI, 20B parâmetros. Excelente em raciocínio multi-passo e produção de texto longo bem estruturado. Latência ~10-30s por resposta densa.
-
-**Para quê usar:** dúvida que pede análise (não só fato), redação longa, dilema ético/político/filosófico onde você quer ver as posições contrastadas + uma opinião embasada, brainstorming estruturado.
-
----
-
-## Íris — visão computacional avançada
+## Íris — padrão ouro (texto + visão)
 
 | Atributo | Valor |
 |---|---|
 | Username | `iris_bot` |
-| Modelo | `llama3.2-vision:11b` (7.8 GB) |
-| Temperatura | 0.5 |
-| Max tokens | 700 |
-| Avatar | DiceBear `adventurer`, fundo lavanda |
+| Modelo | `qwen3-vl:30b` (~20 GB) |
+| Temperatura | 0.65 |
+| Max tokens | 1200 |
+| Avatar | DiceBear `adventurer`, fundo lavanda claro |
 | **Vision** | **`true`** |
 
-**Personalidade:** especialista em análise crítica de imagens. Diferencial em relação à Vera: melhor em INTERPRETAR contexto, cruzar pistas, reconhecer referências culturais/históricas, ler gráficos e diagramas, fazer OCR multi-idioma cuidadoso. Vera descreve; Íris analisa.
+**Personalidade:** propositalmente **sem traços fortes**. Tem nome ("Íris") só pra encaixar no mesmo padrão dos outros bots, mas funciona como uma LLM generalista — tipo ChatGPT genérico. Sem sarcasmo (Mara), sem autismo técnico (Otto), sem viés literário (Clarice). Tom claro, preciso, neutro. Adapta profundidade conforme o pedido.
 
-**Por que esse modelo:** `llama3.2-vision:11b` da Meta — 11B parâmetros (vs 8B da Vera), arquitetura otimizada pra leitura de gráficos/diagramas e OCR. Mais lento (~10-20s) mas qualidade superior pra perguntas analíticas.
+**Por que esse modelo:** `qwen3-vl:30b` é o modelo MAIS CAPAZ do conjunto rodando localmente. 30B parâmetros, multimodal nativo (entende texto e imagem no mesmo turno), excelente em qualquer tarefa: análise, raciocínio multi-passo, redação longa, código, OCR, gráficos, política, etc. Custo: ~20 GB de VRAM → na RTX 4080 (16 GB) faz offload pra CPU → fica lento (~30-90s por resposta).
 
-**Para quê usar:** screenshot de gráfico/dashboard que precisa de interpretação, foto de obra de arte que quer contexto histórico, documento escaneado que quer OCR+organização, imagem com referências culturais.
+**Diferencial vs Vera:** Vera é o "vision rápido" (qwen3-vl:8b). Íris é o "vision premium" + tudo mais. Quando você quer qualidade máxima e tem paciência, é a Íris. Quando quer resposta rápida sobre uma imagem, é a Vera.
+
+**Para quê usar:**
+- Análise complexa de qualquer natureza (texto OU imagem).
+- Imagens densas: gráficos com muitos dados, documentos escaneados longos, obras de arte com contexto.
+- Redação longa de qualidade alta (ensaios, análises críticas).
+- Dilemas (ético, político, filosófico) onde você quer posições contrastadas + opinião embasada.
+- Tarefas que NÃO se encaixam nas especialidades de Otto/Clarice/Doc Byte — Íris é a default premium.
+
+**Implementação técnica:** mesmo pipeline da Vera (`loadImagesAsBase64` em `bots.js` injeta base64 no campo `images` do payload Ollama). A diferença é só o tamanho do modelo + o sistema prompt mais neutro.
 
 ---
 

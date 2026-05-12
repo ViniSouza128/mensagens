@@ -103,9 +103,13 @@ Resumo das principais escolhas técnicas e o porquê de cada uma.
 - **Escolha dos modelos** (RTX 4080 16 GB): diversifica espectro fast → slow:
   - `gemma3:270m` (Zezé) — adolescente gen-z, latência quase nula.
   - `jaahas/qwen3.5-uncensored:4b` (Mara) — amiga sem filtro, ainda rápido.
-  - `igorls/gemma-4-E4B-it-heretic-GGUF:q4_k_m` (Hermes) — filósofo provocador, modelo "heretic" sem salvaguardas.
-  - `mistral-small3.2:24b` (Aurora) — assistente equilibrada, melhor "all-purpose" dentro da VRAM.
-  - `qwen3-coder:30b` (Doc Byte) — especialista em código, ultra-lento por exceder VRAM (offload CPU), mas qualidade alta.
+  - `igorls/gemma-4-E4B-it-heretic-GGUF:q4_k_m` (Otto) — polímata técnico, modelo "heretic" sem salvaguardas pra opinar livre.
+  - `mistral-small3.2:24b` (Aurora) — assistente equilibrada, "ChatGPT genérico" dentro da VRAM.
+  - `command-r:35b` (Clarice) — escritora, especializada em texto de qualidade (Cohere RAG-tuned).
+  - `qwen3-vl:8b` (Vera) — vision rápida, ~3-10s por resposta.
+  - `qwen3-vl:30b` (Íris) — padrão ouro multimodal (texto + visão), ~30-90s. Excede VRAM → offload CPU, mas qualidade superior em qualquer tarefa.
+
+A divisão é por NICHO + ESCALA — quando o usuário quer qualidade máxima, escolhe Íris; quando quer velocidade, Zezé ou Mara; quando quer um especialista, vai num dos focados (Otto/Clarice/Vera).
 
 ## Por que não X?
 
