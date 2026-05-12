@@ -67,6 +67,30 @@
 @keyframes streamBlink {
   to { opacity: 0; }
 }
+
+/* Placeholder dentro do ghost bubble enquanto o modelo ainda não produziu
+   nenhum token (entre o `Enter` do usuário e o 1º chunk do `bot.stream`).
+   Três pontinhos pulsando — sinal visual de que o balão está "vivo" e
+   esperando, sem precisar mostrar texto. */
+.streamGhostDots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 1em;
+}
+.streamGhostDots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: streamGhostDotsBounce 1.2s infinite ease-in-out;
+}
+.streamGhostDots span:nth-child(2) { animation-delay: .15s; }
+.streamGhostDots span:nth-child(3) { animation-delay: .3s; }
+@keyframes streamGhostDotsBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
 /* Quando há poucas mensagens, empurra-as para a base do scroll
    (estilo iMessage/WhatsApp). Auto-margin no primeiro item após o sentinel
    colapsa para 0 quando o conteúdo já transborda, então o scroll continua natural. */

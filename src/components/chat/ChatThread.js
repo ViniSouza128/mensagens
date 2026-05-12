@@ -197,14 +197,27 @@ export default function ChatThread({
         {messages.length === 0 && !loading ? (
           <EmptyChat chat={chat} />
         ) : null}
-        {streamingBubble?.content ? (
-          // Ghost bubble: bot está enviando tokens em tempo real.
-          // Renderiza um balão "incompleto" com o conteúdo acumulado-até-agora.
-          // Some quando o bubble vira mensagem real (bot.stream.end + message.new).
+        {streamingBubble ? (
+          // Ghost bubble do bot LLM. Dois modos:
+          //   1. PLACEHOLDER (content vazio + pending=true) — aparece IMEDIATAMENTE
+          //      quando o usuário aperta Enter. Mostra 3 pontinhos pulsantes.
+          //   2. STREAMING (content tem texto) — tokens chegando ao vivo via
+          //      `bot.stream`. Mostra o texto crescendo + cursor piscando.
+          // Some quando o bubble vira mensagem real (bot.stream.end + message.new)
+          // ou quando o turno termina (typing.stop).
           <div className={styles.streamGhostRow} data-streaming-bubble>
             <div className={styles.streamGhostBubble}>
-              <div className={styles.streamGhostText}>{streamingBubble.content}</div>
-              <span className={styles.streamGhostCursor} aria-hidden />
+              {streamingBubble.content ? (
+                <>
+                  <div className={styles.streamGhostText}>{streamingBubble.content}</div>
+                  <span className={styles.streamGhostCursor} aria-hidden />
+                </>
+              ) : (
+                // Placeholder enquanto modelo ainda não produziu nada.
+                <div className={styles.streamGhostDots} aria-label="aguardando resposta">
+                  <span /><span /><span />
+                </div>
+              )}
             </div>
           </div>
         ) : null}

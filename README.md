@@ -1,6 +1,6 @@
 # Mensagens
 
-Mensageiro web moderno, completo e escalável construído com **Next.js 14 (App Router)**, **React 18**, **JavaScript puro** (sem TypeScript), **CSS Modules** e **SQLite** (via `better-sqlite3` com FTS5). Roda inteiramente em uma única instalação local — sem dependências de terceiros em runtime.
+Mensageiro web moderno e completo construído com **Next.js 15 (App Router)**, **React 19**, **JavaScript puro** (sem TypeScript), **CSS Modules** e **SQLite** (via `better-sqlite3` com FTS5). Roda inteiramente em uma única instalação local — sem dependências de terceiros em runtime.
 
 ## Recursos principais
 
@@ -16,8 +16,8 @@ Mensageiro web moderno, completo e escalável construído com **Next.js 14 (App 
 - **Busca global** com SQLite FTS5 (`unicode61 remove_diacritics 2`) — usuários, chats, mensagens (com `<mark>`) e arquivos, sem distinção de acentos/maiúsculas.
 - **Configurações** — privacidade (visto/foto/bio: todos/contatos/ninguém), notificações, tema/cor/fonte/papel de parede, qualidade de mídia, auto-download, enviar com Enter.
 - **Painel administrativo** (visível apenas para admins) — visão geral, usuários (buscar, promover, suspender, banir, reintegrar), denúncias com contexto **15 anteriores + 5 posteriores** ao alvo, log de auditoria, log de erros.
-- **Bots LLM locais (Ollama) com streaming** — 5 usuários-bot com personas distintas (`Zezé`, `Mara`, `Hermes`, `Aurora`, `Clarice`) que respondem em tempo real usando modelos rodando em `127.0.0.1:11434`. Tokens chegam ao vivo via SSE (`bot.stream`) e aparecem letra-por-letra num "ghost bubble" antes de virarem mensagens reais — mesma sensação que o ChatGPT. Indicador troca entre **"pensando…"** (antes do 1º token) e **"escrevendo…"** (durante streaming). Respostas longas viram múltiplos balões separados, cada um com **tempo por balão** + **total** ao fim. Composer fica **bloqueado** enquanto o bot termina a resposta — não enfileira, exige clique ativo. **"Limpar conversa"** apaga histórico e (para bots) reseta a janela de contexto. Personas, prompts e modelos vivem em `src/server/llm/personas.js`; foto de perfil baixada do DiceBear pelo seed.
 - **Performance** — virtualização leve, infinite scroll, lazy loading, UI otimista, EventSource (SSE) para realtime.
+- **Limpar conversa** — apaga histórico do chat de todos os membros (cascata limpa mídias, reações, fixados); preview na lista lateral é atualizado em tempo real via SSE `chat.cleared`.
 - **Acessibilidade** — navegação por teclado, foco visível, rótulos ARIA em todos os controles, contraste adequado nos dois temas.
 - **PWA base** — manifesto, ícones SVG vetoriais, theme-color por modo.
 - **Auditoria completa** — toda ação sensível de admin é registrada com ator, alvo e metadados.
@@ -51,28 +51,18 @@ Você pode sobrescrever a conta admin antes do primeiro `npm run dev` definindo 
 
 > **Produção:** O servidor **não sobe** se `AUTH_SECRET` for o valor padrão (`NODE_ENV=production`). Defina uma string aleatória longa via variável de ambiente. A senha padrão do admin (`admin123`) também deve ser trocada antes de expor o serviço publicamente.
 
-## Bots LLM (Ollama local)
+## Extras opcionais
 
-O seed cria 5 usuários-bot que respondem automaticamente quando alguém manda DM para eles. Para que respondam de verdade, você precisa do **Ollama** rodando localmente (`ollama serve`) e dos modelos baixados (`ollama pull <nome>`).
+### Bots LLM via Ollama
 
-| Bot       | Modelo                                            | Estilo                          | VRAM aprox. |
-|-----------|---------------------------------------------------|---------------------------------|-------------|
-| Zezé      | `gemma3:270m`                                     | Adolescente gen-z casual         | ~0.3 GB |
-| Mara      | `jaahas/qwen3.5-uncensored:4b`                    | Amiga sarcástica sem filtro     | ~3.5 GB |
-| Hermes    | `igorls/gemma-4-E4B-it-heretic-GGUF:q4_k_m`       | Filósofo provocador (uncensored) | ~5 GB |
-| Aurora    | `mistral-small3.2:24b`                            | Assistente equilibrada           | ~15 GB |
-| Clarice   | `command-r:35b`                                   | Escritora — texto, prosa, poesia (lenta) | ~18 GB (offload p/ CPU se >VRAM) |
+O seed também cria alguns usuários-bot que respondem via [Ollama](https://ollama.com/) local — útil para teste e demo offline. Não é o foco do projeto; é só um "tempero" que aproveita a arquitetura de chat existente. Se você não quiser, basta remover os bots do array `BOTS` em [`src/server/llm/personas.js`](src/server/llm/personas.js) e rodar `npm run seed`. Sem Ollama rodando, os bots aparecem na lista mas mostram "[modelo offline]" ao receber mensagem.
 
-Todos os bots têm regras rígidas no system prompt para **sempre responder em pt-br** (exceto se o usuário pedir outro idioma explicitamente). Cada turno é cronometrado: o front mostra **`1.4s`** à esquerda do horário em cada balão e uma badge adicional **`total 6.0s`** no último balão da resposta.
+Personas, modelos e detalhes técnicos: [docs/AGENTS.md](docs/AGENTS.md).
 
-Encontre os bots em **Nova conversa → seção "Bots AI (Ollama local)"**, ou apenas busque pelo nome. Cada bot é um usuário real do sistema: você pode reagir, fixar, encaminhar suas mensagens normalmente.
-
-Variáveis de ambiente:
+Variáveis relacionadas:
 
 - `OLLAMA_HOST` — base URL (default `http://127.0.0.1:11434`)
-- `OLLAMA_TIMEOUT_MS` — timeout por chamada (default 180000, suficiente para qwen3-coder)
-
-Para criar/ajustar bots: edite o array `BOTS` em [`src/server/llm/personas.js`](src/server/llm/personas.js) e rode `npm run seed` — o upsert atualiza modelo/prompt/temperatura sem perder mensagens. Veja a seção "Bots LLM" em [DECISIONS.md](./DECISIONS.md) para o racional completo.
+- `OLLAMA_TIMEOUT_MS` — timeout por chamada (default 180000)
 
 ## Scripts
 

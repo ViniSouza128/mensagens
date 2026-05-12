@@ -142,6 +142,21 @@ export function AppStateProvider({ initialUser, children }) {
         } else if (data.type === 'message.updated' || data.type === 'message.deleted') {
           // Debounced full refresh — last_message might have changed
           scheduleRefreshChatsRef.current?.();
+        } else if (data.type === 'chat.cleared') {
+          // Histórico do chat foi apagado (POST /api/chats/:id/clear).
+          // Limpamos o preview da última mensagem na lista lateral
+          // imediatamente — senão o item continua mostrando a mensagem antiga
+          // até a próxima refresh full. Também limpa o cache otimista de
+          // mensagens no localStorage para que reabrir o chat não restaure
+          // mensagens já apagadas.
+          const cid = data.chat_id;
+          setChats((prev) => prev.map((c) => c.id === cid
+            ? { ...c, last_message: null, last_message_at: c.created_at || null, unread: 0 }
+            : c));
+          try { window.localStorage.removeItem(`mensagens.cache.msgs.${cid}`); } catch { /* quota */ }
+          // Refresh full em segundo plano para reconciliar tudo (ordenação,
+          // pinned/archived state, etc).
+          scheduleRefreshChatsRef.current?.();
         }
 
         if (data.type === 'contact_request.new' || data.type === 'contact_request.responded') {

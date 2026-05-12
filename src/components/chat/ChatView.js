@@ -250,7 +250,20 @@ export default function ChatView({ chatId }) {
         toast('Este grupo foi apagado.', { tone: 'warning' });
         router.replace('/chats');
       } else if (ev.type === 'chat.cleared') {
+        // Histórico apagado: esvazia mensagens visíveis + cache otimista +
+        // o ghost de streaming + indicador de digitação. Mostra um toast
+        // explicando o que aconteceu (especialmente importante quando outro
+        // membro do chat limpa — o usuário atual só vê a tela ficar vazia).
         setMessages([]);
+        setStreamingBubble(null);
+        setTyping([]);
+        try { window.localStorage.removeItem(`mensagens.cache.msgs.${chatId}`); } catch { /* quota */ }
+        // Releitura do chat (também atualiza last_message_at). loadChat() é
+        // a fonte canônica para esse chat aberto.
+        loadChat();
+        if (ev.cleared_by && ev.cleared_by !== user?.id) {
+          toast('A conversa foi apagada por outro membro.', { tone: 'warning' });
+        }
       }
     });
   }, [subscribe, chatId, user, loadChat, toast, router]);
@@ -391,6 +404,25 @@ export default function ChatView({ chatId }) {
     };
     setMessages((prev) => [...prev, optimistic]);
     setReply(null);
+
+    // Se o destinatário é um bot LLM, mostra o BALÃO FANTASMA IMEDIATAMENTE
+    // — antes mesmo do request HTTP voltar. Ele entra como "placeholder"
+    // (`pending:true`, content vazio) e ChatThread renderiza pontinhos
+    // pulsantes. Quando o servidor publica `bot.stream`, o conteúdo começa
+    // a aparecer dentro do mesmo balão; quando vira mensagem real,
+    // `bot.stream.end` limpa o placeholder. UX: o usuário sempre vê algo
+    // acontecendo no instante em que aperta Enter, em vez de esperar o
+    // SSE round-trip (1-5s p/ modelos médios; +load p/ modelos grandes).
+    if (chat?.partner?.is_bot) {
+      setStreamingBubble({
+        idx: -1,
+        name: chat.partner.name || chat.partner.username,
+        senderId: chat.partner.id,
+        content: '',
+        pending: true,
+      });
+    }
+
     try {
       const payload = {
         type: msgType,
@@ -410,6 +442,9 @@ export default function ChatView({ chatId }) {
       if (chat?.partner?.is_bot) startBotReplyPoll(sent.id);
     } catch (err) {
       setMessages((prev) => prev.map((m) => (m.client_id === client_id ? { ...m, status: 'failed', error: err.code || 'send_failed' } : m)));
+      // Falha no envio invalida o ghost que tínhamos pintado otimisticamente:
+      // o bot não vai responder se a mensagem nem chegou.
+      setStreamingBubble((cur) => (cur?.pending ? null : cur));
       if (err.code === 'requires_contact_request') {
         toast('Esse usuário bloqueia desconhecidos. Solicitação enviada.', { tone: 'warning' });
       } else if (err.code === 'rate_limited') {
