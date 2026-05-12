@@ -21,7 +21,9 @@ export default function Avatar({ name, src, size = 40, online = false, alt, eage
             alt={alt || name || 'avatar'}
             loading={eager ? 'eager' : 'lazy'}
             decoding="async"
-            fetchpriority={eager ? 'high' : 'low'}
+            // React 19 espera camelCase `fetchPriority` (warning de DOM prop em
+            // versões anteriores aceitava lowercase). Mantém igual ao HTML spec.
+            fetchPriority={eager ? 'high' : 'low'}
             width={size}
             height={size}
           />

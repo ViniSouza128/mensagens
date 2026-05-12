@@ -21,6 +21,7 @@ import { getDb } from '@/database/db';
 import { ollamaChat } from '@/server/llm/ollama';
 import { publish } from '@/server/events';
 import { logger } from '@/server/logger';
+import { getBotByUsername } from '@/server/llm/personas';
 
 // Quantas mensagens recentes mandar como contexto para o modelo.
 // 20 é equilibrado: cabe em num_ctx=4096 mesmo com mensagens longas,
@@ -85,14 +86,44 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+// Padrões que indicam que o modelo "vazou" sua identidade técnica em uma
+// resposta passada (e.g. "I am Gemma, a large language model"). Quando uma
+// resposta antiga do BOT bate aqui, ela é REMOVIDA do contexto antes de
+// reenviar — caso contrário o histórico polui o priming e o modelo continua
+// repetindo o vazamento mesmo com few-shot decente.
+const IDENTITY_LEAK_PATTERNS = [
+  /\b(i am|i'm) (a |an )?(large )?(language )?(model|ai|assistant)\b/i,
+  /\bmy name is (gemma|qwen|mistral|command-r|claude|llama|chatgpt|gpt)\b/i,
+  /\b(meu nome é|sou (?:o |a )?)(gemma|qwen|mistral|command-r|claude|llama|chatgpt|gpt)\b/i,
+  /\b(google|alibaba|cohere|mistral ai|meta|anthropic|openai) (created|trained|developed|made|me created)\b/i,
+  /\bfui (treinad|criad|desenvolvid|fabricad)/i,
+  /\b(eu sou|sou um|sou uma) (uma? )?(modelo|ia|assistente|inteligência|llm)\b/i,
+];
+
+function looksLikeIdentityLeak(body) {
+  if (!body) return false;
+  return IDENTITY_LEAK_PATTERNS.some((re) => re.test(body));
+}
+
 /**
- * Monta o array de mensagens (system + histórico) para mandar ao Ollama.
+ * Monta o array de mensagens (system + few-shot + histórico) para mandar ao
+ * Ollama.
+ *
+ * Few-shot priming: pares user/assistant injetados ANTES do histórico real.
+ * Necessário para modelos minúsculos (gemma3:270m) que não conseguem manter
+ * a persona apenas pelo system prompt — eles defaultam pra "I am Gemma".
+ * Imitação > instrução para LLMs pequenas.
+ *
+ * Sanitização: respostas anteriores do bot que vazaram a identidade técnica
+ * (vide IDENTITY_LEAK_PATTERNS) são filtradas — junto com a pergunta que as
+ * disparou — para não envenenar o contexto. Mensagens humanas nunca são
+ * filtradas.
  */
-function buildOllamaMessages(bot, chatId) {
+function buildOllamaMessages(bot, chatId, fewShot = []) {
   const db = getDb();
   const rows = db
     .prepare(
-      `SELECT sender_id, body, deleted
+      `SELECT id, sender_id, body, deleted
        FROM messages
        WHERE chat_id = ? AND deleted = 0 AND body IS NOT NULL AND body != ''
        ORDER BY created_at DESC
@@ -101,13 +132,34 @@ function buildOllamaMessages(bot, chatId) {
     .all(chatId, CONTEXT_WINDOW)
     .reverse();
 
-  const history = rows.map((r) => ({
-    role: r.sender_id === bot.id ? 'assistant' : 'user',
-    content: r.body,
-  }));
+  // Identifica índices a remover: cada resposta de bot que parece um leak
+  // descarta também a pergunta humana imediatamente anterior (para evitar
+  // pares Q→A ainda associando "qual seu nome?" com "I am Gemma").
+  const drop = new Set();
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    if (r.sender_id === bot.id && looksLikeIdentityLeak(r.body)) {
+      drop.add(i);
+      if (i > 0 && rows[i - 1].sender_id !== bot.id) drop.add(i - 1);
+    }
+  }
+
+  const history = rows
+    .map((r, i) => (drop.has(i) ? null : {
+      role: r.sender_id === bot.id ? 'assistant' : 'user',
+      content: r.body,
+    }))
+    .filter(Boolean);
+
+  // Expande few_shot [{user,assistant}, ...] em sequência alternada user/assistant.
+  const fewShotTurns = (fewShot || []).flatMap((ex) => [
+    { role: 'user', content: ex.user },
+    { role: 'assistant', content: ex.assistant },
+  ]);
 
   return [
     { role: 'system', content: bot.bot_system_prompt || 'Você é um assistente útil.' },
+    ...fewShotTurns,
     ...history,
   ];
 }
@@ -175,9 +227,17 @@ async function runBotReply({ chatId, bot, sendMessage }) {
   // modelos como qwen3-coder:30b podem levar dezenas de segundos.
   publishTyping(chatId, bot, true, 90_000);
 
+  // Cronometra o tempo total de pensamento (chamada Ollama). Esse valor vai
+  // dentro do `extra` da mensagem (campo `bot_reply_ms`) — o front mostra
+  // "2.3s" à esquerda do horário. Captado por chunk: o primeiro chunk carrega
+  // o tempo de raciocínio completo; chunks seguintes (se houver) zeram, pois
+  // não houve nova chamada ao modelo.
+  const tStart = Date.now();
   let reply;
   try {
-    const messages = buildOllamaMessages(bot, chatId);
+    // Few-shot vive em personas.js (não no DB) — busca por username, idempotente.
+    const persona = getBotByUsername(bot.username);
+    const messages = buildOllamaMessages(bot, chatId, persona?.few_shot || []);
     reply = await ollamaChat({
       model: bot.bot_model,
       messages,
@@ -187,17 +247,21 @@ async function runBotReply({ chatId, bot, sendMessage }) {
   } catch (err) {
     publishTyping(chatId, bot, false);
     logger.error(`bot ${bot.username} ollama call failed`, { err: err?.message, model: bot.bot_model });
-    // Fallback curto pra não deixar o usuário no vácuo.
+    // Fallback curto pra não deixar o usuário no vácuo. Também marca como
+    // mensagem de bot (extra.bot=true) e inclui tempo decorrido até o erro,
+    // pra UI poder exibir info diferente em caso de falha.
     try {
       sendMessage({
         chatId,
         senderId: bot.id,
         type: 'text',
         body: '[modelo offline no momento — tenta de novo daqui a pouco]',
+        extra: { bot: true, bot_reply_ms: Date.now() - tStart, bot_error: true },
       });
     } catch { /* noop */ }
     return;
   }
+  const thinkMs = Date.now() - tStart;
 
   const chunks = splitIntoChunks(reply);
   if (chunks.length === 0) {
@@ -211,11 +275,15 @@ async function runBotReply({ chatId, bot, sendMessage }) {
     const chunk = chunks[i];
     await sleep(typingDelayMs(chunk));
     try {
+      // Só o primeiro chunk carrega bot_reply_ms (= tempo total que a LLM
+      // levou pra raciocinar). Chunks subsequentes são apenas split visual
+      // da mesma resposta — recebem bot:true mas sem o duration.
       sendMessage({
         chatId,
         senderId: bot.id,
         type: 'text',
         body: chunk,
+        extra: i === 0 ? { bot: true, bot_reply_ms: thinkMs } : { bot: true },
       });
     } catch (err) {
       logger.error(`bot ${bot.username} sendMessage failed`, { err: err?.message });

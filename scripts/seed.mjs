@@ -150,6 +150,42 @@ for (const bot of BOTS) {
   upsertBot(bot);
 }
 
+// Avatares dos bots — baixa do DiceBear (uma vez só) e atualiza avatar_path.
+// Idempotente: pula se o arquivo já existir em uploads/originals/.
+// Erros de rede são logados mas não derrubam o seed (bot continua usando
+// initials no avatar, sem foto, até a próxima execução com internet).
+const uploadsOriginals = path.resolve(root, process.env.UPLOADS_DIR || 'uploads', 'originals');
+if (!fs.existsSync(uploadsOriginals)) fs.mkdirSync(uploadsOriginals, { recursive: true });
+
+async function ensureBotAvatar(bot) {
+  if (!bot.avatar_url) return;
+  const filename = `bot-${bot.username}.png`;
+  const fullPath = path.join(uploadsOriginals, filename);
+  if (!fs.existsSync(fullPath)) {
+    try {
+      // AbortSignal.timeout requer Node 18+
+      const res = await fetch(bot.avatar_url, { signal: AbortSignal.timeout(10000) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const buf = Buffer.from(await res.arrayBuffer());
+      if (buf.length < 100) throw new Error('arquivo muito pequeno, provável erro');
+      fs.writeFileSync(fullPath, buf);
+      console.log('[seed] avatar baixado:', bot.username, '→', filename, `(${buf.length}B)`);
+    } catch (e) {
+      console.warn('[seed] falha avatar', bot.username + ':', e.message);
+      return;
+    }
+  }
+  // O avatar_path no DB segue o padrão das uploads: prefixo `originals/`.
+  // O Avatar component constrói `/api/files/<avatar_path>` automaticamente.
+  db.prepare('UPDATE users SET avatar_path=?, updated_at=? WHERE username=?')
+    .run(`originals/${filename}`, Date.now(), bot.username);
+}
+
+// Sequencial para evitar mandar 5 requests simultâneos pro DiceBear
+for (const bot of BOTS) {
+  await ensureBotAvatar(bot);
+}
+
 // Cleanup: bots que foram REMOVIDOS de personas.js (ou tiveram username
 // alterado) ficam órfãos no banco. Aqui dropamos qualquer user is_bot=1 cujo
 // username não esteja na lista atual. ON DELETE CASCADE no schema cuida das

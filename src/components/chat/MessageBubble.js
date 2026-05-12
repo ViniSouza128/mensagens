@@ -250,6 +250,18 @@ function MessageBubble({
           {!editing ? (
             <div className={styles.meta}>
               {msg.edited_at ? <span className={styles.edited}>editada</span> : null}
+              {/* Para mensagens de bot LLM, mostra o tempo de "pensamento"
+                  à ESQUERDA do horário. Vem de `extra.bot_reply_ms` injetado
+                  pelo orquestrador (src/server/llm/bots.js). Chunks seguintes
+                  do mesmo turno não têm o campo, ficam só com hora normal. */}
+              {msg.bot_reply_ms ? (
+                <span
+                  className={styles.botTiming}
+                  title={`Modelo levou ${formatBotMs(msg.bot_reply_ms)} para pensar a resposta`}
+                >
+                  {formatBotMs(msg.bot_reply_ms)}
+                </span>
+              ) : null}
               <span className={styles.time}>{formatTime(msg.created_at)}</span>
               {isMine ? <MessageStatus status={msg.status} /> : null}
             </div>
@@ -527,6 +539,20 @@ function formatVoiceDuration(ms) {
   const m = Math.floor(s / 60);
   const sec = s % 60;
   return `${m}:${sec < 10 ? '0' : ''}${sec}`;
+}
+
+/**
+ * Formata tempo de raciocínio do bot LLM ("0.4s", "12.3s", "1m20s").
+ * Usado no meta da bolha de mensagem, à esquerda do horário.
+ */
+function formatBotMs(ms) {
+  if (!ms || ms < 0) return '';
+  if (ms < 1000) return `${ms}ms`;
+  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+  const s = Math.round(ms / 1000);
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}m${sec < 10 ? '0' : ''}${sec}s`;
 }
 
 // ─── Lightweight markdown + URL renderer ───────────────────────────────────

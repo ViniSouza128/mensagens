@@ -247,6 +247,22 @@
   color: color-mix(in oklab, currentColor 65%, transparent);
 }
 .edited { font-style: italic; }
+
+/* Tempo de "pensamento" do bot LLM. Aparece à esquerda do horário só em
+   mensagens cujo `extra.bot_reply_ms` foi preenchido (1º chunk da resposta). */
+.botTiming {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 5px;
+  height: 14px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  background: color-mix(in oklab, currentColor 10%, transparent);
+  color: var(--accent);
+  border-radius: var(--radius-pill);
+  font-variant-numeric: tabular-nums;
+}
 .starBadge {
   position: absolute;
   bottom: -6px;

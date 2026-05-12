@@ -90,8 +90,24 @@ export function AppStateProvider({ initialUser, children }) {
 
   useEffect(() => () => clearTimeout(refreshTimerRef.current), []);
 
+  // Refs estáveis para as callbacks — evita que a identidade nova de
+  // `scheduleRefreshChats` / `refreshRequests` a cada render derrube o
+  // EventSource. Antes esse efeito dependia delas direto; em dev mode
+  // (Fast Refresh / HMR) e até em produção quando `user` é atualizado por
+  // refreshMe(), a SSE era fechada e reaberta — eventos publicados no meio
+  // (ex.: resposta do bot LLM que chega 2-5s depois) se perdiam, e a UI só
+  // mostrava a resposta após F5.
+  const scheduleRefreshChatsRef = useRef(scheduleRefreshChats);
+  const refreshRequestsRef = useRef(refreshRequests);
+  useEffect(() => { scheduleRefreshChatsRef.current = scheduleRefreshChats; }, [scheduleRefreshChats]);
+  useEffect(() => { refreshRequestsRef.current = refreshRequests; }, [refreshRequests]);
+
+  // Mantém apenas `user?.id` como dep — só re-abrimos a SSE se o usuário
+  // logado mudou. Isto fixa o bug de respostas do bot só aparecerem após
+  // refresh em algumas condições.
+  const userId = user?.id || null;
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
     const es = new EventSource('/api/events');
     eventsRef.current = es;
 
@@ -109,7 +125,7 @@ export function AppStateProvider({ initialUser, children }) {
             if (idx < 0) return prev; // unknown chat handled by scheduleRefreshChats below
             chatFound = true;
             const old = prev[idx];
-            const isMine = message.sender_id === user.id;
+            const isMine = message.sender_id === userId;
             const updated = {
               ...old,
               last_message: message,
@@ -122,14 +138,14 @@ export function AppStateProvider({ initialUser, children }) {
             return next;
           });
           // If the chat wasn't in the list (e.g. just added to a group), do a full refresh
-          if (!chatFound) scheduleRefreshChats();
+          if (!chatFound) scheduleRefreshChatsRef.current?.();
         } else if (data.type === 'message.updated' || data.type === 'message.deleted') {
           // Debounced full refresh — last_message might have changed
-          scheduleRefreshChats();
+          scheduleRefreshChatsRef.current?.();
         }
 
         if (data.type === 'contact_request.new' || data.type === 'contact_request.responded') {
-          refreshRequests();
+          refreshRequestsRef.current?.();
         }
 
         listenersRef.current.forEach((fn) => {
@@ -141,14 +157,14 @@ export function AppStateProvider({ initialUser, children }) {
     };
 
     es.onerror = () => {
-      // EventSource auto-reconnects
+      // EventSource auto-reconnects nativamente
     };
 
     return () => {
       es.close();
       eventsRef.current = null;
     };
-  }, [user, scheduleRefreshChats, refreshRequests]);
+  }, [userId]);
 
   useEffect(() => {
     refreshChats();

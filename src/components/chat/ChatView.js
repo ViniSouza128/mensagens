@@ -208,6 +208,21 @@ export default function ChatView({ chatId }) {
         if (ev.user_id === user?.id) return;
         const name = ev.user_name || 'Alguém';
         setTyping((prev) => prev.filter((e) => e.name !== name));
+        // Belt-and-suspenders: o evento `message.new` do bot pode chegar
+        // antes do `typing.stop` (caso normal) ou se perder se a SSE bagunçar
+        // entre os dois. Fazemos um fetch curtinho APÓS o stop pra garantir
+        // que qualquer mensagem que tenha entrado e não esteja na UI seja
+        // reconciliada. Não-bloqueante; só anexa o que falta.
+        api.get(`/api/chats/${chatId}/messages?limit=10`).then((data) => {
+          if (!Array.isArray(data) || !data.length) return;
+          setMessages((prev) => {
+            const have = new Set(prev.map((m) => m.id));
+            const missing = data.filter((m) => m.id && !have.has(m.id));
+            if (!missing.length) return prev;
+            // Insere preservando ordem cronológica (created_at asc)
+            return [...prev, ...missing].sort((a, b) => (a.created_at || 0) - (b.created_at || 0));
+          });
+        }).catch(() => {});
       } else if (ev.type === 'chat.pins' || ev.type === 'chat.updated') {
         loadChat();
       } else if (ev.type === 'chat.deleted') {
@@ -260,6 +275,43 @@ export default function ChatView({ chatId }) {
 
   const goToMessageRef = useRef(goToMessage);
   useEffect(() => { goToMessageRef.current = goToMessage; });
+
+  // ── Poll fallback para resposta de bot ────────────────────────────────────
+  // Em alguns cenários (HMR no dev, queda momentânea de SSE, evento perdido
+  // entre reconexões do EventSource), o `message.new` do bot pode não chegar
+  // via SSE — e a resposta só aparece após F5. Este poll é o seguro contra
+  // isso: depois que o usuário manda algo num chat com bot, polla as últimas
+  // mensagens a cada 2s até receber uma nova do bot ou estourar 90s.
+  const botPollAbortRef = useRef(null);
+  function startBotReplyPoll(afterMessageId) {
+    // Cancela poll anterior se ainda rodava (usuário mandou nova msg antes
+    // do bot terminar — o novo turno cobre o anterior).
+    if (botPollAbortRef.current) { clearTimeout(botPollAbortRef.current); botPollAbortRef.current = null; }
+    const startedAt = Date.now();
+    const seen = new Set();
+    seen.add(afterMessageId);
+    const tick = async () => {
+      if (Date.now() - startedAt > 90_000) return; // 90s budget
+      try {
+        const fresh = await api.get(`/api/chats/${chatId}/messages?limit=15`);
+        if (Array.isArray(fresh)) {
+          let gotBotMessage = false;
+          setMessages((prev) => {
+            const have = new Set(prev.map((m) => m.id));
+            const missing = fresh.filter((m) => m.id && !have.has(m.id));
+            if (!missing.length) return prev;
+            // Bot replied if at least one missing message is from someone else
+            if (missing.some((m) => m.sender_id !== user?.id)) gotBotMessage = true;
+            return [...prev, ...missing].sort((a, b) => (a.created_at || 0) - (b.created_at || 0));
+          });
+          if (gotBotMessage) return; // done — stop polling
+        }
+      } catch { /* ignore network blips */ }
+      botPollAbortRef.current = setTimeout(tick, 2000);
+    };
+    botPollAbortRef.current = setTimeout(tick, 1500); // primeira tentativa após 1.5s
+  }
+  useEffect(() => () => { if (botPollAbortRef.current) clearTimeout(botPollAbortRef.current); }, []);
 
   // ── Send message ──────────────────────────────────────────────────────────
   async function send({ body, attachments, type, voice, poll, extra }) {
@@ -332,6 +384,9 @@ export default function ChatView({ chatId }) {
       const sent = await api.post(`/api/chats/${chatId}/messages`, payload);
       setMessages((prev) => prev.map((m) => (m.client_id === client_id ? { ...sent, client_id } : m)));
       refreshChats();
+      // Se o destinatário é um bot LLM, garante via poll que vamos ver a resposta
+      // mesmo se a SSE bagunçar (HMR/reconexão). Idempotente: para se já recebeu.
+      if (chat?.partner?.is_bot) startBotReplyPoll(sent.id);
     } catch (err) {
       setMessages((prev) => prev.map((m) => (m.client_id === client_id ? { ...m, status: 'failed', error: err.code || 'send_failed' } : m)));
       if (err.code === 'requires_contact_request') {

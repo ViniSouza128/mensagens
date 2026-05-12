@@ -53,6 +53,13 @@ export async function ollamaChat({
         messages,
         // Resposta inteira em uma chamada (não streaming).
         stream: false,
+        // think:false desliga a fase de raciocínio em modelos "thinking"
+        // (Qwen3, DeepSeek-R1, etc). Sem isso, modelos como
+        // jaahas/qwen3.5-uncensored:4b consomem TODO o num_predict no campo
+        // "thinking" e devolvem content vazio — o bot fica em silêncio.
+        // Para chat curto/persona não queremos chain-of-thought; o usuário
+        // espera resposta direta. Ollama 0.10+ aceita esse campo no top level.
+        think: false,
         options: {
           temperature,
           // num_predict limita tamanho da resposta — protege contra
@@ -73,11 +80,17 @@ export async function ollamaChat({
 
     const data = await res.json();
     // Resposta Ollama: { message: { role: 'assistant', content: '...' }, ... }
+    // Algumas versões antigas (Ollama <0.10) podem ignorar think:false e
+    // ainda devolver `thinking` no payload; nesse caso usamos content
+    // mesmo (que será '' e cai no fallback) — não tem como recuperar
+    // o pensamento como resposta sem perder a persona.
     const content = data?.message?.content;
     if (typeof content !== 'string') {
       throw new Error('ollama_invalid_response');
     }
-    return content.trim();
+    const trimmed = content.trim();
+    if (!trimmed) throw new Error('ollama_empty_content');
+    return trimmed;
   } catch (err) {
     // Normaliza erro de abort/timeout para mensagem clara.
     if (err.name === 'AbortError') {
