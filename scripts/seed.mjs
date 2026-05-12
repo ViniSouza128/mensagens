@@ -150,5 +150,17 @@ for (const bot of BOTS) {
   upsertBot(bot);
 }
 
+// Cleanup: bots que foram REMOVIDOS de personas.js (ou tiveram username
+// alterado) ficam órfãos no banco. Aqui dropamos qualquer user is_bot=1 cujo
+// username não esteja na lista atual. ON DELETE CASCADE no schema cuida das
+// mensagens, chat_members e demais relações do bot. Humanos NUNCA são tocados.
+const currentUsernames = new Set(BOTS.map((b) => b.username));
+const stale = db.prepare('SELECT id, username FROM users WHERE is_bot = 1').all()
+  .filter((u) => !currentUsernames.has(u.username));
+for (const u of stale) {
+  db.prepare('DELETE FROM users WHERE id = ?').run(u.id);
+  console.log('[seed] bot removido (não existe mais em personas.js):', u.username);
+}
+
 db.close();
 console.log('[seed] concluído. Admin id:', adminId, '· bots:', BOTS.length);
