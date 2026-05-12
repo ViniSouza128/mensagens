@@ -137,6 +137,43 @@ Comum a todas:
 
 ---
 
+## Cosmos — generalista profundo
+
+| Atributo | Valor |
+|---|---|
+| Username | `cosmos_bot` |
+| Modelo | `gpt-oss:20b` (13 GB) |
+| Temperatura | 0.6 |
+| Max tokens | 900 |
+| Avatar | DiceBear `notionists`, fundo lavanda |
+
+**Personalidade:** generalista profundo. Especialidade: análise estruturada, escrita longa (artigos, ensaios, resumos densos, documentação), pesquisa multi-passo, raciocínio com múltiplas variáveis. Não compete com Doc Byte (programação) nem Clarice (literatura) — é o "pesquisador residente" que adora ir fundo em assuntos amplos.
+
+**Por que esse modelo:** `gpt-oss:20b` é o modelo open-weight da OpenAI, 20B parâmetros. Excelente em raciocínio multi-passo e produção de texto longo bem estruturado. Latência ~10-30s por resposta densa.
+
+**Para quê usar:** dúvida que pede análise (não só fato), redação longa, dilema ético/político/filosófico onde você quer ver as posições contrastadas + uma opinião embasada, brainstorming estruturado.
+
+---
+
+## Íris — visão computacional avançada
+
+| Atributo | Valor |
+|---|---|
+| Username | `iris_bot` |
+| Modelo | `llama3.2-vision:11b` (7.8 GB) |
+| Temperatura | 0.5 |
+| Max tokens | 700 |
+| Avatar | DiceBear `adventurer`, fundo lavanda |
+| **Vision** | **`true`** |
+
+**Personalidade:** especialista em análise crítica de imagens. Diferencial em relação à Vera: melhor em INTERPRETAR contexto, cruzar pistas, reconhecer referências culturais/históricas, ler gráficos e diagramas, fazer OCR multi-idioma cuidadoso. Vera descreve; Íris analisa.
+
+**Por que esse modelo:** `llama3.2-vision:11b` da Meta — 11B parâmetros (vs 8B da Vera), arquitetura otimizada pra leitura de gráficos/diagramas e OCR. Mais lento (~10-20s) mas qualidade superior pra perguntas analíticas.
+
+**Para quê usar:** screenshot de gráfico/dashboard que precisa de interpretação, foto de obra de arte que quer contexto histórico, documento escaneado que quer OCR+organização, imagem com referências culturais.
+
+---
+
 ## Adicionando ou modificando uma persona
 
 1. Edite o array `BOTS` em [`src/server/llm/personas.js`](../src/server/llm/personas.js).

@@ -32,18 +32,135 @@ import { getBotByUsername } from '@/server/llm/personas';
 // Quantas mensagens recentes mandar como contexto para o modelo.
 const CONTEXT_WINDOW = 20;
 
-// Map de respostas de bot em andamento, indexadas por chatId.
-// Permite cancelar uma resposta no meio quando o usuário aperta o botão
-// "parar". Cada entrada: { abort: AbortController, startedAt: number }.
-const inFlight = new Map();
+// ── FILA GLOBAL DE BOT REPLIES ──────────────────────────────────────────
+// Por que existe: a GPU do servidor (RTX 4080, 16 GB) só consegue rodar UM
+// modelo de cada vez com performance aceitável. Se o usuário manda 7
+// perguntas pra 5 bots diferentes em sequência rápida, antes (sem fila) o
+// servidor disparava 7 chamadas Ollama em paralelo — VRAM saturava, modelos
+// começavam a competir, respostas degradavam.
+//
+// Agora: TODA chamada de resposta passa por uma FIFO global. Worker único
+// processa 1 job de cada vez. Justiça por ordem de chegada — independente
+// de quem mandou (mesmo user mandando 7 mensagens, outro user no meio entra
+// na ordem de chegada, conforme pedido pelo Vini).
+//
+// Estado:
+//   `inFlight`  → chatId → entry (AbortController) PARA O JOB ATUALMENTE RODANDO
+//   `queue`     → array FIFO de jobs aguardando
+//   `running`   → true se worker está processando
+//
+// Cada job: { id, chatId, bot, sendMessage, enqueuedAt }.
+const inFlight = new Map(); // chatId → { abort, startedAt }
+const queue = [];
+let running = false;
 
-/** Aborta a resposta em andamento (se houver) de um chat. Idempotente. */
+/**
+ * Aborta a resposta de um chat. Funciona em dois estágios:
+ *   1. Se já está RODANDO (em inFlight): aborta o stream Ollama.
+ *   2. Se ainda está AGUARDANDO (no queue): remove do queue.
+ * Idempotente — chamar sem nada acontecendo devolve `false`.
+ */
 export function abortBotReply(chatId) {
+  // Caso 1: em execução agora
   const entry = inFlight.get(chatId);
-  if (!entry) return false;
-  try { entry.abort.abort(); } catch { /* noop */ }
-  inFlight.delete(chatId);
-  return true;
+  if (entry) {
+    try { entry.abort.abort(); } catch { /* noop */ }
+    inFlight.delete(chatId);
+    return true;
+  }
+  // Caso 2: aguardando na fila
+  const idx = queue.findIndex((j) => j.chatId === chatId);
+  if (idx >= 0) {
+    const removed = queue.splice(idx, 1)[0];
+    // Notifica o front que esse chat saiu da fila — limpa typing indicator.
+    publishTypingStop(chatId, removed.bot);
+    // Reanuncia posições dos jobs que ficaram (vieram pra frente).
+    broadcastQueueState();
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Adiciona um job à fila e arranca o worker se ainda não tá rodando.
+ * Devolve a posição atual na fila (0 = será o próximo a executar; isso é
+ * publicado via SSE pro front mostrar "X na sua frente").
+ */
+function enqueueBotJob(job) {
+  // Anti-duplicata: se já existe job pendente pro mesmo chat, abortamos o
+  // anterior (usuário mandou duas msgs rápidas — a 2ª substitui a 1ª).
+  // Evita o bot responder mensagens já obsoletas.
+  const dupIdx = queue.findIndex((j) => j.chatId === job.chatId);
+  if (dupIdx >= 0) queue.splice(dupIdx, 1);
+  // Se já tem job RODANDO pro mesmo chat, aborta antes de enfileirar o novo.
+  if (inFlight.has(job.chatId)) {
+    const entry = inFlight.get(job.chatId);
+    try { entry.abort.abort(); } catch { /* noop */ }
+    inFlight.delete(job.chatId);
+  }
+  queue.push(job);
+  // Sinaliza pra todos que esse bot está "pensando" (mesmo que ainda esteja
+  // na fila — o usuário precisa de feedback imediato). Position carrega
+  // quantos têm na frente.
+  publishQueuedThinking(job);
+  broadcastQueueState();
+  if (!running) startWorker();
+}
+
+/** Worker único — processa jobs em série. */
+async function startWorker() {
+  running = true;
+  while (queue.length > 0) {
+    const job = queue.shift();
+    try {
+      await runBotReply(job);
+    } catch (err) {
+      logger.error('queued bot job crashed', { err: err?.message, chatId: job?.chatId });
+    }
+    // Próximo job ganha posição 0 na fila — anuncia.
+    broadcastQueueState();
+  }
+  running = false;
+}
+
+/**
+ * Para cada job no `queue` (aguardando) + o que está rodando, publica um
+ * evento `bot.queue.position` com a posição atual. O front mostra
+ * "X na sua frente" no lock banner.
+ */
+function broadcastQueueState() {
+  // Total: 1 (running) + queue.length (waiting). Posição 0 = está rodando.
+  // O job rodando não está em `queue`, então o front conta como posição 0.
+  for (let i = 0; i < queue.length; i++) {
+    const j = queue[i];
+    publish(getRecipientIds(j.chatId, j.bot.id), {
+      type: 'bot.queue.position',
+      chat_id: j.chatId,
+      user_id: j.bot.id,
+      user_name: j.bot.name || j.bot.username,
+      // +1 porque tem 1 rodando na frente, mais os anteriores no queue.
+      position: (running ? 1 : 0) + i,
+      total: queue.length + (running ? 1 : 0),
+    });
+  }
+}
+
+/**
+ * Publica typing.start (thinking=true) pra um job recém-enfileirado.
+ * Front mostra "pensando…" imediatamente. Quando chegar a vez do job, o
+ * runBotReply vai publicar typing.start de novo (refresh do TTL).
+ */
+function publishQueuedThinking(job) {
+  const recipients = getRecipientIds(job.chatId, job.bot.id);
+  if (!recipients.length) return;
+  publish(recipients, {
+    type: 'typing.start',
+    chat_id: job.chatId,
+    user_id: job.bot.id,
+    user_name: job.bot.name || job.bot.username,
+    thinking: true,
+    ttl_ms: 5 * 60_000, // bastante longo — fila pode demorar minutos
+  });
 }
 
 // Máximo de bubbles que um bot pode emitir em uma resposta. Evita modelo
@@ -208,22 +325,20 @@ export function maybeBotReply({ chatId, senderId, sendMessage }) {
   const sender = db.prepare('SELECT is_bot FROM users WHERE id = ?').get(senderId);
   if (sender?.is_bot) return;
 
-  runBotReply({ chatId, bot, sendMessage }).catch((err) => {
-    logger.error(`bot ${bot.username} reply failed (outer)`, { err: err?.message, chatId });
-    try { publishTypingStop(chatId, bot); } catch { /* noop */ }
-  });
+  // Em vez de disparar runBotReply direto (paralelo), enfileira o job na
+  // FIFO global. Worker único processa 1 por vez, justo por ordem de
+  // chegada. Veja `enqueueBotJob()` no topo deste arquivo.
+  enqueueBotJob({ chatId, bot, sendMessage, enqueuedAt: Date.now() });
 }
 
 /**
  * Loop principal: streaming do Ollama, multi-bubble com timing por bubble
- * e total no último.
+ * e total no último. Chamado pelo worker da fila — NÃO chame direto.
  */
 async function runBotReply({ chatId, bot, sendMessage }) {
-  // Se já tem uma resposta rodando pra este chat, aborta a anterior antes
-  // de começar a nova. Evita responses concorrentes confusas (e.g. usuário
-  // mandou 2 msgs rápidas, antes o bot tentaria responder as duas em
-  // paralelo gerando intercalação).
-  abortBotReply(chatId);
+  // Job começou a executar — saiu da fila pro `inFlight`. Não precisa
+  // abortar anterior aqui porque o enqueueBotJob já cuidou de remover
+  // duplicatas/abortar concorrentes pro mesmo chat.
 
   // AbortController dessa rodada — também é exposto via abortBotReply() pra
   // cancelamento explícito do usuário (botão "parar" no front).

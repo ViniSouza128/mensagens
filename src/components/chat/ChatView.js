@@ -44,9 +44,35 @@ export default function ChatView({ chatId }) {
   const [previewQueue, setPreviewQueue] = useState([]);
   const [typing, setTyping] = useState([]);
   // Bubble "fantasma" que recebe o stream de tokens do bot em tempo real.
-  // Forma: { idx, name, content } | null. Limpa quando `bot.stream.end` chega
-  // (a mensagem real entrou via message.new) ou quando o turno acaba.
+  // Forma: { idx, name, content, senderId, pending? } | null.
+  // Limpa quando:
+  //   - bot.stream.end chega (a mensagem real entrou via message.new)
+  //   - typing.stop chega (fim do turno)
+  //   - message.new com bot_total_ms (último balão da resposta)
+  //   - watchdog 60s sem update (fail-safe contra SSE perdida)
   const [streamingBubble, setStreamingBubble] = useState(null);
+  // Posição na fila FIFO de bots quando o partner é bot e está aguardando vez.
+  // null = não está na fila / 0 = é o próximo / N>0 = N na frente.
+  const [botQueueInfo, setBotQueueInfo] = useState(null);
+
+  // Watchdog: se streamingBubble ficar parado >60s sem update, força clear.
+  // Captura `streamingBubble` no setter pra ler o "lastUpdate" carimbado por
+  // bot.stream / send(). Se o tempo passou, limpa.
+  useEffect(() => {
+    if (!streamingBubble) return;
+    const stamp = streamingBubble._t || Date.now();
+    const elapsed = Date.now() - stamp;
+    const remaining = Math.max(1000, 60_000 - elapsed);
+    const id = setTimeout(() => {
+      // Re-checa porque o stream pode ter avançado nesse meio tempo
+      setStreamingBubble((cur) => {
+        if (!cur) return null;
+        if ((Date.now() - (cur._t || 0)) > 60_000) return null;
+        return cur;
+      });
+    }, remaining);
+    return () => clearTimeout(id);
+  }, [streamingBubble]);
   const [lightbox, setLightbox] = useState(null);
   const [dropping, setDropping] = useState(false);
   const [details, setDetails] = useState(null);
@@ -160,6 +186,7 @@ export default function ChatView({ chatId }) {
     setDrawerOpen(false);
     setStreamingBubble(null);
     setTyping([]);
+    setBotQueueInfo(null);
     lastReadMsgIdRef.current = null;
     markChatRead(chatId);
     loadChat();
@@ -184,6 +211,19 @@ export default function ChatView({ chatId }) {
           if (prev.find((m) => m.id === ev.message.id)) return prev;
           return [...prev, ev.message];
         });
+        // Belt-and-suspenders pro ghost que às vezes ficava pendurado depois
+        // que o bot terminou: se a mensagem que chegou é do bot E tem
+        // `bot_total_ms` (= é o ÚLTIMO balão da resposta), força clear do
+        // streamingBubble. Cobre o caso em que `bot.stream.end` ou
+        // `typing.stop` se perdem por reconexão de SSE no meio.
+        if (ev.message?.bot && ev.message?.bot_total_ms != null) {
+          setStreamingBubble(null);
+        }
+        // Também limpa se o sender for o bot do streaming atual — qualquer
+        // message.new do mesmo bot indica que pelo menos um balão fechou.
+        else if (ev.message?.bot && ev.message?.sender_id) {
+          setStreamingBubble((cur) => (cur?.senderId === ev.message.sender_id && cur?.pending ? null : cur));
+        }
       } else if (ev.type === 'message.updated' || ev.type === 'message.deleted') {
         setMessages((prev) => prev.map((m) => (m.id === ev.message.id ? ev.message : m)));
       } else if (ev.type === 'message.reaction') {
@@ -214,8 +254,16 @@ export default function ChatView({ chatId }) {
         if (ev.user_id === user?.id) return;
         const name = ev.user_name || 'Alguém';
         setTyping((prev) => prev.filter((e) => e.name !== name));
+        // typing.stop também encerra qualquer info de fila desse bot.
+        setBotQueueInfo(null);
         // Limpa qualquer ghost bubble pendente do bot no fim do turno.
-        setStreamingBubble((cur) => (cur?.name === name ? null : cur));
+        // Match por senderId (mais robusto que name — nomes podem repetir).
+        setStreamingBubble((cur) => {
+          if (!cur) return null;
+          if (cur.senderId && cur.senderId === ev.user_id) return null;
+          if (cur.name === name) return null;
+          return cur;
+        });
         // Belt-and-suspenders: o evento `message.new` do bot pode chegar
         // antes do `typing.stop` (caso normal) ou se perder se a SSE bagunçar
         // entre os dois. Fazemos um fetch curtinho APÓS o stop pra garantir
@@ -231,14 +279,23 @@ export default function ChatView({ chatId }) {
             return [...prev, ...missing].sort((a, b) => (a.created_at || 0) - (b.created_at || 0));
           });
         }).catch(() => {});
+      } else if (ev.type === 'bot.queue.position') {
+        // Bot está na fila FIFO global do servidor. Mostra "X na frente"
+        // no lock banner enquanto aguarda. Quando começa a rodar, o
+        // servidor publica typing.start (writing/thinking) e o bot.stream;
+        // typing.stop limpa a info aqui.
+        setBotQueueInfo({ position: ev.position, total: ev.total });
       } else if (ev.type === 'bot.stream') {
         // Stream de tokens do bot LLM em tempo real. Substitui o ghost
-        // bubble pelo conteúdo acumulado-do-bubble-atual.
+        // bubble pelo conteúdo acumulado-do-bubble-atual. `_t` carimba o
+        // momento do último update — watchdog usa isso pra limpar ghosts
+        // travados.
         setStreamingBubble({
           idx: ev.bubble_idx || 0,
           name: ev.user_name || 'Bot',
           senderId: ev.user_id,
           content: ev.content || '',
+          _t: Date.now(),
         });
       } else if (ev.type === 'bot.stream.end') {
         // Bubble foi persistido como mensagem real. Limpa o ghost; o
@@ -420,6 +477,7 @@ export default function ChatView({ chatId }) {
         senderId: chat.partner.id,
         content: '',
         pending: true,
+        _t: Date.now(),
       });
     }
 
@@ -750,7 +808,13 @@ export default function ChatView({ chatId }) {
           onSend={send}
           onPreview={(items) => openQueue(Array.isArray(items) ? items : [items])}
           locked={botBusy}
-          lockedLabel={botBusy ? `${chat.partner?.name || 'O bot'} está ${botBusyLabel}…` : null}
+          lockedLabel={
+            botBusy
+              ? (botQueueInfo && botQueueInfo.position > 0
+                  ? `${chat.partner?.name || 'Bot'} aguardando vez na fila — ${botQueueInfo.position} ${botQueueInfo.position === 1 ? 'na frente' : 'na frente'}`
+                  : `${chat.partner?.name || 'O bot'} está ${botBusyLabel}…`)
+              : null
+          }
           lockedSince={lockedSinceRef.current}
           onCancelBot={botBusy ? cancelBotReply : null}
         />

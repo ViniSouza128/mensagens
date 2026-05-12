@@ -92,7 +92,11 @@
 [data-tip][data-tip-pos='right']:focus-visible::before { opacity: 1; }
 
 /* Tooltip ABAIXO — usado por botões no topo da viewport (header) onde
-   o padrão (acima) sairia pela borda superior. */
+   o padrão (acima) sairia pela borda superior. O botão pai recebe
+   stacking context próprio no hover/focus pra GARANTIR que o tooltip
+   fique por cima dos elementos vizinhos (ex: input de busca logo abaixo
+   do header). Sem isso, o z-index 1000 do ::after pode perder pra
+   elementos subsequentes que criam novos stacking contexts via `position`. */
 [data-tip][data-tip-pos='bottom']::after {
   bottom: auto;
   top: calc(100% + 6px);
@@ -100,4 +104,9 @@
   transform: translateX(-50%);
   z-index: 1000;
   box-shadow: var(--shadow-md);
+}
+[data-tip][data-tip-pos='bottom']:hover,
+[data-tip][data-tip-pos='bottom']:focus-visible {
+  position: relative;
+  z-index: 1000;
 }

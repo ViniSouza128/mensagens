@@ -45,6 +45,8 @@ Veja `docs/AGENTS.md` pra detalhes de cada persona. Pontos chave:
 - Cada bot é um usuário real (is_bot=1) — reaproveita TODO o fluxo de chat normal.
 - Seed (`npm run seed`) faz upsert idempotente E DELETE de bots removidos do array.
 - Streaming via `ollamaChatStream` (`src/server/llm/ollama.js`), multi-bubble split on-the-fly em `\n\n`.
+- **Fila FIFO global** (`bots.js`): TODA resposta passa por uma fila — só 1 modelo rodando por vez. `enqueueBotJob()` adiciona, worker processa em série. `abortBotReply(chatId)` cancela rodando OU aguardando. Anti-duplicata por chatId (nova msg substitui anterior do mesmo chat).
+- **Bots NÃO podem entrar em grupos**: `/api/chats/group` e `/api/chats/[id]/members` rejeitam com erro `bots_cannot_join_groups`. Frontend filtra bots na seleção de membros do NewChatModal.
 - Sempre setar `think: false` (modelos Qwen3 são "thinking" — sem isso devolvem content vazio).
 - Sanitizar histórico contra identity leaks ("I am Gemma", etc) — regex em `bots.js#IDENTITY_LEAK_PATTERNS`.
 - Few-shot é mais forte que system prompt pra modelos pequenos. Sempre incluir 3-5 turnos exemplo.

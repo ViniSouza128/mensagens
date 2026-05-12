@@ -1,4 +1,4 @@
-import { ok, readBody, withErrors } from '@/server/http';
+import { ok, fail, readBody, withErrors } from '@/server/http';
 import { requireUser } from '@/server/auth';
 import { createGroup } from '@/server/handlers/groups';
 import { decorateChatForUser, getMembership } from '@/server/handlers/chats';
@@ -11,11 +11,25 @@ export async function POST(req) {
   return withErrors(async () => {
     const u = await requireUser();
     const body = await readBody(req);
+    const memberIds = Array.isArray(body.member_ids) ? body.member_ids : [];
+    // Rejeita criação de grupo com bots LLM nos membros: bots não foram
+    // desenhados pra contexto de chat de grupo (entendem só 1-on-1; o
+    // pipeline `maybeBotReply` só dispara em direct chats). Permitir
+    // membership seria ENGANOSO — o bot apareceria como membro mas nunca
+    // responderia. Bloquear na criação evita esse caso.
+    if (memberIds.length) {
+      const db = getDb();
+      const ph = memberIds.map(() => '?').join(',');
+      const bots = db.prepare(`SELECT id, name FROM users WHERE id IN (${ph}) AND is_bot = 1`).all(...memberIds);
+      if (bots.length) {
+        return fail(400, 'bots_cannot_join_groups', { bot_names: bots.map((b) => b.name) });
+      }
+    }
     const raw = createGroup(u.id, {
       name: body.name,
       description: body.description || null,
       avatarPath: body.avatar_path || null,
-      memberIds: Array.isArray(body.member_ids) ? body.member_ids : [],
+      memberIds,
     });
     const db = getDb();
     const m = getMembership(raw.id, u.id);

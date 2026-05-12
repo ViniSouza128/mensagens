@@ -255,28 +255,37 @@ export default function NewChatModal({ open, onClose }) {
 
           <div className={styles.list}>
             {loading && <div className={styles.empty}><span className={styles.hint}>Buscando…</span></div>}
-            {!loading && list.length === 0 && (
-              <div className={styles.empty}>
-                <p className={styles.hint}>{dq ? 'Nenhum resultado.' : 'Use a busca para encontrar pessoas.'}</p>
-              </div>
-            )}
-            {list.map((u) => {
-              const sel = isSelected(u.id);
-              return (
-                <div key={u.id} className={[styles.row, styles.rowClickable, sel ? styles.rowSelected : ''].join(' ')}
-                  onClick={() => toggleMember(u)} role="checkbox" aria-checked={sel} tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') toggleMember(u); }}>
-                  <Avatar name={u.name} src={u.avatar_path} size={40} />
-                  <div className={styles.info}>
-                    <div className={styles.name}>{u.name || u.username}</div>
-                    <div className={styles.handle}>@{u.username}</div>
+            {(() => {
+              // Bots não podem entrar em grupos — backend rejeita explicitamente
+              // (POST /api/chats/group → bots_cannot_join_groups). Filtra aqui
+              // pra nem mostrar como opção de seleção. Veja
+              // src/app/api/chats/group/route.js.
+              const filtered = list.filter((u) => !u.is_bot);
+              if (!loading && filtered.length === 0) {
+                return (
+                  <div className={styles.empty}>
+                    <p className={styles.hint}>{dq ? 'Nenhum resultado de humanos (bots não entram em grupos).' : 'Use a busca para encontrar pessoas.'}</p>
                   </div>
-                  <span className={[styles.checkCircle, sel ? styles.checkCircleOn : ''].join(' ')}>
-                    {sel && <CheckIcon size={13} />}
-                  </span>
-                </div>
-              );
-            })}
+                );
+              }
+              return filtered.map((u) => {
+                const sel = isSelected(u.id);
+                return (
+                  <div key={u.id} className={[styles.row, styles.rowClickable, sel ? styles.rowSelected : ''].join(' ')}
+                    onClick={() => toggleMember(u)} role="checkbox" aria-checked={sel} tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') toggleMember(u); }}>
+                    <Avatar name={u.name} src={u.avatar_path} size={40} />
+                    <div className={styles.info}>
+                      <div className={styles.name}>{u.name || u.username}</div>
+                      <div className={styles.handle}>@{u.username}</div>
+                    </div>
+                    <span className={[styles.checkCircle, sel ? styles.checkCircleOn : ''].join(' ')}>
+                      {sel && <CheckIcon size={13} />}
+                    </span>
+                  </div>
+                );
+              });
+            })()}
           </div>
 
           {selected.length > 0 && (

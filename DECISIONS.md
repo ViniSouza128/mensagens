@@ -65,6 +65,16 @@ Resumo das principais escolhas técnicas e o porquê de cada uma.
 - Imagens usam `loading="lazy"` por padrão.
 - O cliente memoriza o último estado de scroll por chat para não pular ao voltar de outras telas.
 
+## Fila FIFO global de bot replies
+
+- **Por que:** GPU única (RTX 4080, 16 GB VRAM) só roda 1 modelo decente por vez. Antes (sem fila), múltiplas mensagens disparavam chamadas Ollama em paralelo — VRAM saturava, modelos competiam, qualidade despencava. Agora todas as respostas passam por uma FIFO global; worker único processa 1 job por vez.
+- **Estado**: `queue` (array) + `inFlight` (map por chatId, com AbortController) + `running` boolean em [`bots.js`](src/server/llm/bots.js).
+- **Fairness**: ordem de chegada. User A mandando 7 perguntas com user B intercalando 1 no meio → ambos respondidos na ordem que entraram na fila, sem priorização por user.
+- **Anti-duplicata**: se um job pro mesmo `chatId` já está aguardando OU rodando quando entra novo, o anterior é abortado/removido. Caso típico: usuário mandou 2 mensagens rápidas — só a última precisa de resposta.
+- **Cancel**: `abortBotReply(chatId)` cobre tanto job rodando (aborta stream Ollama) quanto na fila (remove + notifica typing.stop).
+- **SSE pro front**: cada job enfileirado dispara `typing.start` (thinking=true) imediatamente — usuário vê "Bot está pensando…" mesmo aguardando vez. Quando há fila >0, evento `bot.queue.position` informa quantos têm na frente. Lock banner mostra "X na frente" em vez de "está pensando".
+- **Trade-off rejeitado**: priorização por usuário. Seria mais "justo" pra evitar um user monopolizar, mas complica o modelo mental ("por que minha pergunta foi pulada?"). FIFO é previsível.
+
 ## Streaming + UX dos bots LLM
 
 - **Streaming de tokens** (`ollamaChatStream` em `server/llm/ollama.js`) — POST com `stream:true` + `think:false`. O parser lê NDJSON token-a-token e dispara `onDelta(piece)` por chunk. O orquestrador acumula em `bubbleBuf` e publica eventos SSE `bot.stream` debounced em 80ms — agrupa rajadas curtas, mantém UX fluida sem inundar o socket. UI mantém um "ghost bubble" com cursor piscando que cresce em tempo real até virar mensagem real (via `bot.stream.end` + `message.new`).
