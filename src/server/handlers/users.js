@@ -8,7 +8,7 @@ const PUBLIC_FIELDS = [
   'privacy_last_seen', 'privacy_avatar', 'privacy_bio',
   'is_admin', 'status', 'created_at',
   // Campos de bot LLM — front-end usa para badge "AI" e tooltip com o modelo.
-  'is_bot', 'bot_model', 'bot_tagline',
+  'is_bot', 'bot_model', 'bot_tagline', 'bot_vision',
 ];
 
 const SETTINGS_FIELDS = [

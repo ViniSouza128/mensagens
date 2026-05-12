@@ -40,6 +40,7 @@ const MIGRATIONS = [
   "ALTER TABLE users ADD COLUMN bot_temperature REAL",
   "ALTER TABLE users ADD COLUMN bot_max_tokens INTEGER",
   "ALTER TABLE users ADD COLUMN bot_tagline TEXT",
+  "ALTER TABLE users ADD COLUMN bot_vision INTEGER NOT NULL DEFAULT 0",
 ];
 for (const sql of MIGRATIONS) {
   try { db.exec(sql); }
@@ -86,6 +87,7 @@ function upsertUser({ username, email, password, name, isAdmin = false, bio = ''
  */
 function upsertBot(bot) {
   const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(bot.username);
+  const vision = bot.vision ? 1 : 0;
   if (existing) {
     db.prepare(
       `UPDATE users SET
@@ -93,12 +95,14 @@ function upsertBot(bot) {
         is_bot = 1,
         bot_model = ?, bot_system_prompt = ?,
         bot_temperature = ?, bot_max_tokens = ?, bot_tagline = ?,
+        bot_vision = ?,
         updated_at = ?
        WHERE id = ?`
     ).run(
       bot.name, bot.bio || '',
       bot.model, bot.system,
       bot.temperature ?? 0.8, bot.max_tokens ?? 256, bot.tagline || '',
+      vision,
       now, existing.id
     );
     console.log('[seed] bot atualizado:', bot.username, '→', bot.model);
@@ -114,16 +118,16 @@ function upsertBot(bot) {
     `INSERT INTO users (
       id, username, username_normalized, email, password_hash, name, bio,
       is_admin, status, onboarded,
-      is_bot, bot_model, bot_system_prompt, bot_temperature, bot_max_tokens, bot_tagline,
+      is_bot, bot_model, bot_system_prompt, bot_temperature, bot_max_tokens, bot_tagline, bot_vision,
       created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'active', 1, 1, ?, ?, ?, ?, ?, ?, ?)`
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'active', 1, 1, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     id, bot.username, normalize(bot.username), `${bot.username}@bots.local`, hash,
     bot.name, bot.bio || '',
-    bot.model, bot.system, bot.temperature ?? 0.8, bot.max_tokens ?? 256, bot.tagline || '',
+    bot.model, bot.system, bot.temperature ?? 0.8, bot.max_tokens ?? 256, bot.tagline || '', vision,
     now, now
   );
-  console.log('[seed] bot criado:', bot.username, '→', bot.model);
+  console.log('[seed] bot criado:', bot.username, '→', bot.model, vision ? '(vision)' : '');
   return id;
 }
 

@@ -96,7 +96,7 @@ export function listChatsForUser(userId, { archived = false } = {}) {
     for (const p of db.prepare(
       `SELECT cm.chat_id, u.id, u.username, u.name, u.avatar_path, u.bio,
               u.last_seen_at, u.online, u.privacy_last_seen, u.privacy_avatar,
-              u.is_bot, u.bot_model, u.bot_tagline
+              u.is_bot, u.bot_model, u.bot_tagline, u.bot_vision
        FROM chat_members cm JOIN users u ON u.id = cm.user_id
        WHERE cm.chat_id IN (${dph}) AND cm.user_id != ?`
     ).all(...directIds, userId)) {
@@ -189,7 +189,7 @@ export function decorateChatForUser(row, userId) {
       .prepare(
         `SELECT u.id, u.username, u.name, u.avatar_path, u.bio, u.last_seen_at, u.online,
                 u.privacy_last_seen, u.privacy_avatar,
-                u.is_bot, u.bot_model, u.bot_tagline
+                u.is_bot, u.bot_model, u.bot_tagline, u.bot_vision
          FROM chat_members cm JOIN users u ON u.id = cm.user_id
          WHERE cm.chat_id = ? AND cm.user_id != ?`
       )

@@ -24,7 +24,7 @@ const PAD = 8;
 
 export default function MessageChevronMenu({
   msg, isMine, isPinned, canEdit,
-  onReply, onForward, onStar, onPin, onEdit, onDelete, onReport, onDetails,
+  onReply, onForward, onStar, onPin, onEdit, onDelete, onDeleteForMe, onReport, onDetails,
   onCopy, onSelect,
 }) {
   const [open, setOpen] = useState(false);
@@ -113,9 +113,14 @@ export default function MessageChevronMenu({
           <button className={styles.item} role="menuitem" onClick={() => { setOpen(false); onDetails?.(msg); }}>
             <InfoIcon size={16} /> Dados da mensagem
           </button>
-          <button className={styles.item} role="menuitem" onClick={() => { setOpen(false); onReply?.(msg); }}>
-            <ReplyIcon size={16} /> Responder
-          </button>
+          {/* "Responder" não faz sentido pra mensagens de IA — o bot não
+              entende citação/quote nem reage diferente. Esconde quando
+              msg.bot=true (campo do extra setado por src/server/llm/bots.js). */}
+          {!msg.bot ? (
+            <button className={styles.item} role="menuitem" onClick={() => { setOpen(false); onReply?.(msg); }}>
+              <ReplyIcon size={16} /> Responder
+            </button>
+          ) : null}
           {msg.body ? (
             <button className={styles.item} role="menuitem" onClick={() => { setOpen(false); onCopy?.(); }}>
               <CopyIcon size={16} /> Copiar
@@ -139,9 +144,16 @@ export default function MessageChevronMenu({
             </button>
           ) : null}
           <div className={styles.divider} />
+          {/* "Apagar para mim" — disponível pra QUALQUER mensagem (própria ou
+              de outro). A mensagem some só pra este usuário; os outros membros
+              continuam vendo. Diferente de "Apagar" (legado, abaixo) que
+              marca deletada pra todos e exige autoria. */}
+          <button className={styles.item} role="menuitem" onClick={() => { setOpen(false); onDeleteForMe?.(msg); }}>
+            <TrashIcon size={16} /> Apagar para mim
+          </button>
           {isMine ? (
             <button className={[styles.item, styles.itemDanger].join(' ')} role="menuitem" onClick={() => { setOpen(false); onDelete?.(msg); }}>
-              <TrashIcon size={16} /> Apagar
+              <TrashIcon size={16} /> Apagar para todos
             </button>
           ) : (
             <button className={[styles.item, styles.itemDanger].join(' ')} role="menuitem" onClick={() => { setOpen(false); onReport?.(msg); }}>

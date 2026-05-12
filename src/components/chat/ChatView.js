@@ -488,6 +488,23 @@ export default function ChatView({ chatId }) {
 
   const remove = useCallback((msg) => { setDeleteTarget(msg); }, []);
 
+  /**
+   * "Apagar para mim" para uma mensagem específica. A mensagem some só
+   * da view do usuário atual; os outros membros continuam vendo.
+   * Confirma antes (operação irreversível pela perspectiva do usuário).
+   */
+  const removeForMe = useCallback((msg) => {
+    if (!msg?.id) return;
+    if (!window.confirm('Apagar esta mensagem APENAS PARA VOCÊ? Os outros membros do chat vão continuar vendo.')) return;
+    // Optimismo: remove da UI imediatamente
+    setMessages((prev) => prev.filter((m) => m.id !== msg.id));
+    api.delete(`/api/messages/${msg.id}?scope=me`).catch(() => {
+      // Falhou — reverte (re-fetch das últimas mensagens)
+      toast('Não foi possível apagar a mensagem.', { tone: 'danger' });
+      loadMessages();
+    });
+  }, [loadMessages, toast]);
+
   const report = useCallback((msg) => {
     setReportTarget(msg);
     setReportReason('');
@@ -559,6 +576,25 @@ export default function ChatView({ chatId }) {
     setSelectionMode(false);
   }, []);
 
+  /**
+   * Apaga em massa as mensagens selecionadas "só pra mim".
+   * Confirma antes (operação irreversível pela view do usuário, embora a
+   * mensagem continue pros outros membros). Remove imediatamente da UI
+   * local, com optimismo — se a API falhar, a próxima reload reconcilia.
+   */
+  const bulkDeleteForMe = useCallback((ids) => {
+    if (!ids?.length) return;
+    const n = ids.length;
+    if (!window.confirm(`Apagar ${n} mensage${n === 1 ? 'm' : 'ns'} APENAS PARA VOCÊ? Os outros membros do chat vão continuar vendo.`)) return;
+    // Remove imediato do estado local (optimista)
+    setMessages((prev) => prev.filter((m) => !ids.includes(m.id)));
+    clearSelection();
+    // Fire em paralelo, sem bloquear UI
+    Promise.all(ids.map((id) => api.delete(`/api/messages/${id}?scope=me`).catch(() => null)))
+      .then(() => toast(`${n} mensage${n === 1 ? 'm apagada' : 'ns apagadas'} pra você.`, { tone: 'success' }))
+      .catch(() => toast('Algumas mensagens não puderam ser apagadas.', { tone: 'warning' }));
+  }, [clearSelection, toast]);
+
   const openQueue = useCallback((input) => {
     const items = [...input].map((f) => {
       if (f instanceof File) {
@@ -622,6 +658,18 @@ export default function ChatView({ chatId }) {
     : null;
   const botBusy = !!botBusyEntry;
   const botBusyLabel = botBusyEntry?.thinking ? 'pensando' : 'escrevendo';
+  // Quando o lock entrou em ação? Ref pra ElapsedTimer no Composer.
+  const lockedSinceRef = useRef(null);
+  if (botBusy && !lockedSinceRef.current) lockedSinceRef.current = Date.now();
+  if (!botBusy && lockedSinceRef.current) lockedSinceRef.current = null;
+
+  // Cancela resposta do bot em andamento. Usuário aperta "parar" no
+  // lock banner. Endpoint aborta o stream Ollama; o que já chegou é
+  // persistido com flag bot_cancelled=true.
+  const cancelBotReply = useCallback(() => {
+    if (!chatId) return;
+    api.post(`/api/chats/${chatId}/bot-abort`, {}).catch(() => {});
+  }, [chatId]);
 
   // Shared drawer props
   const drawerProps = {
@@ -647,6 +695,7 @@ export default function ChatView({ chatId }) {
           selectedCount={selected.size}
           onClearSelection={clearSelection}
           onForwardSelection={() => setForwardSel([...selected])}
+          onDeleteSelection={() => bulkDeleteForMe([...selected])}
           searchOpen={chatSearch}
           onToggleSearch={() => setChatSearch((s) => !s)}
           infoOpen={drawerOpen}
@@ -667,6 +716,7 @@ export default function ChatView({ chatId }) {
           onReply={startReply}
           onEdit={saveEdit}
           onDelete={remove}
+          onDeleteForMe={removeForMe}
           onReact={react}
           onStar={star}
           onPin={pin}
@@ -689,7 +739,9 @@ export default function ChatView({ chatId }) {
           onSend={send}
           onPreview={(items) => openQueue(Array.isArray(items) ? items : [items])}
           locked={botBusy}
-          lockedLabel={botBusy ? `${chat.partner?.name || 'O bot'} está ${botBusyLabel}… aguarde para enviar` : null}
+          lockedLabel={botBusy ? `${chat.partner?.name || 'O bot'} está ${botBusyLabel}…` : null}
+          lockedSince={lockedSinceRef.current}
+          onCancelBot={botBusy ? cancelBotReply : null}
         />
         {dropping ? (
           <div className={styles.dropOverlay} aria-hidden>

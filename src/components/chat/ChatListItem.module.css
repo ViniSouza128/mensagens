@@ -76,6 +76,13 @@
   font-style: italic;
   font-weight: 500;
 }
+/* "Conta removida" no lugar do nome quando o partner de um direct chat foi
+   apagado (bot removido de personas.js, usuário humano deletado, etc). */
+.removed {
+  color: var(--text-muted);
+  font-style: italic;
+  font-weight: 500;
+}
 .botBadge {
   display: inline-flex;
   align-items: center;

@@ -157,6 +157,43 @@ export function AppStateProvider({ initialUser, children }) {
           // Refresh full em segundo plano para reconciliar tudo (ordenação,
           // pinned/archived state, etc).
           scheduleRefreshChatsRef.current?.();
+        } else if (data.type === 'typing.start' || data.type === 'typing.stop') {
+          // Marca o chat com flag `partner.typing` + label apropriada
+          // ("digitando…", "escrevendo…" ou "pensando…") pra ChatListItem
+          // mostrar no preview. typing.start tem TTL — auto-limpa após
+          // `ttl_ms` (ou 6s default) caso o stop não chegue. O typing local
+          // dentro do chat aberto continua sendo gerido pelo ChatView; aqui
+          // só interessa o preview na lista lateral.
+          if (data.user_id === userId) return; // ignora typing próprio
+          const cid = data.chat_id;
+          const stop = data.type === 'typing.stop';
+          const label = stop ? null : (data.thinking ? 'pensando…' : (data.user_name ? 'escrevendo…' : 'digitando…'));
+          setChats((prev) => prev.map((c) => {
+            if (c.id !== cid) return c;
+            // Para direct: aplica a flag no partner. Para group: futuramente
+            // poderíamos listar os nomes; por agora só direct é alvo.
+            if (c.type !== 'direct' || !c.partner) return c;
+            return {
+              ...c,
+              partner: {
+                ...c.partner,
+                typing: !stop,
+                typing_label: label,
+              },
+            };
+          }));
+          if (!stop) {
+            // TTL — clear flag automaticamente se typing.stop não chegar
+            // (queda de SSE, modelo travado, etc).
+            const ttl = Math.min(Math.max(Number(data.ttl_ms) || 6000, 1000), 120000);
+            setTimeout(() => {
+              setChats((prev) => prev.map((c) => {
+                if (c.id !== cid) return c;
+                if (c.type !== 'direct' || !c.partner) return c;
+                return { ...c, partner: { ...c.partner, typing: false, typing_label: null } };
+              }));
+            }, ttl);
+          }
         }
 
         if (data.type === 'contact_request.new' || data.type === 'contact_request.responded') {

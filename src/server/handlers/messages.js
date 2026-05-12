@@ -188,18 +188,24 @@ export function listMessages(chatId, viewerId, { before = null, limit = 40 } = {
   ensureMember(chatId, viewerId);
   const db = getDb();
   const lim = Math.min(Math.max(limit, 1), 100);
+  // Filtra mensagens que ESTE viewer escondeu via "delete só pra mim"
+  // (tabela message_hides). NOT EXISTS é eficiente porque message_hides
+  // tem PK composta (message_id, user_id) com índice implícito.
   const rows = before
     ? db
         .prepare(
-          `SELECT * FROM messages WHERE chat_id = ? AND created_at < ?
-           ORDER BY created_at DESC LIMIT ?`
+          `SELECT m.* FROM messages m WHERE m.chat_id = ? AND m.created_at < ?
+             AND NOT EXISTS (SELECT 1 FROM message_hides h WHERE h.message_id = m.id AND h.user_id = ?)
+           ORDER BY m.created_at DESC LIMIT ?`
         )
-        .all(chatId, before, lim)
+        .all(chatId, before, viewerId, lim)
     : db
         .prepare(
-          `SELECT * FROM messages WHERE chat_id = ? ORDER BY created_at DESC LIMIT ?`
+          `SELECT m.* FROM messages m WHERE m.chat_id = ?
+             AND NOT EXISTS (SELECT 1 FROM message_hides h WHERE h.message_id = m.id AND h.user_id = ?)
+           ORDER BY m.created_at DESC LIMIT ?`
         )
-        .all(chatId, lim);
+        .all(chatId, viewerId, lim);
   return buildMessages(rows.reverse(), viewerId);
 }
 
@@ -343,6 +349,28 @@ export function editMessage({ messageId, userId, body }) {
   const members = listMembers(m.chat_id);
   publish(members.map((mm) => mm.user_id), { type: 'message.updated', chat_id: m.chat_id, message: built });
   return built;
+}
+
+/**
+ * Apaga uma mensagem APENAS PARA ESTE USUÁRIO. A mensagem continua existindo
+ * no DB e visível para os outros membros do chat — só some da view do user
+ * que pediu o hide.
+ *
+ * Não publica SSE (a outra ponta não precisa saber).
+ */
+export function hideMessageForUser({ messageId, userId }) {
+  const db = getDb();
+  const m = db.prepare('SELECT id, chat_id FROM messages WHERE id = ?').get(messageId);
+  if (!m) throw new HttpError(404, 'message_not_found');
+  // Confirma que o usuário é membro do chat (não deixa ocultar mensagens
+  // de chats que ele nem participa).
+  ensureMember(m.chat_id, userId);
+  db.prepare(
+    `INSERT INTO message_hides (message_id, user_id, hidden_at)
+     VALUES (?, ?, ?)
+     ON CONFLICT(message_id, user_id) DO NOTHING`
+  ).run(messageId, userId, Date.now());
+  return { ok: true, hidden: true };
 }
 
 export function deleteMessage({ messageId, userId }) {

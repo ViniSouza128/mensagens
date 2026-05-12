@@ -13,7 +13,7 @@ const GROUP_WINDOW_MS = 5 * 60 * 1000;
 
 export default function ChatThread({
   chat, me, messages, hasMore, onLoadMore, loading, typing, streamingBubble,
-  onReply, onEdit, onDelete, onReact, onStar, onPin, onForward, onRetry, onDetails, onOpenPreview, onReport,
+  onReply, onEdit, onDelete, onDeleteForMe, onReact, onStar, onPin, onForward, onRetry, onDetails, onOpenPreview, onReport,
   selectionMode, selected, onToggleSelect, onStartSelection,
   highlightedMsgId,
 }) {
@@ -181,6 +181,7 @@ export default function ChatThread({
               onReply={onReply}
               onEdit={onEdit}
               onDelete={onDelete}
+              onDeleteForMe={onDeleteForMe}
               onReact={onReact}
               onStar={onStar}
               onPin={onPin}

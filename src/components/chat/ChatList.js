@@ -19,26 +19,13 @@ const StoryViewer   = dynamic(() => import('./StoryViewer'), { ssr: false });
 const StoryComposer = dynamic(() => import('./StoryComposer'), { ssr: false });
 const NewChatModalDyn = dynamic(() => import('./NewChatModal'), { ssr: false });
 
-// Stories são uma feature visual — quando o backend implementar, virão de useApp().
-// Por enquanto extraímos das partner photos dos chats diretos como demonstração.
-// Inclui chat_id para permitir responder ao story diretamente.
-function deriveStories(chats) {
-  const stories = [];
-  const seen = new Set();
-  for (const c of chats) {
-    if (c.type !== 'direct' || !c.partner) continue;
-    const id = c.partner.id || c.partner.username;
-    if (seen.has(id)) continue;
-    seen.add(id);
-    stories.push({
-      id, name: c.partner.name || c.partner.username || 'Contato',
-      avatar: c.partner.avatar_path || c.avatar_path,
-      chat_id: c.id,
-      seen: false,
-    });
-    if (stories.length >= 8) break;
-  }
-  return stories;
+// Stories ainda não têm backend — antes ficávamos inventando stories falsos
+// a partir dos avatares dos contatos pra encher a barra, mas isso era
+// confuso pro usuário (parecia que alguém tinha postado quando ninguém
+// postou). Agora retorna [] até existir tabela `stories` real. Veja
+// ROADMAP.md para o plano de stories de verdade.
+function deriveStories(/* chats */) {
+  return [];
 }
 
 export default function ChatList() {

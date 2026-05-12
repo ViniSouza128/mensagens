@@ -7,8 +7,14 @@
   flex-shrink: 0;
   -ms-overflow-style: none;
   scrollbar-width: none;
+  /* Quando o usuário está arrastando horizontalmente, mudamos pro grab
+     cursor pra dar feedback. */
+  cursor: grab;
+  user-select: none;
 }
 .stories::-webkit-scrollbar { display: none; }
+.dragging { cursor: grabbing; }
+.dragging * { pointer-events: none; }
 .story {
   display: flex;
   flex-direction: column;

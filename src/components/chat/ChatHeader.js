@@ -3,16 +3,21 @@ import { useRouter } from 'next/navigation';
 import Avatar from '@/components/ui/Avatar';
 import IconButton from '@/components/ui/IconButton';
 import {
-  ArrowLeftIcon, ForwardIcon, XIcon, InfoIcon, SearchIcon,
+  ArrowLeftIcon, ForwardIcon, XIcon, InfoIcon, SearchIcon, TrashIcon,
 } from '@/components/icons/Icons';
 import styles from './ChatHeader.module.css';
 
 export default function ChatHeader({
-  chat, onOpenInfo, selectionMode, selectedCount, onClearSelection, onForwardSelection,
+  chat, onOpenInfo, selectionMode, selectedCount, onClearSelection, onForwardSelection, onDeleteSelection,
   searchOpen, onToggleSearch, infoOpen,
 }) {
   const router = useRouter();
-  const sub = subtitle(chat);
+  // Direct chat sem partner = a conta do outro lado foi apagada (bot removido
+  // do array `BOTS` em personas.js, usuário humano deletado, etc). O chat
+  // sobrevive com só o membro restante. Mostramos placeholder claro
+  // "Conta removida" em vez do genérico "Conversa" com avatar "?".
+  const partnerMissing = chat?.type === 'direct' && !chat?.partner;
+  const sub = partnerMissing ? 'Conta removida' : subtitle(chat);
   const isOnline = chat?.type === 'direct' ? !!(chat?.partner?.online) : false;
 
   if (selectionMode) {
@@ -23,6 +28,9 @@ export default function ChatHeader({
           <span className={styles.selectionCount}>{selectedCount} selecionada{selectedCount === 1 ? '' : 's'}</span>
         </div>
         <div className={styles.actions}>
+          {/* Apagar todas as mensagens selecionadas "só pra mim". Botão
+              é destrutivo mas reversível (mensagens continuam pros outros). */}
+          <IconButton label="Apagar para mim" onClick={onDeleteSelection} disabled={selectedCount === 0}><TrashIcon /></IconButton>
           <IconButton label="Encaminhar" onClick={onForwardSelection} disabled={selectedCount === 0}><ForwardIcon /></IconButton>
         </div>
       </header>
@@ -37,9 +45,16 @@ export default function ChatHeader({
         <ArrowLeftIcon />
       </button>
       <button type="button" className={styles.identity} onClick={onOpenInfo} aria-label="Ver informações">
-        <Avatar name={chat?.name} src={avatarSrc} size={42} online={isOnline} />
+        <Avatar
+          name={partnerMissing ? '—' : chat?.name}
+          src={partnerMissing ? null : avatarSrc}
+          size={42}
+          online={isOnline}
+        />
         <div className={styles.titleArea}>
-          <div className={styles.title}>{chat?.name || 'Conversa'}</div>
+          <div className={styles.title}>
+            {partnerMissing ? 'Conta removida' : (chat?.name || 'Conversa')}
+          </div>
           {sub ? (
             <div className={[styles.subtitle, isOnline ? styles.subtitleOnline : ''].join(' ')}>
               {sub}

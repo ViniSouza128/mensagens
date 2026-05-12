@@ -32,6 +32,20 @@ import { getBotByUsername } from '@/server/llm/personas';
 // Quantas mensagens recentes mandar como contexto para o modelo.
 const CONTEXT_WINDOW = 20;
 
+// Map de respostas de bot em andamento, indexadas por chatId.
+// Permite cancelar uma resposta no meio quando o usuário aperta o botão
+// "parar". Cada entrada: { abort: AbortController, startedAt: number }.
+const inFlight = new Map();
+
+/** Aborta a resposta em andamento (se houver) de um chat. Idempotente. */
+export function abortBotReply(chatId) {
+  const entry = inFlight.get(chatId);
+  if (!entry) return false;
+  try { entry.abort.abort(); } catch { /* noop */ }
+  inFlight.delete(chatId);
+  return true;
+}
+
 // Máximo de bubbles que um bot pode emitir em uma resposta. Evita modelo
 // verborrágico explodir a tela. Se o output tiver mais que isso, juntamos
 // no último.
@@ -68,6 +82,11 @@ function looksLikeIdentityLeak(body) {
 /**
  * Monta o array de mensagens (system + few-shot + histórico) para mandar ao
  * Ollama. Filtra respostas antigas do próprio bot que vazaram identidade.
+ *
+ * Para bots de visão (bot_vision=1): a ÚLTIMA mensagem do usuário (a que
+ * disparou a resposta) tem seus attachments de imagem convertidos pra base64
+ * e anexados no campo `images` daquele turno — formato esperado pelo Ollama
+ * em `/api/chat` para modelos vision (llava, qwen-vl, etc).
  */
 function buildOllamaMessages(bot, chatId, fewShot = []) {
   const db = getDb();
@@ -75,7 +94,7 @@ function buildOllamaMessages(bot, chatId, fewShot = []) {
     .prepare(
       `SELECT id, sender_id, body, deleted
        FROM messages
-       WHERE chat_id = ? AND deleted = 0 AND body IS NOT NULL AND body != ''
+       WHERE chat_id = ? AND deleted = 0 AND (body IS NOT NULL OR id IN (SELECT message_id FROM attachments))
        ORDER BY created_at DESC
        LIMIT ?`
     )
@@ -93,11 +112,23 @@ function buildOllamaMessages(bot, chatId, fewShot = []) {
     }
   }
 
+  const lastIdx = rows.length - 1;
   const history = rows
-    .map((r, i) => (drop.has(i) ? null : {
-      role: r.sender_id === bot.id ? 'assistant' : 'user',
-      content: r.body,
-    }))
+    .map((r, i) => {
+      if (drop.has(i)) return null;
+      const turn = {
+        role: r.sender_id === bot.id ? 'assistant' : 'user',
+        content: r.body || '',
+      };
+      // Vision: anexa imagens APENAS no último turno humano (limita
+      // payload — modelos vision não lidam bem com várias imagens
+      // espalhadas em histórico longo, e contexto cresce demais).
+      if (bot.bot_vision && i === lastIdx && turn.role === 'user') {
+        const images = loadImagesAsBase64(r.id);
+        if (images.length) turn.images = images;
+      }
+      return turn;
+    })
     .filter(Boolean);
 
   const fewShotTurns = (fewShot || []).flatMap((ex) => [
@@ -112,9 +143,42 @@ function buildOllamaMessages(bot, chatId, fewShot = []) {
   ];
 }
 
+/**
+ * Lê os attachments de imagem de uma mensagem e devolve como array de base64
+ * (sem prefixo `data:`). Ollama espera só o conteúdo base64 puro no campo
+ * `images` da chamada `/api/chat`.
+ */
+function loadImagesAsBase64(messageId) {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const db = getDb();
+  const atts = db
+    .prepare("SELECT storage_path FROM attachments WHERE message_id = ? AND kind IN ('image','gif')")
+    .all(messageId);
+  if (!atts.length) return [];
+  // `paths.uploadsDir` aponta para a raiz de uploads/. storage_path já vem
+  // com prefixo "originals/" então fica `uploads/originals/<arquivo>`.
+  // Importa lazy pra evitar custo de cold start em chats sem vision bot.
+  const { paths } = require('@/config/env');
+  const out = [];
+  for (const a of atts) {
+    try {
+      const abs = path.join(paths.uploadsDir, a.storage_path);
+      if (!fs.existsSync(abs)) continue;
+      const buf = fs.readFileSync(abs);
+      // Limita 5 MB por imagem — modelos vision já têm dificuldade com >2 MB.
+      if (buf.length > 5 * 1024 * 1024) continue;
+      out.push(buf.toString('base64'));
+      // Limite hard de 3 imagens por turno (Ollama vision performa mal com mais).
+      if (out.length >= 3) break;
+    } catch { /* skip */ }
+  }
+  return out;
+}
+
 function loadBot(userId) {
   const u = getDb()
-    .prepare('SELECT id, name, username, is_bot, bot_model, bot_system_prompt, bot_temperature, bot_max_tokens, status FROM users WHERE id = ?')
+    .prepare('SELECT id, name, username, is_bot, bot_model, bot_system_prompt, bot_temperature, bot_max_tokens, bot_vision, status FROM users WHERE id = ?')
     .get(userId);
   if (!u || !u.is_bot || u.status !== 'active' || !u.bot_model) return null;
   return u;
@@ -155,6 +219,17 @@ export function maybeBotReply({ chatId, senderId, sendMessage }) {
  * e total no último.
  */
 async function runBotReply({ chatId, bot, sendMessage }) {
+  // Se já tem uma resposta rodando pra este chat, aborta a anterior antes
+  // de começar a nova. Evita responses concorrentes confusas (e.g. usuário
+  // mandou 2 msgs rápidas, antes o bot tentaria responder as duas em
+  // paralelo gerando intercalação).
+  abortBotReply(chatId);
+
+  // AbortController dessa rodada — também é exposto via abortBotReply() pra
+  // cancelamento explícito do usuário (botão "parar" no front).
+  const abortCtrl = new AbortController();
+  inFlight.set(chatId, { abort: abortCtrl, startedAt: Date.now() });
+
   // Estado "está pensando" (front mostra "pensando…") com TTL longo. Vai virar
   // "escrevendo…" assim que chegar o primeiro token (publishTyping com
   // thinking:false).
@@ -232,6 +307,7 @@ async function runBotReply({ chatId, bot, sendMessage }) {
       messages,
       temperature: bot.bot_temperature ?? 0.8,
       maxTokens: bot.bot_max_tokens ?? 256,
+      signal: abortCtrl.signal,
       onDelta: (delta) => {
         // No primeiro token, troca o indicador de "pensando" para "escrevendo"
         // (publish typing.start com thinking:false) — UX dá o feedback de que
@@ -275,6 +351,26 @@ async function runBotReply({ chatId, bot, sendMessage }) {
     });
   } catch (err) {
     publishTypingStop(chatId, bot);
+    inFlight.delete(chatId);
+    const aborted = abortCtrl.signal.aborted;
+    if (aborted) {
+      // Usuário cancelou. Persistimos o que já tinha sido gerado (se algo)
+      // com flag `bot_cancelled=true` pra UI marcar visualmente. Se nada
+      // chegou, só não persiste nada — o lock no front cai via typing.stop.
+      if (bubbleBuf.trim()) {
+        try {
+          sendMessage({
+            chatId,
+            senderId: bot.id,
+            type: 'text',
+            body: bubbleBuf.trim(),
+            extra: { bot: true, bot_reply_ms: Date.now() - bubbleStart, bot_total_ms: Date.now() - tStart, bot_cancelled: true, bot_bubble_idx: bubbleIdx },
+          });
+        } catch { /* noop */ }
+      }
+      logger.warn(`bot ${bot.username} reply aborted by user`, { chatId, elapsedMs: Date.now() - tStart });
+      return;
+    }
     logger.error(`bot ${bot.username} ollama call failed`, { err: err?.message, model: bot.bot_model });
     try {
       sendMessage({
@@ -287,6 +383,8 @@ async function runBotReply({ chatId, bot, sendMessage }) {
     } catch { /* noop */ }
     return;
   }
+  // Stream finalizou normalmente — remove do mapa de in-flight.
+  inFlight.delete(chatId);
 
   // Stream encerrado. Persiste o último bubble (com bot_total_ms).
   if (bubbleBuf.trim()) {
@@ -346,7 +444,7 @@ function emitTyping(chatId, bot, type, extra) {
 export function listBotsPublic() {
   return getDb()
     .prepare(
-      `SELECT id, username, name, bio, avatar_path, bot_model, bot_tagline
+      `SELECT id, username, name, bio, avatar_path, bot_model, bot_tagline, bot_vision
        FROM users
        WHERE is_bot = 1 AND status = 'active'
        ORDER BY name COLLATE NOCASE`

@@ -41,6 +41,18 @@ function runMigrations(db) {
     "ALTER TABLE users ADD COLUMN bot_temperature REAL",
     "ALTER TABLE users ADD COLUMN bot_max_tokens INTEGER",
     "ALTER TABLE users ADD COLUMN bot_tagline TEXT",
+    // v5: flag de bot que aceita imagens (vision model)
+    "ALTER TABLE users ADD COLUMN bot_vision INTEGER NOT NULL DEFAULT 0",
+    // v6: tabela `message_hides` para delete "só pra mim". Não é ALTER mas
+    // CREATE TABLE — usa IF NOT EXISTS para ser idempotente.
+    `CREATE TABLE IF NOT EXISTS message_hides (
+       message_id TEXT NOT NULL,
+       user_id TEXT NOT NULL,
+       hidden_at INTEGER NOT NULL,
+       PRIMARY KEY (message_id, user_id),
+       FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE,
+       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+     )`,
   ];
   for (const sql of migrations) {
     try { db.exec(sql); }

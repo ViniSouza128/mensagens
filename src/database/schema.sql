@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS users (
   bot_temperature REAL,       -- temperatura (criatividade); padrão 0.8
   bot_max_tokens INTEGER,     -- num_predict (tamanho máximo da resposta); padrão 256
   bot_tagline TEXT,           -- descrição curta exibida na lista de bots
+  bot_vision INTEGER NOT NULL DEFAULT 0,  -- 1 se o bot aceita anexos de imagem
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 );
@@ -204,6 +205,18 @@ CREATE TABLE IF NOT EXISTS message_reactions (
   user_id TEXT NOT NULL,
   emoji TEXT NOT NULL,
   created_at INTEGER NOT NULL,
+  PRIMARY KEY (message_id, user_id),
+  FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Mensagens ocultas POR usuário (delete "apenas para mim").
+-- A mensagem continua existindo no DB (e visível para os outros membros);
+-- apenas SOMEM da view do usuário que escolheu apagar.
+CREATE TABLE IF NOT EXISTS message_hides (
+  message_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  hidden_at INTEGER NOT NULL,
   PRIMARY KEY (message_id, user_id),
   FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

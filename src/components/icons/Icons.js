@@ -67,7 +67,10 @@ export const SunIcon = (p) => (<Icon {...p}><circle cx="12" cy="12" r="5"/><line
 export const MoonIcon = (p) => (<Icon {...p}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></Icon>);
 export const InfoIcon = (p) => (<Icon {...p}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></Icon>);
 export const BellIcon = (p) => (<Icon {...p}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></Icon>);
-export const BellOffIcon = (p) => (<Icon {...p}><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.89 17.89 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><line x1="1" y1="1" x2="23" y2="23"/></Icon>);
+// Bell-off (silenciado) — desenho completo do sino cortado pela diagonal.
+// Versão anterior tinha trechos faltando porque copiou só uma parte do
+// stroke do bell normal.
+export const BellOffIcon = (p) => (<Icon {...p}><path d="M8.7 3A6 6 0 0 1 18 8c0 4.5.85 7 1.5 8.5"/><path d="M17 17H3s3-2 3-9a4.7 4.7 0 0 1 .27-1.55"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="2" y1="2" x2="22" y2="22"/></Icon>);
 
 /* ─── Mídia ─── */
 export const DownloadIcon = (p) => (<Icon {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></Icon>);

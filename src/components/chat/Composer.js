@@ -28,7 +28,16 @@ const EMOJI_CATEGORIES = [
 
 function draftKey(chatId) { return `mensagens.draft.${chatId}`; }
 
-export default function Composer({ chat, me, reply, onCancelReply, onSend, onPreview, locked = false, lockedLabel = null }) {
+export default function Composer({ chat, me, reply, onCancelReply, onSend, onPreview, locked = false, lockedLabel = null, onCancelBot = null, lockedSince = null }) {
+  // Restrições por tipo de chat partner:
+  // - Bot SEM vision → SEM anexos. Modelos texto não entendem imagem/áudio/arquivo;
+  //   permitir só confunde (bot vai responder sobre o texto e ignorar). Esconde
+  //   completamente o botão.
+  // - Bot COM vision (bot_vision=1) → APENAS imagens. Outros tipos ficam ocultos.
+  // - Humano → tudo (comportamento default).
+  const isBotChat = !!chat?.partner?.is_bot;
+  const isVisionBot = isBotChat && !!chat?.partner?.bot_vision;
+  const attachMode = isVisionBot ? 'image-only' : (isBotChat ? 'none' : 'all');
   const [text, setText] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
   const [showAttach, setShowAttach] = useState(false);
@@ -352,13 +361,35 @@ export default function Composer({ chat, me, reply, onCancelReply, onSend, onPre
           {locked && lockedLabel ? (
             <div className={styles.lockBanner} role="status" aria-live="polite">
               <span className={styles.lockDot} aria-hidden />
-              {lockedLabel}
+              <span className={styles.lockLabel}>{lockedLabel}</span>
+              {lockedSince ? <ElapsedTimer since={lockedSince} /> : null}
+              {onCancelBot ? (
+                <button type="button" className={styles.lockCancel} onClick={onCancelBot} aria-label="Parar resposta do bot" title="Parar">
+                  parar
+                </button>
+              ) : null}
             </div>
           ) : null}
           <div className={[styles.bar, locked ? styles.barLocked : ''].join(' ')}>
             {/* Esquerda: anexar + emoji (lado a lado) */}
             <div className={styles.left} style={{ position: 'relative' }}>
-              <IconButton label="Anexar" onClick={() => setShowAttach((s) => !s)} disabled={locked}><PaperclipIcon /></IconButton>
+              {/* attachMode='all' → botão full anexar abre AttachMenu (foto, vídeo, doc, etc).
+                  attachMode='image-only' → botão direto abre seletor de imagem
+                    (vision bot Vera só faz sentido com imagens).
+                  attachMode='none' → botão escondido completamente
+                    (bots de texto não entendem anexos). */}
+              {attachMode === 'all' ? (
+                <IconButton label="Anexar" onClick={() => setShowAttach((s) => !s)} disabled={locked}><PaperclipIcon /></IconButton>
+              ) : attachMode === 'image-only' ? (
+                <IconButton
+                  label="Anexar imagem"
+                  onClick={() => imgRef.current?.click()}
+                  disabled={locked}
+                  title="Mandar imagem para este bot analisar"
+                >
+                  <PaperclipIcon />
+                </IconButton>
+              ) : null}
               <div className={styles.emojiArea}>
                 <IconButton label="Emoji" onClick={() => setShowEmoji((s) => !s)} disabled={locked}><SmileIcon /></IconButton>
                 {showEmoji && !locked ? (
@@ -368,9 +399,19 @@ export default function Composer({ chat, me, reply, onCancelReply, onSend, onPre
                   />
                 ) : null}
               </div>
-              <AttachMenu open={showAttach && !locked} onClose={() => setShowAttach(false)} onPick={onAttachPick} />
+              {attachMode === 'all' ? (
+                <AttachMenu open={showAttach && !locked} onClose={() => setShowAttach(false)} onPick={onAttachPick} />
+              ) : null}
               <input ref={fileRef} type="file" hidden multiple onChange={(e) => handleFiles(e.target.files)} />
-              <input ref={imgRef} type="file" hidden multiple accept="image/*,video/*" onChange={(e) => handleFiles(e.target.files)} />
+              {/* No modo vision-only, força accept apenas imagens (não vídeo). */}
+              <input
+                ref={imgRef}
+                type="file"
+                hidden
+                multiple={attachMode === 'all'}
+                accept={attachMode === 'image-only' ? 'image/*' : 'image/*,video/*'}
+                onChange={(e) => handleFiles(e.target.files)}
+              />
             </div>
 
             {/* Centro: textarea. Mantemos editável quando locked pra usuário
@@ -390,16 +431,17 @@ export default function Composer({ chat, me, reply, onCancelReply, onSend, onPre
               />
             </div>
 
-            {/* Direita: enviar OU mic. Quando locked, fica visualmente desativado. */}
+            {/* Direita: enviar OU mic. Quando locked, fica visualmente desativado.
+                Bots não processam áudio: o mic vira o send sempre. */}
             <div className={styles.right}>
-              {text.trim() ? (
+              {text.trim() || isBotChat ? (
                 <button
                   type="button"
                   className={styles.sendBtn}
                   onClick={submit}
                   aria-label={locked ? 'Aguarde o bot terminar' : 'Enviar mensagem'}
                   title={locked ? 'Aguarde o bot terminar' : 'Enviar'}
-                  disabled={locked}
+                  disabled={locked || !text.trim()}
                 >
                   <SendIcon size={18} />
                 </button>
@@ -523,4 +565,19 @@ function EmojiPanel({ onPick, onClose }) {
       </div>
     </div>
   );
+}
+
+/**
+ * Mostra o tempo decorrido desde `since` (timestamp em ms) atualizando a
+ * cada 250ms. Usado no lock banner pra dar feedback de "X segundos
+ * pensando" enquanto o bot LLM processa.
+ */
+function ElapsedTimer({ since }) {
+  const [elapsed, setElapsed] = useState(Date.now() - since);
+  useEffect(() => {
+    const id = setInterval(() => setElapsed(Date.now() - since), 250);
+    return () => clearInterval(id);
+  }, [since]);
+  const s = Math.max(0, elapsed) / 1000;
+  return <span className={styles.lockElapsed}>{s < 60 ? `${s.toFixed(1)}s` : `${Math.floor(s/60)}m${Math.round(s%60).toString().padStart(2,'0')}s`}</span>;
 }

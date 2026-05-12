@@ -112,6 +112,31 @@ Comum a todas:
 
 ---
 
+## Vera — visão computacional
+
+| Atributo | Valor |
+|---|---|
+| Username | `vera_bot` |
+| Modelo | `qwen3-vl:8b` (6 GB) |
+| Temperatura | 0.5 |
+| Max tokens | 500 |
+| Avatar | DiceBear `adventurer`, fundo verde claro |
+| **Vision** | **`true`** (única persona até agora com esta flag) |
+
+**Personalidade:** especialista em visão computacional. Descreve, analisa e identifica conteúdo de imagens enviadas pelo usuário. Quando recebe texto sem imagem, lembra brevemente que sua especialidade é olhar imagens, mas responde se for simples.
+
+**Por que esse modelo:** `qwen3-vl:8b` é o vision model mais novo e robusto da coleção do usuário. Identifica objetos, texto (OCR), expressões, cores, contexto cenográfico. 6 GB cabe folgadamente na VRAM.
+
+**Implementação técnica (especial):**
+- Persona tem flag `vision: true` em `personas.js`.
+- Coluna `users.bot_vision` (1/0) propaga isso pro banco.
+- **Composer**: quando o partner é bot com `bot_vision=1`, libera anexo APENAS de imagens (botão direto pro seletor, sem AttachMenu).
+- **Pipeline**: imagem é uploadada como mensagem normal (storage_path em `uploads/originals/`). Quando o bot vai responder, `loadImagesAsBase64()` em `bots.js` lê o arquivo do disco, codifica em base64, e injeta no campo `images` do turno do usuário no payload Ollama. Limite de 3 imagens / 5 MB cada por turno.
+
+**Limitações:** modelos vision sofrem com várias imagens no histórico — por isso só anexamos imagens no ÚLTIMO turno do usuário (não em mensagens antigas).
+
+---
+
 ## Adicionando ou modificando uma persona
 
 1. Edite o array `BOTS` em [`src/server/llm/personas.js`](../src/server/llm/personas.js).

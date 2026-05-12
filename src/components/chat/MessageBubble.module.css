@@ -248,6 +248,21 @@
 }
 .edited { font-style: italic; }
 
+/* Badge "Encaminhada" — pequena tag no topo da bolha quando a mensagem
+   veio de outro chat via Forward. Cor mais apagada pra não competir com
+   o body da mensagem. */
+.forwardedTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  opacity: 0.85;
+}
+.forwardedTag svg { opacity: 0.7; }
+
 /* Tempo de "pensamento" do bot LLM por balão. Aparece à esquerda do horário
    em mensagens cujo `extra.bot_reply_ms` foi preenchido (todos os balões de
    resposta de um bot). */

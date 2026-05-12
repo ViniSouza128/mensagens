@@ -143,10 +143,26 @@ function ChatListItem({ chat, active }) {
         onTouchEnd={onTouchEnd}
         style={swipeX ? { transform: `translateX(${swipeX}px)` } : undefined}
       >
-        <Avatar name={chat.name || 'Conversa'} src={chat.avatar_path} size={48} online={chat.partner?.online} />
+        {/* Direct chat sem partner = a conta foi apagada. Mostra ícone neutro
+            e nome "Conta removida" em vez do genérico "Conversa". */}
+        {(() => {
+          const partnerMissing = chat.type === 'direct' && !chat.partner;
+          return (
+            <Avatar
+              name={partnerMissing ? '—' : (chat.name || 'Conversa')}
+              src={partnerMissing ? null : chat.avatar_path}
+              size={48}
+              online={chat.partner?.online}
+            />
+          );
+        })()}
         <div className={styles.body}>
           <div className={styles.row1}>
-            <span className={[styles.name, 'truncate'].join(' ')}>{chat.name || 'Conversa'}</span>
+            <span className={[styles.name, 'truncate'].join(' ')}>
+              {(chat.type === 'direct' && !chat.partner)
+                ? <em className={styles.removed}>Conta removida</em>
+                : (chat.name || 'Conversa')}
+            </span>
             {chat.partner?.is_bot ? (
               <span className={styles.botBadge} title={`Bot AI · ${chat.partner.bot_model || 'modelo local'}`}>AI</span>
             ) : null}
@@ -154,7 +170,7 @@ function ChatListItem({ chat, active }) {
           </div>
           <div className={styles.row2}>
             <span className={[styles.preview, 'truncate'].join(' ')}>
-              {chat.partner?.typing ? <em className={styles.typing}>digitando…</em> : preview}
+              {chat.partner?.typing ? <em className={styles.typing}>{chat.partner.typing_label || 'digitando…'}</em> : preview}
             </span>
             <span className={styles.meta}>
               {chat.muted ? <span className={styles.metaIcon} title="Silenciado"><BellOffIcon size={14} /></span> : null}

@@ -16,7 +16,7 @@ import { formatTime } from '@/lib/time';
 import { sanitizeHref } from '@/lib/url';
 import { formatBytes } from '@/lib/format';
 import {
-  StarIcon, CheckIcon, XIcon,
+  StarIcon, CheckIcon, XIcon, ForwardIcon,
 } from '@/components/icons/Icons';
 import styles from './MessageBubble.module.css';
 
@@ -46,7 +46,7 @@ function scheduleImageLoad(fn) {
 function MessageBubble({
   msg, me, chat, prevMsg, nextMsg, groupFirst = true, groupLast = true,
   isPinned, selectionMode, selected, highlighted,
-  onReply, onEdit, onDelete, onReact, onStar, onPin, onForward,
+  onReply, onEdit, onDelete, onDeleteForMe, onReact, onStar, onPin, onForward,
   onRetry, onDetails, onOpenPreview, onReport, onToggleSelect, onStartSelection,
 }) {
   const isMine = msg.sender_id === me?.id;
@@ -200,6 +200,15 @@ function MessageBubble({
           !groupFirst && groupLast ? styles.last : '',
           msg.type === 'sticker' ? styles.bubbleSticker : '',
         ].join(' ')}>
+          {/* Badge "encaminhada" — quando a mensagem veio de outra conversa
+              via Forward. `forwarded_from_id` aponta para a msg original
+              (server `forwardMessages` em handlers/messages.js seta). */}
+          {msg.forwarded_from_id ? (
+            <div className={styles.forwardedTag} aria-label="Mensagem encaminhada">
+              <ForwardIcon size={11} /> Encaminhada
+            </div>
+          ) : null}
+
           {msg.reply_to ? (
             <div className={styles.replyWrap}>
               <ReplyPreview reply={msg.reply_to} />
@@ -222,6 +231,7 @@ function MessageBubble({
               onPin={onPin}
               onEdit={() => startEdit()}
               onDelete={onDelete}
+              onDeleteForMe={onDeleteForMe}
               onReport={onReport}
               onDetails={onDetails}
               onCopy={copyText}
@@ -314,6 +324,7 @@ function MessageBubble({
             onPin={() => { setContextMenu(null); onPin?.(msg, !isPinned); }}
             onEdit={() => { setContextMenu(null); startEdit(); }}
             onDelete={() => { setContextMenu(null); onDelete?.(msg); }}
+            onDeleteForMe={() => { setContextMenu(null); onDeleteForMe?.(msg); }}
             onReport={() => { setContextMenu(null); onReport?.(msg); }}
             onDetails={() => { setContextMenu(null); onDetails?.(msg); }}
             onCopy={() => { setContextMenu(null); copyText(); }}
