@@ -76,9 +76,17 @@ export const BellOffIcon = (p) => (<Icon {...p}><path d="M8.7 3A6 6 0 0 1 18 8c0
 export const DownloadIcon = (p) => (<Icon {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></Icon>);
 export const PlayIcon = (p) => (<Icon {...p}><polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/></Icon>);
 export const PauseIcon = (p) => (<Icon {...p}><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></Icon>);
-export const HdIcon = (p) => (<Icon {...p}><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M7 10v4M7 12h3M10 10v4M14 10v4M17 10v4h2a3 3 0 0 0 3-3v-1a3 3 0 0 0-3-3h-2"/></Icon>);
-export const RotateIcon = (p) => (<Icon {...p}><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></Icon>);
-export const CropIcon = (p) => (<Icon {...p}><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M22 18V8a2 2 0 0 0-2-2H10"/></Icon>);
+// HD: retângulo com letras "H" (hastes em x=6/x=10 + traço em y=12) e "D" (haste em x=14
+// com curva fechada à direita até x=19). Antes a curva começava em x=17 deixando um buraco
+// entre a haste do D e a curva, e tinha um "M14 10v4" duplicado solto.
+export const HdIcon = (p) => (<Icon {...p}><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10v4M10 10v4M6 12h4M14 10v4h3a2 2 0 0 0 2-2v0a2 2 0 0 0-2-2h-3"/></Icon>);
+// Rotate (estilo Lucide rotate-ccw): arco grande com remate em (21,8) + chevron no canto
+// superior-esquerdo. Antes o arco não tinha o L21 8 final, então a "setinha" ficava solta.
+export const RotateIcon = (p) => (<Icon {...p}><path d="M3 12a9 9 0 1 0 3-6.7L21 8"/><path d="M3 3v5h5"/></Icon>);
+// Crop (Lucide): dois colchetes opostos — canto inferior-esquerdo (M6 2…h14) e canto
+// superior-direito (M18 22…H2). Antes o segundo path começava em (22,18), MESMO ponto
+// do final do primeiro, fazendo as linhas se cruzarem em vez de formar o frame.
+export const CropIcon = (p) => (<Icon {...p}><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></Icon>);
 export const RefreshIcon = (p) => (<Icon {...p}><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></Icon>);
 
 /* ─── Pessoas ─── */
