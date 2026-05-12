@@ -1,0 +1,46 @@
+.wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  overflow-y: auto;
+}
+.header { display: flex; flex-direction: column; gap: 4px; }
+.list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+}
+.body { flex: 1; min-width: 0; }
+.name { font-weight: 600; font-size: 14px; }
+.username { font-size: 12px; color: var(--muted); }
+.msg { font-size: 13px; color: var(--text); margin-top: 4px; font-style: italic; }
+.actions { display: flex; gap: 6px; flex-shrink: 0; }
+.status {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-hover);
+  color: var(--muted);
+}
+.status_accepted { background: color-mix(in oklab, var(--success, #28a745) 15%, transparent); color: var(--success, #28a745); }
+.status_rejected { background: color-mix(in oklab, var(--danger) 15%, transparent); color: var(--danger); }
+.status_ignored { background: var(--surface-hover); color: var(--muted); }
+.empty { text-align: center; padding: 30px; color: var(--muted); }

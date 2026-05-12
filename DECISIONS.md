@@ -1,0 +1,90 @@
+# Decisões de arquitetura
+
+Resumo das principais escolhas técnicas e o porquê de cada uma.
+
+## Stack
+
+- **Next.js 14 (App Router)** — server components para layouts/proteção de rota e route handlers em `app/api/*` para a API. Mantém front e back num único processo, simplifica deploy e dispensa BFF separado.
+- **JavaScript puro (sem TypeScript)** — pedido explícito do projeto. Compensamos com lint estrito, contratos claros nos handlers e validações servidor-side em `server/validations.js`.
+- **CSS Modules + tokens via custom properties** — cada componente tem seu `.module.css` evitando colisões; tema/cor/fonte são controlados pelos atributos `data-theme`/`data-accent`/`data-font` no `<html>` e resolvem para variáveis CSS em `globals.css`. Sem CSS-in-JS para evitar runtime extra.
+- **SQLite via `better-sqlite3`** — banco embarcado, sem servidor extra. Migrações simples e suficientes para o escopo. FTS5 com `unicode61 remove_diacritics 2` resolve busca acento-insensível e fuzzy-ready sem dependências adicionais.
+
+## Realtime
+
+- **Server-Sent Events (SSE)** em vez de WebSocket. Razões:
+  - Roda em qualquer plataforma de hospedagem que suporte streaming HTTP.
+  - Reconexão automática nativa do `EventSource`.
+  - Suficiente para fluxo unidirecional servidor→cliente; mensagens enviadas via POST normal.
+- Conexões SSE são contadas em `server/events.js` (`activeCount`) e expostas no painel admin.
+
+## Autenticação
+
+- **JWT em cookie httpOnly** assinado via `jose`, com tabela `sessions` espelho para revogação.
+- Senhas com **bcryptjs** (custo 10) — pure JS, sem dependências nativas extras.
+- Middleware/handlers usam `requireUser()` / `requireAdmin()` que lêem o cookie e validam a sessão.
+
+## UX de mensagens
+
+- **UI otimista**: ao enviar, criamos uma mensagem `tmp_<client_id>` no estado e fazemos POST. Ao receber a confirmação (resposta direta ou eco do SSE) substituímos pela versão server pelo `client_id`. Falhas marcam `status: 'failed'` e mostram retry.
+- **Edição** permitida em até 4h após o envio **OU** enquanto a mensagem ainda não foi lida pelo destinatário — quem fica sem ler aceita ediç ões mais antigas naturalmente.
+- **Status** (`sending` → `sent` → `delivered` → `read`) é derivado dos `message_receipts` no servidor; o cliente apenas renderiza.
+- **Pin/Star/Reply/Forward/React** são endpoints idempotentes; o estado fica no banco para sobreviver a recarregamentos.
+
+## Modelo social
+
+- Bloqueio de mensagens de desconhecidos (`block_unknown`) faz com que mensagens de não-contatos virem **solicitação de contato** discreta — o destinatário aceita/rejeita; o remetente não sabe se foi bloqueado.
+- Estado mútuo (`mutual`) é derivado on-the-fly da existência de relação A→B e B→A; não existe tabela duplicada.
+
+## Mídia
+
+- **Sharp** para todas as transformações em imagens. Fluxo: upload → kindHint → se imagem, gera thumb 220px + variante padrão 1600px (ou 2560px com `hd: '1'`) → grava metadados. Vídeos têm extração de poster pela primeira frame.
+- Arquivos servidos por `app/api/files/[...path]/route.js` com `resolveUploadPath` que valida e impede traversal.
+- Limites duros aplicados no servidor: 80 MB foto, 320 MB vídeo, 2 GB documento.
+
+## Links
+
+- Detecção de URL no cliente enquanto digita; preview chamada apenas na primeira URL.
+- Endpoint `/api/linkpreview` valida com `isLikelyPrivateHost` para bloquear loopback/RFC1918/link-local — defesa SSRF.
+- Cache em memória no cliente para evitar refetch ao re-renderizar.
+
+## Admin
+
+- **Princípio do menor privilégio**: admin **não** acessa chats privados arbitrariamente. A única visão de mensagens disponível é o **contexto de denúncia**: 15 mensagens anteriores + 5 posteriores ao alvo, e somente quando uma denúncia existe. Toda visualização de contexto fica no log de auditoria.
+- Promover/suspender/banir/reintegrar passa pelo mesmo POST `/api/admin/users` com um campo `action` — fluxo mais simples no front e auditoria uniforme no back.
+
+## Segurança
+
+- Todas as escritas usam SQL parametrizado (`prepare(...).run(?)`).
+- Rate limiting em janelas em memória (`server/rateLimit.js`) protege endpoints de envio de mensagens, login, registro e link preview.
+- Cookies de sessão são `httpOnly`, `sameSite=lax` e `secure` em produção.
+- Sem `dangerouslySetInnerHTML` em conteúdo do usuário, exceto em snippets de busca já sanitizados pelo servidor (apenas `<mark>`).
+
+## Performance
+
+- Listas longas usam `IntersectionObserver` para infinite scroll ao invés de virtualização agressiva — bom equilíbrio entre simplicidade e fluidez para o tamanho típico de chat.
+- Imagens usam `loading="lazy"` por padrão.
+- O cliente memoriza o último estado de scroll por chat para não pular ao voltar de outras telas.
+
+## Bots LLM (Ollama)
+
+- **Usuários-bot são usuários "de verdade"** (linha em `users` com `is_bot=1` e colunas `bot_model` / `bot_system_prompt` / `bot_temperature` / `bot_max_tokens` / `bot_tagline`). Vantagem: reutilizam todo o fluxo de mensageria — chat direct, SSE, status de leitura, reactions, pin, search — sem caminho paralelo. Custo: ocupam contagem na tabela `users` mas isso é irrelevante na escala alvo.
+- **Hook é fire-and-forget no fim de `sendMessage()`** (`server/handlers/messages.js`). Quando o handler termina de inserir + publicar `message.new`, ele chama `maybeBotReply()` que decide se há um bot na outra ponta. Crucialmente **não** bloqueia o response HTTP do humano. Erros do Ollama são engolidos e logados — o usuário humano nunca recebe 500 por causa de bot.
+- **Ollama local em `127.0.0.1:11434`** via `/api/chat`. Streaming desligado (`stream:false`) para simplicidade: o "indicador de pensamento" cobre a latência percebida via SSE em vez de streamar tokens. Trade-off consciente: respostas só aparecem inteiras, sem efeito "letra-por-letra" — em compensação evitamos tokenização parcial, retries de chunks e complexidade no orquestrador.
+- **Múltiplas mensagens por resposta**: o orquestrador (`server/llm/bots.js`) divide a resposta da LLM em até 3 chunks. Estratégia de corte: respeita `\\n\\n` que o próprio modelo emite (instruído via system prompt), e se algum chunk for >400 chars parte em sentenças. Cada chunk é enviado como mensagem separada via `sendMessage()` com delay simulado (350ms + 18ms/char, máx 2.2s) — UX mais natural do que parágrafo bloco.
+- **Indicador "está pensando" vs "digitando"**: reaproveita o evento SSE `typing.start` adicionando dois campos novos: `thinking: boolean` (rótulo no front: "pensando…" em vez de "digitando…") e `ttl_ms` (front mantém o indicador por esse tempo antes de auto-clear). TTL longo (90s) cobre modelos grandes (qwen3-coder:30b chega a 30-60s).
+- **Bot não pode ser o gatilho de outro bot**: `maybeBotReply` checa `senderId` e aborta se o remetente também é bot — evita loops recursivos caso bots conversem entre si no futuro.
+- **Senhas dos bots são aleatórias**: o seed gera uma string nanoid+bcrypt para satisfazer `password_hash NOT NULL`, mas o bot nunca faz login pelo cookie. Quem cria mensagem em nome dele é sempre o servidor.
+- **Personas em código, não em DB de admin**: `src/server/llm/personas.js` é a fonte da verdade dos prompts. O seed faz upsert idempotente; rodar `npm run seed` propaga ajustes de prompt para o banco sem perder histórico de mensagens.
+- **Escolha dos modelos** (RTX 4080 16 GB): diversifica espectro fast → slow:
+  - `gemma3:270m` (Zezé) — adolescente gen-z, latência quase nula.
+  - `jaahas/qwen3.5-uncensored:4b` (Mara) — amiga sem filtro, ainda rápido.
+  - `igorls/gemma-4-E4B-it-heretic-GGUF:q4_k_m` (Hermes) — filósofo provocador, modelo "heretic" sem salvaguardas.
+  - `mistral-small3.2:24b` (Aurora) — assistente equilibrada, melhor "all-purpose" dentro da VRAM.
+  - `qwen3-coder:30b` (Doc Byte) — especialista em código, ultra-lento por exceder VRAM (offload CPU), mas qualidade alta.
+
+## Por que não X?
+
+- **WebSocket** — overkill; SSE cobre 100% dos casos e atravessa proxies hostis melhor.
+- **ORM (Prisma/Drizzle)** — adicionaria runtime e build steps; SQL puro é mais transparente para o tamanho do schema.
+- **Tailwind / Styled Components** — pedido foi CSS puro; design tokens via custom properties já dão consistência.
+- **Redis para fanout** — uma única instância Node serve bem o público-alvo; `events.js` faz fanout em memória com baixíssimo overhead.

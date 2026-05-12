@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Raios — Mensagens DS</title>
+<link rel="stylesheet" href="_base.css"/><link rel="stylesheet" href="_components.css"/>
+<style>
+.radii-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--space-4)}
+.radii-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-3);padding:var(--space-4);text-align:center}
+.radii-card .preview{width:80px;height:80px;background:var(--accent-grad);margin:0 auto var(--space-3);box-shadow:0 4px 12px color-mix(in oklab,var(--accent) 35%,transparent)}
+.radii-card .name{font-family:var(--font-mono);color:var(--accent-strong);font-weight:600;font-size:13px}
+.radii-card .px{font-size:12px;color:var(--muted);margin-top:2px;font-family:var(--font-mono)}
+</style></head>
+<body>
+<div class="sd-shell">
+<aside class="sd-nav" id="sdNav"></aside>
+<main class="sd-main">
+<div class="sd-breadcrumb"><a href="index.html">Design System</a><span class="sep">/</span><span>Fundamentos</span><span class="sep">/</span><span>Raios &amp; bordas</span></div>
+<header class="sd-header"><div><h1 class="title">Raios &amp; bordas</h1><p class="lead">Curvas que dão personalidade. Escala leve a generosa, com pill total para chips e CTAs circulares.</p></div><button class="theme-toggle"></button></header>
+
+<section class="section"><h2>Corner radii</h2>
+<div class="radii-grid">
+  <div class="radii-card"><div class="preview" style="border-radius:6px"></div><div class="name">--r-1</div><div class="px">6px</div><div style="font-size:11px;color:var(--muted);margin-top:6px">Tags pequenas, badges</div></div>
+  <div class="radii-card"><div class="preview" style="border-radius:10px"></div><div class="name">--r-2</div><div class="px">10px</div><div style="font-size:11px;color:var(--muted);margin-top:6px">Inputs, botões</div></div>
+  <div class="radii-card"><div class="preview" style="border-radius:14px"></div><div class="name">--r-3</div><div class="px">14px</div><div style="font-size:11px;color:var(--muted);margin-top:6px">Cards, painéis</div></div>
+  <div class="radii-card"><div class="preview" style="border-radius:18px"></div><div class="name">--r-4</div><div class="px">18px</div><div style="font-size:11px;color:var(--muted);margin-top:6px">Modais, hero</div></div>
+  <div class="radii-card"><div class="preview" style="border-radius:24px"></div><div class="name">--r-5</div><div class="px">24px</div><div style="font-size:11px;color:var(--muted);margin-top:6px">Cards grandes</div></div>
+  <div class="radii-card"><div class="preview" style="border-radius:999px"></div><div class="name">--r-pill</div><div class="px">999px</div><div style="font-size:11px;color:var(--muted);margin-top:6px">Chips, pills, avatars</div></div>
+</div>
+</section>
+
+<section class="section"><h2>Em uso</h2>
+<div class="cols-2">
+<div class="showcase"><div class="eyebrow" style="margin-bottom:8px">INPUT (--r-2)</div><input class="input" placeholder="Buscar..."/></div>
+<div class="showcase"><div class="eyebrow" style="margin-bottom:8px">BUTTON (--r-2)</div><button class="btn btn-primary">Enviar</button></div>
+<div class="showcase"><div class="eyebrow" style="margin-bottom:8px">CARD (--r-3)</div><div class="card" style="padding:14px">Card</div></div>
+<div class="showcase"><div class="eyebrow" style="margin-bottom:8px">CHIP (--r-pill)</div><div class="chips"><button class="chip on">Todas</button><button class="chip">Não lidas</button></div></div>
+<div class="showcase"><div class="eyebrow" style="margin-bottom:8px">AVATAR (--r-pill)</div><div class="av s56 bg-2">VR<span class="dot"></span></div></div>
+<div class="showcase"><div class="eyebrow" style="margin-bottom:8px">BUBBLE (16px)</div><div class="bubble">Mensagem</div></div>
+</div>
+</section>
+
+<section class="section"><h2>Bordas</h2>
+<table class="tokens"><thead><tr><th>Valor</th><th>Uso</th></tr></thead><tbody>
+<tr><td class="value">1px solid var(--border)</td><td>Padrão (cards, divisores)</td></tr>
+<tr><td class="value">1px solid var(--border-strong)</td><td>Hover de outline, ênfase</td></tr>
+<tr><td class="value">1.5px solid var(--border)</td><td>Inputs (campos editáveis)</td></tr>
+<tr><td class="value">1.5px solid var(--accent)</td><td>Inputs em focus, opção ativa</td></tr>
+<tr><td class="value">3px solid var(--accent)</td><td>Indicadores fortes (quote, painel ativo)</td></tr>
+</tbody></table>
+</section>
+
+<section class="section"><h2>Regras</h2>
+<div class="callout warn"><div><strong>Não misture raios:</strong> filhos com radius ≤ pai.</div></div>
+<div class="callout info"><div><strong>Pill total</strong> só para elementos com height fixa.</div></div>
+</section>
+</main></div>
+<script src="_nav.js"></script><script src="_assets.js"></script>
+<script>document.getElementById('sdNav').innerHTML = window.SD_NAV;</script>
+</body></html>

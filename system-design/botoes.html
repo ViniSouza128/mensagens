@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Botões — Mensagens DS</title>
+<link rel="stylesheet" href="_base.css"/><link rel="stylesheet" href="_components.css"/></head>
+<body>
+<div class="sd-shell"><aside class="sd-nav" id="sdNav"></aside><main class="sd-main">
+<div class="sd-breadcrumb"><a href="index.html">Design System</a><span class="sep">/</span><span>Componentes</span><span class="sep">/</span><span>Botões</span></div>
+<header class="sd-header"><div><h1 class="title">Botões</h1><p class="lead">5 variantes principais cobrem todas as ações. Cada uma tem 3 tamanhos e 4 estados.</p></div><button class="theme-toggle"></button></header>
+
+<section class="section"><h2>Variantes</h2>
+
+<h3>Primary <code class="inline">.btn-primary</code></h3>
+<p class="lead">A ação principal de cada tela. <strong>Apenas uma por contexto.</strong></p>
+<div class="showcase row">
+<button class="btn btn-primary">Enviar mensagem</button>
+<button class="btn btn-primary"><svg class="icon-sm"><use href="#i-send"/></svg> Enviar</button>
+<button class="btn btn-primary">Salvar alterações</button>
+<button class="btn btn-primary" disabled>Desabilitado</button>
+</div>
+
+<h3>Success <code class="inline">.btn-success</code></h3>
+<div class="showcase row">
+<button class="btn btn-success">Aceitar solicitação</button>
+<button class="btn btn-success"><svg class="icon-sm"><use href="#i-check"/></svg> Confirmar</button>
+</div>
+
+<h3>Secondary <code class="inline">.btn-secondary</code></h3>
+<div class="showcase row">
+<button class="btn btn-secondary">Ver mais</button>
+<button class="btn btn-secondary">Salvar rascunho</button>
+</div>
+
+<h3>Outline <code class="inline">.btn-outline</code></h3>
+<div class="showcase row">
+<button class="btn btn-outline">Cancelar</button>
+<button class="btn btn-outline">Conversar</button>
+<button class="btn btn-outline"><svg class="icon-sm"><use href="#i-info"/></svg> Detalhes</button>
+</div>
+
+<h3>Ghost <code class="inline">.btn-ghost</code></h3>
+<div class="showcase row">
+<button class="btn btn-ghost">Cancelar</button>
+<button class="btn btn-ghost">Pular</button>
+</div>
+
+<h3>Destructive <code class="inline">.btn-danger</code></h3>
+<div class="showcase row">
+<button class="btn btn-danger">Apagar conversa</button>
+<button class="btn btn-danger"><svg class="icon-sm"><use href="#i-trash"/></svg> Excluir</button>
+</div>
+</section>
+
+<section class="section"><h2>Tamanhos</h2>
+<div class="showcase row">
+<button class="btn btn-primary btn-sm">Small</button>
+<button class="btn btn-primary">Default</button>
+<button class="btn btn-primary btn-lg">Large</button>
+</div>
+<table class="tokens"><thead><tr><th>Tamanho</th><th>Padding</th><th>Font</th></tr></thead><tbody>
+<tr><td>sm</td><td class="value">6px 12px</td><td class="value">13px</td></tr>
+<tr><td>default</td><td class="value">9px 16px</td><td class="value">14px</td></tr>
+<tr><td>lg</td><td class="value">12px 20px</td><td class="value">15px</td></tr>
+</tbody></table>
+</section>
+
+<section class="section"><h2>Botão block</h2>
+<div class="showcase column" style="max-width:400px;margin:0 auto">
+<button class="btn btn-primary btn-block btn-lg">Entrar</button>
+<button class="btn btn-outline btn-block">Criar conta</button>
+</div>
+</section>
+
+<section class="section"><h2>Icon buttons <code class="inline">.ibtn</code></h2>
+<div class="showcase row">
+<button class="ibtn sm" aria-label="Fechar"><svg class="icon-sm"><use href="#i-x"/></svg></button>
+<button class="ibtn" aria-label="Buscar"><svg class="icon"><use href="#i-search"/></svg></button>
+<button class="ibtn lg" aria-label="Notificações"><svg class="icon"><use href="#i-bell"/></svg></button>
+<button class="ibtn active" aria-label="Info"><svg class="icon"><use href="#i-info"/></svg></button>
+</div>
+</section>
+
+<section class="section"><h2>Send button &amp; FAB</h2>
+<div class="showcase row">
+<button class="send-btn"><svg class="icon"><use href="#i-send"/></svg></button>
+<span class="muted">Send (44×44)</span>
+<button class="fab"><svg class="icon-lg"><use href="#i-send"/></svg></button>
+<span class="muted">FAB (56×56)</span>
+</div>
+</section>
+
+<section class="section"><h2>Estados</h2>
+<table class="tokens"><thead><tr><th>Estado</th><th>Tratamento</th></tr></thead><tbody>
+<tr><td>Default</td><td>Cor base, sombra leve</td></tr>
+<tr><td>Hover</td><td>Brightness 1.08, sombra colorida (primary)</td></tr>
+<tr><td>Active</td><td>scale(.97)</td></tr>
+<tr><td>Focus-visible</td><td>Box-shadow accent ring 3px</td></tr>
+<tr><td>Disabled</td><td>opacity .4, cursor default</td></tr>
+</tbody></table>
+</section>
+
+<section class="section"><h2>Regras</h2>
+<div class="callout warn"><div><strong>Apenas 1 botão primário por tela.</strong></div></div>
+<div class="callout info"><div><strong>Ícone + texto:</strong> ícone antes do texto, gap 6px.</div></div>
+<div class="callout danger"><div><strong>Destructive precisa confirmação.</strong></div></div>
+</section>
+</main></div>
+<script src="_nav.js"></script><script src="_assets.js"></script>
+<script>document.getElementById('sdNav').innerHTML = window.SD_NAV;</script>
+</body></html>

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cores — Mensagens Design System</title>
+<link rel="stylesheet" href="_base.css" />
+<link rel="stylesheet" href="_components.css" />
+<style>
+  .swatch-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-3); overflow: hidden; transition: all var(--t-fast); }
+  .swatch-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .swatch-card .swatch { height: 90px; display: flex; align-items: flex-end; padding: 12px; color: #fff; font-weight: 700; font-size: 13px; }
+  .swatch-card .info { padding: 12px 14px; font-size: 12px; }
+  .swatch-card .info .name { font-weight: 600; color: var(--text); }
+  .swatch-card .info .token { font-family: var(--font-mono); color: var(--accent-strong); font-size: 11.5px; }
+  .swatch-card .info .hex { font-family: var(--font-mono); color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+  .swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-5); }
+  .accent-row { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-4); }
+  .accent-row .acc { width: 84px; text-align: center; }
+  .accent-row .acc .circle { width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 8px; box-shadow: 0 4px 12px color-mix(in oklab, currentColor 30%, transparent); }
+  .accent-row .acc .name { font-size: 12px; font-weight: 600; }
+  .accent-row .acc .hex { font-size: 10.5px; color: var(--muted); font-family: var(--font-mono); }
+  .gradient-card { height: 120px; border-radius: var(--r-3); position: relative; overflow: hidden; color: #fff; padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; }
+  .gradient-card .lab { font-weight: 700; font-size: 14px; }
+  .gradient-card .css { font-family: var(--font-mono); font-size: 10.5px; opacity: .85; }
+</style>
+</head>
+<body>
+<div class="sd-shell">
+  <aside class="sd-nav" id="sdNav"></aside>
+  <main class="sd-main">
+    <div class="sd-breadcrumb"><a href="index.html">Design System</a><span class="sep">/</span><span>Fundamentos</span><span class="sep">/</span><span>Cores</span></div>
+    <header class="sd-header"><div><h1 class="title">Cores</h1><p class="lead">A paleta do produto. Cores neutras dão a base, accent destaca a marca, semânticas comunicam estado.</p></div><button class="theme-toggle"></button></header>
+
+    <section class="section"><h2>Brand accent</h2>
+      <p class="lead"><code class="inline">--accent</code> é configurável (7 opções).</p>
+      <div class="cols-3">
+        <div class="swatch-card"><div class="swatch" style="background:#eef2ff;color:#4f46e5">SOFT</div><div class="info"><div class="name">Accent soft</div><div class="token">--accent-soft</div><div class="hex">#eef2ff</div></div></div>
+        <div class="swatch-card"><div class="swatch" style="background:#6366f1">DEFAULT</div><div class="info"><div class="name">Accent</div><div class="token">--accent</div><div class="hex">#6366f1</div></div></div>
+        <div class="swatch-card"><div class="swatch" style="background:#4f46e5">STRONG</div><div class="info"><div class="name">Accent strong</div><div class="token">--accent-strong</div><div class="hex">#4f46e5</div></div></div>
+      </div>
+      <h3>Sub-marcas / accents alternativos</h3>
+      <div class="accent-row">
+        <div class="acc"><div class="circle" style="background:#6366f1"></div><div class="name">Indigo</div><div class="hex">#6366f1</div></div>
+        <div class="acc"><div class="circle" style="background:#14b8a6"></div><div class="name">Teal</div><div class="hex">#14b8a6</div></div>
+        <div class="acc"><div class="circle" style="background:#f43f5e"></div><div class="name">Rose</div><div class="hex">#f43f5e</div></div>
+        <div class="acc"><div class="circle" style="background:#f59e0b"></div><div class="name">Amber</div><div class="hex">#f59e0b</div></div>
+        <div class="acc"><div class="circle" style="background:#10b981"></div><div class="name">Emerald</div><div class="hex">#10b981</div></div>
+        <div class="acc"><div class="circle" style="background:#0ea5e9"></div><div class="name">Sky</div><div class="hex">#0ea5e9</div></div>
+        <div class="acc"><div class="circle" style="background:#8b5cf6"></div><div class="name">Violet</div><div class="hex">#8b5cf6</div></div>
+      </div>
+      <h3>Gradientes</h3>
+      <div class="cols-2">
+        <div class="gradient-card" style="background:linear-gradient(135deg,#818cf8,#6366f1,#4f46e5)"><div class="lab">Brand gradient</div><div class="css">linear-gradient(135deg,#818cf8,#6366f1,#4f46e5)</div></div>
+        <div class="gradient-card" style="background:linear-gradient(135deg,#6366f1,#4f46e5)"><div class="lab">Bubble out</div><div class="css">--bubble-out-grad</div></div>
+      </div>
+    </section>
+
+    <section class="section"><h2>Neutros</h2><h3>Tema claro</h3>
+      <div class="swatch-grid">
+        <div class="swatch-card"><div class="swatch" style="background:#fafbfc;color:#0f172a">bg</div><div class="info"><div class="name">Page bg</div><div class="token">--bg</div><div class="hex">#fafbfc</div></div></div>
+        <div class="swatch-card"><div class="swatch" style="background:#fff;color:#0f172a;border-bottom:1px solid #e5e8ec">surface</div><div class="info"><div class="name">Surface</div><div class="token">--surface</div><div class="hex">#ffffff</div></div></div>
+        <div class="swatch-card"><div class="swatch" style="background:#f4f6f8;color:#0f172a">surface-2</div><div class="info"><div class="name">Surface 2</div><div class="token">--surface-2</div><div class="hex">#f4f6f8</div></div></div>
+        <div class="swatch-card"><div class="swatch" style="background:#e9ecef;color:#0f172a">surface-3</div><div class="info"><div class="name">Surface 3</div><div class="token">--surface-3</div><div class="hex">#e9ecef</div></div></div>
+        <div class="swatch-card"><div class="swatch" style="background:#e5e8ec;color:#0f172a">border</div><div class="info"><div class="name">Border</div><div class="token">--border</div><div class="hex">#e5e8ec</div></div></div>
+        <div class="swatch-card"><div class="swatch" style="background:#0f172a">text</div><div class="info"><div class="name">Text primary</div><div class="token">--text</div><div class="hex">#0f172a</div></div></div>
+        <div class="swatch-card"><div class="swatch" style="background:#5b6574">muted</div><div class="info"><div class="name">Muted</div><div class="token">--muted</div><div class="hex">#5b6574</div></div></div>
+        <div class="swatch-card"><div class="swatch" style="background:#8b94a3">faint</div><div class="info"><div class="name">Faint</div><div class="token">--faint</div><div class="hex">#8b94a3</div></div></div>
+      </div>
+      <h3>Tema escuro</h3>
+      <div class="swatch-grid">
+        <div class="swatch-card"><div class="swatch" style="background:#0a0d14">bg</div><div class="info"><div class="name">Page bg</div><div class="token">--bg</div><div class="hex">#0a0d14</div></div></div>
+        <div class="swatch-card"><div class="swatch" style="background:#131822">surface</div><div class="info"><div class="name">Surface</div><div class="token">--surface</div><div class="hex">#131822</div></div></div>
+        <div class="swatch-card"><div class="swatch" style="background:#1a2030">surface-2</div><div class="info"><div class="name">Surface 2</div><div class="token">--surface-2</div><div class="hex">#1a2030</div></div></div>
+        <div class="swatch-card"><div class="swatch" style="background:#e8ebf1;color:#0f172a">text</div><div class="info"><div class="name">Text</div><div class="token">--text</div><div class="hex">#e8ebf1</div></div></div>
+      </div>
+    </section>
+
+    <section class="section"><h2>Semânticas (status)</h2>
+      <div class="cols-4">
+        <div class="swatch-card"><div class="swatch" style="background:#10b981">SUCCESS</div><div class="info"><div class="name">Success</div><div class="token">--success</div><div class="hex">#10b981</div></div></div>
+        <div class="swatch-card"><div class="swatch" style="background:#f59e0b">WARNING</div><div class="info"><div class="name">Warning</div><div class="token">--warning</div><div class="hex">#f59e0b</div></div></div>
+        <div class="swatch-card"><div class="swatch" style="background:#ef4444">DANGER</div><div class="info"><div class="name">Danger</div><div class="token">--danger</div><div class="hex">#ef4444</div></div></div>
+        <div class="swatch-card"><div class="swatch" style="background:#3b82f6">INFO</div><div class="info"><div class="name">Info</div><div class="token">--info</div><div class="hex">#3b82f6</div></div></div>
+      </div>
+      <h3>Em uso</h3>
+      <div class="showcase row">
+        <span class="tag tag-active"><svg class="icon-sm"><use href="#i-check"/></svg> Ativo</span>
+        <span class="tag tag-suspended">Suspenso</span>
+        <span class="tag tag-banned">Banido</span>
+        <span class="tag tag-admin">Admin</span>
+      </div>
+      <div class="showcase column">
+        <div class="callout success"><strong>Sucesso:</strong> Mensagem enviada.</div>
+        <div class="callout info"><strong>Dica:</strong> Use ⌘K para buscar.</div>
+        <div class="callout warn"><strong>Atenção:</strong> Você está enviando mensagens muito rápido.</div>
+        <div class="callout danger"><strong>Erro:</strong> Não foi possível conectar.</div>
+      </div>
+    </section>
+
+    <section class="section"><h2>Cores de bubbles</h2>
+      <div class="showcase column" style="background:var(--bg)">
+        <div class="bubble" style="align-self:flex-start">Olá! Tudo bem? <span class="meta">10:30</span></div>
+        <div class="bubble mine" style="align-self:flex-end">Tudo ótimo, e você? <span class="meta">10:32 ✓✓</span></div>
+        <div class="bubble" style="align-self:flex-start">Bem também 😄 <span class="meta">10:33</span></div>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="_nav.js"></script>
+<script src="_assets.js"></script>
+<script>document.getElementById('sdNav').innerHTML = window.SD_NAV;</script>
+</body>
+</html>

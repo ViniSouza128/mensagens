@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Modais — Mensagens DS</title>
+<link rel="stylesheet" href="_base.css"/><link rel="stylesheet" href="_components.css"/>
+<style>
+.demo-backdrop{background:linear-gradient(135deg,var(--surface-2),var(--surface-3));border-radius:var(--r-3);padding:var(--space-8);display:flex;align-items:center;justify-content:center;border:1px solid var(--border)}
+.action-menu-demo{background:var(--surface);border-radius:14px;width:280px;overflow:hidden;box-shadow:var(--shadow-xl);border:1px solid var(--border);padding:6px}
+.action-menu-demo button{display:flex;align-items:center;gap:12px;width:100%;padding:9px 10px;background:transparent;border:0;border-radius:8px;text-align:left;font-size:14px;color:var(--text)}
+.action-menu-demo button:hover{background:var(--hover)}
+.action-menu-demo button.danger{color:var(--danger)}
+.action-menu-demo hr{margin:4px 6px}
+.toast-demo{background:var(--surface);border:1px solid var(--border);padding:12px 16px;border-radius:12px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:12px;min-width:280px;position:relative}
+.toast-demo::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:12px 0 0 12px}
+.toast-demo.success::before{background:var(--success)}
+.toast-demo.danger::before{background:var(--danger)}
+.toast-demo.warning::before{background:var(--warning)}
+.toast-demo.info::before{background:var(--info)}
+</style></head>
+<body>
+<div class="sd-shell"><aside class="sd-nav" id="sdNav"></aside><main class="sd-main">
+<div class="sd-breadcrumb"><a href="index.html">Design System</a><span class="sep">/</span><span>Componentes</span><span class="sep">/</span><span>Modais &amp; overlays</span></div>
+<header class="sd-header"><div><h1 class="title">Modais &amp; overlays</h1><p class="lead">Modais, action menus, drawers, toasts, lightbox.</p></div><button class="theme-toggle"></button></header>
+
+<section class="section"><h2>Modal padrão</h2>
+<div class="demo-backdrop">
+<div class="modal" style="max-width:420px">
+<div class="modal-head"><h3>Apagar conversa</h3><button class="ibtn sm"><svg class="icon-sm"><use href="#i-x"/></svg></button></div>
+<div class="modal-body"><p style="margin:0">Tem certeza? Esta ação não pode ser desfeita.</p></div>
+<div class="modal-foot"><button class="btn btn-ghost">Cancelar</button><button class="btn btn-danger">Apagar</button></div>
+</div>
+</div>
+<table class="tokens"><thead><tr><th>Spec</th><th>Valor</th></tr></thead><tbody>
+<tr><td>Backdrop</td><td class="value">rgba(15,23,42,.55) + blur(6px)</td></tr>
+<tr><td>Container radius</td><td class="value">18px</td></tr>
+<tr><td>Max-width default</td><td class="value">480px (lg: 640px / sm: 360px)</td></tr>
+<tr><td>Animação entrada</td><td class="value">scaleIn 240ms ease-out</td></tr>
+<tr><td>Z-index</td><td class="value">300</td></tr>
+</tbody></table>
+</section>
+
+<section class="section"><h2>Action menu</h2>
+<div class="demo-backdrop">
+<div class="action-menu-demo">
+<button><svg class="icon-sm"><use href="#i-reply"/></svg> Responder</button>
+<button><svg class="icon-sm"><use href="#i-paperclip"/></svg> Copiar texto</button>
+<button><svg class="icon-sm"><use href="#i-pin"/></svg> Fixar mensagem</button>
+<button><svg class="icon-sm"><use href="#i-star"/></svg> Favoritar</button>
+<button><svg class="icon-sm"><use href="#i-info"/></svg> Detalhes</button>
+<hr/>
+<button class="danger"><svg class="icon-sm"><use href="#i-trash"/></svg> Apagar</button>
+</div>
+</div>
+</section>
+
+<section class="section"><h2>Bottom sheet (mobile)</h2>
+<div class="demo-backdrop" style="height:480px;align-items:flex-end;padding:0;border-radius:0;background:linear-gradient(135deg,#7c3aed,#6366f1)">
+<div style="width:100%;background:var(--surface);border-radius:18px 18px 0 0;max-height:88vh;animation:slideUp 280ms;padding:0">
+<div style="width:36px;height:4px;background:var(--border-strong);border-radius:999px;margin:10px auto 0"></div>
+<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><h3 style="margin:0;font-size:17px">Nova conversa</h3><button class="ibtn sm"><svg class="icon-sm"><use href="#i-x"/></svg></button></div>
+<div style="padding:16px 20px">
+<input class="input input-search" placeholder="Buscar contato…" style="margin-bottom:12px"/>
+<div style="display:flex;align-items:center;gap:12px;padding:8px"><div class="av s32 bg-2">VR</div><div><strong>Vinícius</strong><div class="muted" style="font-size:12px">@vini</div></div></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="section"><h2>Drawer (info panel)</h2>
+<div class="demo-backdrop" style="padding:0;height:380px;align-items:stretch">
+<div style="flex:1;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px">Conteúdo do chat</div>
+<div style="width:300px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column">
+<div style="padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"><strong>Informações</strong><button class="ibtn sm"><svg class="icon-sm"><use href="#i-x"/></svg></button></div>
+<div style="padding:24px;text-align:center;border-bottom:1px solid var(--border)">
+<div class="av s96 bg-2" style="margin:0 auto 8px">VR<span class="dot"></span></div>
+<h3 style="margin:0;font-size:18px">Vinícius Rodrigues</h3>
+</div>
+</div>
+</div>
+</section>
+
+<section class="section"><h2>Toast</h2>
+<div class="showcase column">
+<div class="toast-demo success"><div style="flex:1">Mensagem enviada!</div></div>
+<div class="toast-demo info"><div style="flex:1">Buscar com Ctrl+K</div></div>
+<div class="toast-demo warning"><div style="flex:1">Você está enviando muito rápido.</div></div>
+<div class="toast-demo danger"><div style="flex:1">Erro ao conectar.</div><button style="border:0;background:transparent;color:var(--accent);font-weight:600">Tentar</button></div>
+</div>
+</section>
+
+<section class="section"><h2>Lightbox</h2>
+<div class="showcase" style="background:rgba(0,0,0,.95);padding:24px;height:320px;display:flex;align-items:center;justify-content:center;position:relative">
+<div style="position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;color:#fff;font-size:13px"><span>2 / 5</span><div><button class="ibtn" style="color:#fff"><svg class="icon"><use href="#i-x"/></svg></button></div></div>
+<img src="https://picsum.photos/seed/lb/600/400" style="height:240px;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.5)"/>
+<button style="position:absolute;left:14px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.18);border:0;color:#fff"><svg class="icon"><use href="#i-back"/></svg></button>
+<button style="position:absolute;right:14px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.18);border:0;color:#fff"><svg class="icon" style="transform:rotate(180deg)"><use href="#i-back"/></svg></button>
+</div>
+</section>
+
+<section class="section"><h2>Hierarquia de z-index</h2>
+<table class="tokens"><thead><tr><th>Layer</th><th>z-index</th></tr></thead><tbody>
+<tr><td>App content</td><td class="value">auto</td></tr>
+<tr><td>Sticky chat header</td><td class="value">5</td></tr>
+<tr><td>Sidebar</td><td class="value">10</td></tr>
+<tr><td>Drawer (mobile)</td><td class="value">50</td></tr>
+<tr><td>Modal backdrop</td><td class="value">300</td></tr>
+<tr><td>Toast</td><td class="value">400</td></tr>
+<tr><td>Lightbox</td><td class="value">500</td></tr>
+<tr><td>Auth screens</td><td class="value">600</td></tr>
+</tbody></table>
+</section>
+</main></div>
+<script src="_nav.js"></script><script src="_assets.js"></script>
+<script>document.getElementById('sdNav').innerHTML = window.SD_NAV;</script>
+</body></html>

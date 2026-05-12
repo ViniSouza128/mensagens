@@ -1,0 +1,46 @@
+.backdrop {
+  position: fixed; inset: 0;
+  background: var(--backdrop);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 900;
+  animation: fadeIn .18s var(--ease-out);
+}
+.drawer {
+  position: fixed; top: 0; bottom: 0;
+  background: var(--surface);
+  width: var(--drawer-w, 380px);
+  display: flex; flex-direction: column;
+  box-shadow: var(--shadow-3);
+  animation: drawerIn .26s var(--ease-out);
+  will-change: transform;
+}
+.right { right: 0; }
+.left {
+  left: 0;
+  border-right: 1px solid var(--border);
+  animation: drawerInLeft .26s var(--ease-out);
+}
+.header {
+  padding: var(--space-4); border-bottom: 1px solid var(--border);
+  font-weight: 700; font-size: var(--text-lg);
+}
+.body { padding: var(--space-3); overflow: auto; flex: 1; }
+
+@keyframes drawerIn {
+  from { transform: translateX(40px); opacity: 0 }
+  to   { transform: translateX(0); opacity: 1 }
+}
+@keyframes drawerInLeft {
+  from { transform: translateX(-40px); opacity: 0 }
+  to   { transform: translateX(0); opacity: 1 }
+}
+
+@media (min-width: 720px) {
+  .right { border-left: 1px solid var(--border); }
+}
+
+@media (max-width: 640px) {
+  .drawer.right,
+  .drawer.left { width: 100%; }
+}

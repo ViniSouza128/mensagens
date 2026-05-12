@@ -1,0 +1,7 @@
+.s {
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted);
+}
+.s.read { color: var(--accent); }
+.s.failed { color: var(--danger); }

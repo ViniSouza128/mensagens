@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Cartões — Mensagens DS</title>
+<link rel="stylesheet" href="_base.css"/><link rel="stylesheet" href="_components.css"/>
+<style>
+.summary{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-3);padding:var(--space-4)}
+.summary-row{display:flex;justify-content:space-between;padding:8px 0;font-size:13.5px}
+.summary-row:not(:last-child){border-bottom:1px solid color-mix(in oklab,var(--border) 50%,transparent)}
+.summary-row.total{font-weight:700;font-size:16px;padding-top:12px;border-top:1px solid var(--border);margin-top:4px}
+.event-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-3);overflow:hidden;transition:all var(--t-fast)}
+.event-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.event-card .cover{height:120px;background:linear-gradient(135deg,#818cf8,#ec4899);display:flex;align-items:center;justify-content:center;color:#fff;font-size:40px}
+.event-card .info{padding:14px}
+.event-card .title{font-weight:700;font-size:15px;margin-bottom:4px}
+.event-card .meta-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.av.img{background-size:cover;background-position:center}
+</style></head>
+<body>
+<div class="sd-shell"><aside class="sd-nav" id="sdNav"></aside><main class="sd-main">
+<div class="sd-breadcrumb"><a href="index.html">Design System</a><span class="sep">/</span><span>Componentes</span><span class="sep">/</span><span>Cartões</span></div>
+<header class="sd-header"><div><h1 class="title">Cartões</h1><p class="lead">Containers de conteúdo. Card padrão, stat, photo, list row, event card e summary.</p></div><button class="theme-toggle"></button></header>
+
+<section class="section"><h2>Card padrão</h2>
+<div class="showcase"><div class="card"><h3 class="card-title">Sua conta</h3><p class="muted" style="margin:0">Container de uma seção qualquer. Background --surface, borda 1px e radius --r-3.</p></div></div>
+<table class="tokens"><thead><tr><th>Spec</th><th>Valor</th></tr></thead><tbody>
+<tr><td>Background</td><td class="value">var(--surface)</td></tr>
+<tr><td>Border</td><td class="value">1px solid var(--border)</td></tr>
+<tr><td>Radius</td><td class="value">var(--r-3) — 14px</td></tr>
+<tr><td>Padding</td><td class="value">20px</td></tr>
+<tr><td>Shadow</td><td class="value">var(--shadow-xs)</td></tr>
+</tbody></table>
+</section>
+
+<section class="section"><h2>Stat card</h2>
+<p class="lead">Indicador numérico para dashboards. Hover lift + sombra.</p>
+<div class="showcase">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;width:100%">
+<div class="stat"><div class="lab">Usuários</div><div class="val">2.847</div><div class="delta">+12% esta semana</div></div>
+<div class="stat"><div class="lab">Mensagens</div><div class="val">128.4k</div><div class="delta">+8% hoje</div></div>
+<div class="stat"><div class="lab">Denúncias</div><div class="val" style="color:var(--warning)">7</div><div class="delta warn">3 novas</div></div>
+<div class="stat"><div class="lab">Erros 24h</div><div class="val" style="color:var(--danger)">2</div><div class="delta bad">1 crítico</div></div>
+</div>
+</div>
+</section>
+
+<section class="section"><h2>Photo card</h2>
+<p class="lead">Cells de imagens em grids de mídia. Aspect ratio 1:1.</p>
+<h3>Default (com fotos reais)</h3>
+<div class="showcase">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%">
+<div class="photo" style="background-image:url(https://picsum.photos/seed/p1/300/300);background-size:cover"></div>
+<div class="photo" style="background-image:url(https://picsum.photos/seed/p2/300/300);background-size:cover"></div>
+<div class="photo" style="background-image:url(https://picsum.photos/seed/p3/300/300);background-size:cover"></div>
+<div class="photo" style="background-image:url(https://picsum.photos/seed/p4/300/300);background-size:cover"></div>
+</div>
+</div>
+<h3>Variantes (in-cart, free)</h3>
+<div class="showcase">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%">
+<div class="photo" style="background-image:url(https://picsum.photos/seed/p5/300/300);background-size:cover"></div>
+<div class="photo in-cart" style="background-image:url(https://picsum.photos/seed/p6/300/300);background-size:cover"><span class="badge-corner">No carrinho</span></div>
+<div class="photo free" style="background-image:url(https://picsum.photos/seed/p7/300/300);background-size:cover"></div>
+<div class="photo" style="background:var(--surface-2);color:var(--muted);font-size:18px">+12</div>
+</div>
+</div>
+</section>
+
+<section class="section"><h2>List row (com fotos reais)</h2>
+<div class="showcase">
+<div class="card" style="width:100%">
+<div class="list-row">
+<div class="av img" style="background-image:url(https://i.pravatar.cc/88?img=12)"><span class="dot"></span></div>
+<div class="meta"><strong>Vinícius Rodrigues</strong><div class="sub">@vini</div></div>
+<button class="btn btn-outline btn-sm"><svg class="icon-sm"><use href="#i-chats"/></svg> Conversar</button>
+</div>
+<div class="list-row">
+<div class="av img" style="background-image:url(https://i.pravatar.cc/88?img=5)"></div>
+<div class="meta"><strong>Maria Silva</strong><div class="sub">@maria</div></div>
+<button class="btn btn-outline btn-sm">Conversar</button>
+</div>
+<div class="list-row">
+<div class="av img" style="background-image:url(https://i.pravatar.cc/88?img=8)"></div>
+<div class="meta"><strong>João Pereira <span class="tag tag-admin">Admin</span></strong><div class="sub">@joao</div></div>
+<button class="ibtn"><svg class="icon"><use href="#i-more"/></svg></button>
+</div>
+</div>
+</div>
+</section>
+
+<section class="section"><h2>Event card</h2>
+<div class="showcase">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;width:100%">
+<div class="event-card">
+<div class="cover">🎉</div>
+<div class="info"><div class="title">Mensagens v3 chegou!</div><div class="muted" style="font-size:13px">Voz, polls, stories e muito mais.</div><div class="meta-row"><span class="badge-pill" style="background:var(--accent-soft);color:var(--accent)">NOVO</span><button class="btn btn-primary btn-sm">Ver mais</button></div></div>
+</div>
+<div class="event-card">
+<div class="cover" style="background:linear-gradient(135deg,#10b981,#059669)">🌱</div>
+<div class="info"><div class="title">Convide amigos, ganhe Pro</div><div class="muted" style="font-size:13px">A cada 3 amigos, 1 mês grátis.</div><div class="meta-row"><span class="badge-pill" style="background:var(--success-soft);color:var(--success)">PROMO</span><button class="btn btn-success btn-sm">Convidar</button></div></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="section"><h2>Stats / cart summary</h2>
+<div class="showcase" style="max-width:420px;margin:0 auto">
+<div class="summary">
+<h3 class="card-title">Resumo do plano</h3>
+<div class="summary-row"><span class="muted">Plano Pro mensal</span><span>R$ 19,90</span></div>
+<div class="summary-row"><span class="muted">Storage extra (50GB)</span><span>R$ 9,90</span></div>
+<div class="summary-row"><span class="muted">Desconto (anual)</span><span style="color:var(--success)">−R$ 30,00</span></div>
+<div class="summary-row total"><span>Total</span><span>R$ 268,80<span class="muted" style="font-weight:400;font-size:12px">/ano</span></span></div>
+<button class="btn btn-primary btn-block" style="margin-top:14px">Confirmar assinatura</button>
+</div>
+</div>
+</section>
+
+<section class="section"><h2>Regras</h2>
+<div class="callout info"><div><strong>Cards aninham:</strong> radius do filho ≤ radius do pai.</div></div>
+<div class="callout warn"><div><strong>Não use shadow-md em cards estáticos.</strong> Apenas no hover.</div></div>
+</section>
+</main></div>
+<script src="_nav.js"></script><script src="_assets.js"></script>
+<script>document.getElementById('sdNav').innerHTML = window.SD_NAV;</script>
+</body></html>

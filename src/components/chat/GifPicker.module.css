@@ -1,0 +1,106 @@
+.search {
+  position: relative;
+  margin-bottom: 12px;
+}
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.clearBtn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px; height: 24px;
+  border: 0; background: var(--surface-2);
+  border-radius: 50%;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.tag {
+  border: 0;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--t-fast);
+}
+.tag:hover { background: var(--accent-soft); color: var(--accent); }
+/* Layout em colunas verticais (masonry estilo Pinterest) — cada GIF
+   mantém seu aspect ratio original, sem cortes nem sobreposições. */
+.grid {
+  column-count: 3;
+  column-gap: 8px;
+  max-height: 460px;
+  overflow-y: auto;
+  padding: 2px;
+}
+@media (max-width: 600px) {
+  .grid { column-count: 2; }
+}
+.cell {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--surface-2);
+  padding: 0;
+  margin: 0 0 8px;
+  /* impede que a coluna corte um cell ao meio */
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+  transition: transform var(--t-fast), box-shadow var(--t-fast);
+}
+.cell:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.cell img {
+  width: 100%; height: auto;
+  object-fit: contain;
+  display: block;
+}
+.skel {
+  display: block;
+  width: 100%;
+  height: 0;
+  padding-bottom: 100%;
+  background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%);
+  background-size: 200% 100%;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  break-inside: avoid;
+  animation: shimmer 1.4s infinite linear;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skel { animation: none; }
+}
+.empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--text-muted);
+  font-size: 14px;
+  column-span: all;
+  -webkit-column-span: all;
+}
+.credit {
+  text-align: right;
+  font-size: 10px;
+  color: var(--text-faint);
+  margin-top: 8px;
+  font-style: italic;
+}

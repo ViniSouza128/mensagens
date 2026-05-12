@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mensagens — Design System</title>
+<link rel="stylesheet" href="_base.css" />
+<link rel="stylesheet" href="_components.css" />
+<style>
+  .hero { background: linear-gradient(135deg, color-mix(in oklab, var(--accent) 8%, var(--surface)), var(--surface)); border: 1px solid var(--border); border-radius: var(--r-4); padding: var(--space-10); margin-bottom: var(--space-10); position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -100px; right: -100px; width: 300px; height: 300px; background: var(--accent-grad); opacity: .12; border-radius: 50%; filter: blur(40px); }
+  .hero h1 { margin: 0 0 var(--space-3); font-size: var(--text-4xl); font-weight: 800; letter-spacing: var(--tracking-tight); line-height: 1.1; }
+  .hero .subtitle { font-size: var(--text-lg); color: var(--muted); max-width: 640px; line-height: 1.5; }
+  .hero-meta { display: flex; gap: var(--space-3); margin-top: var(--space-5); flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; font-size: 12px; font-weight: 500; color: var(--muted); }
+  .hero-meta .pill strong { color: var(--text); }
+  .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-4); }
+  .nav-card { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-3); padding: var(--space-5); text-decoration: none; color: var(--text); transition: all var(--t-fast); position: relative; }
+  .nav-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--accent); text-decoration: none; }
+  .nav-card .ico { width: 44px; height: 44px; background: var(--accent-soft); color: var(--accent); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-3); }
+  .nav-card h3 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+  .nav-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+  .section-cat h2 { font-size: var(--text-xl); margin-bottom: var(--space-4); }
+</style>
+</head>
+<body>
+<div class="sd-shell">
+  <aside class="sd-nav" id="sdNav"></aside>
+  <main class="sd-main">
+    <div class="hero">
+      <div class="eyebrow" style="margin-bottom:8px">v1.1 • baseado no mockup v3</div>
+      <h1>Design System<br/>Mensagens</h1>
+      <p class="subtitle">Sistema visual completo do app de mensagens — fundamentos, componentes, padrões de interação, animações e sons. Construído para garantir consistência em qualquer tela.</p>
+      <div class="hero-meta">
+        <span class="pill"><strong>19</strong> páginas</span>
+        <span class="pill"><strong>50+</strong> componentes</span>
+        <span class="pill"><strong>140+</strong> tokens</span>
+        <span class="pill"><strong>2</strong> temas (claro/escuro)</span>
+      </div>
+      <div class="hero-meta">
+        <a class="pill" href="mockup-completo.html" style="text-decoration:none; color:var(--accent); border-color:var(--accent);">→ Abrir mockup interativo completo</a>
+      </div>
+    </div>
+    <section class="section section-cat"><h2>Fundamentos</h2><p class="lead">As decisões básicas que sustentam toda a interface.</p>
+      <div class="grid-cards">
+        <a class="nav-card" href="marca.html"><div class="ico"><svg class="icon"><use href="#i-brand"/></svg></div><h3>Marca &amp; logo</h3><p>Logotipo, símbolo, sub-marcas e cartões de visita.</p></a>
+        <a class="nav-card" href="cores.html"><div class="ico"><svg class="icon"><use href="#i-droplet"/></svg></div><h3>Cores</h3><p>Brand, accents, neutros, semânticas e bubbles.</p></a>
+        <a class="nav-card" href="tipografia.html"><div class="ico"><svg class="icon"><use href="#i-type"/></svg></div><h3>Tipografia</h3><p>Famílias, escala (xs → 5xl), pesos e tracking.</p></a>
+        <a class="nav-card" href="espacamento.html"><div class="ico"><svg class="icon"><use href="#i-ruler"/></svg></div><h3>Espaçamento</h3><p>Spacing scale (4px base) e regras de aplicação.</p></a>
+        <a class="nav-card" href="raios.html"><div class="ico"><svg class="icon"><use href="#i-radius"/></svg></div><h3>Raios &amp; bordas</h3><p>Corner radii (6 → 24px) e estilos de borda.</p></a>
+        <a class="nav-card" href="elevacao.html"><div class="ico"><svg class="icon"><use href="#i-layers"/></svg></div><h3>Elevação</h3><p>Sombras (xs → xl) e glassmorphism.</p></a>
+        <a class="nav-card" href="iconografia.html"><div class="ico"><svg class="icon"><use href="#i-image"/></svg></div><h3>Iconografia</h3><p>Biblioteca de ícones SVG 24×24.</p></a>
+      </div>
+    </section>
+    <section class="section section-cat"><h2>Componentes</h2><p class="lead">Blocos reutilizáveis para compor qualquer tela.</p>
+      <div class="grid-cards">
+        <a class="nav-card" href="botoes.html"><div class="ico"><svg class="icon"><use href="#i-button"/></svg></div><h3>Botões</h3><p>5 variantes, 3 tamanhos, todos os estados.</p></a>
+        <a class="nav-card" href="inputs.html"><div class="ico"><svg class="icon"><use href="#i-input"/></svg></div><h3>Inputs &amp; campos</h3><p>Text, search, focus, error, switch, custom select.</p></a>
+        <a class="nav-card" href="badges-chips.html"><div class="ico"><svg class="icon"><use href="#i-tag"/></svg></div><h3>Badges &amp; chips</h3><p>Status, filter, eyebrows, badges numéricos.</p></a>
+        <a class="nav-card" href="avatares.html"><div class="ico"><svg class="icon"><use href="#i-user"/></svg></div><h3>Avatares</h3><p>7 tamanhos, fotos reais, indicador online, stack.</p></a>
+        <a class="nav-card" href="cartoes.html"><div class="ico"><svg class="icon"><use href="#i-card"/></svg></div><h3>Cartões</h3><p>Card, stat, photo, list row, event, summary.</p></a>
+        <a class="nav-card" href="midia.html"><div class="ico"><svg class="icon"><use href="#i-image"/></svg></div><h3>Mídia &amp; arquivos</h3><p>Foto, vídeo, voz com waveform, file previews.</p></a>
+        <a class="nav-card" href="componentes-chat.html"><div class="ico"><svg class="icon"><use href="#i-chats"/></svg></div><h3>Componentes de chat</h3><p>Bubble, header, composer, info panel, list item.</p></a>
+        <a class="nav-card" href="modais.html"><div class="ico"><svg class="icon"><use href="#i-modal"/></svg></div><h3>Modais &amp; overlays</h3><p>Modal, action menu, drawer, bottom sheet, lightbox.</p></a>
+      </div>
+    </section>
+    <section class="section section-cat"><h2>Sistema vivo</h2><p class="lead">Layout responsivo, movimento e som.</p>
+      <div class="grid-cards">
+        <a class="nav-card" href="layout.html"><div class="ico"><svg class="icon"><use href="#i-grid"/></svg></div><h3>Layout &amp; grid</h3><p>App shell, breakpoints, containers, regras.</p></a>
+        <a class="nav-card" href="animacoes.html"><div class="ico"><svg class="icon"><use href="#i-sparkle"/></svg></div><h3>Animações &amp; efeitos</h3><p>Easings, durations, keyframes, brilhos.</p></a>
+        <a class="nav-card" href="sons.html"><div class="ico"><svg class="icon"><use href="#i-volume"/></svg></div><h3>Sons</h3><p>SFX sintéticos: enviar, receber, click, abrir.</p></a>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="_nav.js"></script>
+<script src="_assets.js"></script>
+<script>document.getElementById('sdNav').innerHTML = window.SD_NAV;</script>
+</body>
+</html>

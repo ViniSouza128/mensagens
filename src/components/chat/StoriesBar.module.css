@@ -1,0 +1,98 @@
+.stories {
+  display: flex;
+  gap: 12px;
+  padding: 10px 14px 12px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.stories::-webkit-scrollbar { display: none; }
+.story {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 4px;
+  cursor: pointer;
+  width: 64px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+}
+.ring {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(135deg, #f43f5e, #f59e0b, #10b981, #6366f1);
+  position: relative;
+  transition: transform var(--t-fast);
+  box-sizing: border-box;
+}
+.story:hover .ring { transform: scale(1.06); }
+/* Inner mask: cria espaço entre ring e avatar (padding visível) */
+.ring::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: var(--surface);
+  z-index: 0;
+}
+.ring > * {
+  position: relative;
+  z-index: 1;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ringSeen { background: var(--border-strong); }
+.ringAdd {
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ringAdd::before { display: none; }
+.ringAdd > * { background: transparent; }
+
+/* Anel "Seu story" — usa accent para indicar conteúdo próprio */
+.ringMine {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+}
+.addBadge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--surface);
+  z-index: 2;
+  line-height: 1;
+}
+.name {
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 64px;
+  color: var(--text);
+}

@@ -1,0 +1,25 @@
+.row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-3);
+}
+.label { font-size: var(--text-sm); color: var(--text); }
+.switch {
+  position: relative;
+  width: 40px; height: 22px;
+  background: var(--surface-3);
+  border-radius: var(--radius-pill);
+  padding: 2px;
+  transition: background var(--t-fast);
+  cursor: pointer;
+  flex: none;
+}
+.switch.on { background: var(--accent); }
+.knob {
+  display: block;
+  width: 18px; height: 18px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  transition: transform var(--t-fast);
+}
+.on .knob { transform: translateX(18px); }

@@ -1,0 +1,69 @@
+/* Chevron — vive dentro da bolha (top-right). Visível apenas no hover/focus
+   da bolha através de regra herdada em MessageBubble.module.css usando
+   data-attr [data-message-chevron] (cruza fronteira de CSS Modules). */
+.chevron {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+  background: color-mix(in oklab, var(--text) 20%, transparent);
+  color: inherit;
+  opacity: 0;
+  transition: opacity 120ms var(--t-fast), background var(--t-fast), transform var(--t-fast);
+  pointer-events: none;
+  z-index: var(--z-dropdown);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.chevron:hover { background: color-mix(in srgb, var(--text) 16%, transparent); transform: scale(1.08); }
+.chevronOpen   { opacity: 1; pointer-events: auto; background: color-mix(in oklab, var(--text) 34%, transparent); }
+
+/* ── Dropdown (renderizado em portal, position: fixed clamped) ───── */
+.menu {
+  position: fixed;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-3);
+  box-shadow: var(--shadow-xl);
+  padding: 6px;
+  z-index: var(--z-dropdown);
+  animation: scaleIn 140ms var(--ease-out);
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 2px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: var(--text-sm);
+  text-align: left;
+  border-radius: var(--radius-2);
+  cursor: pointer;
+  transition: background var(--t-fast);
+}
+.item:hover { background: var(--surface-2); }
+.item > svg { color: var(--text-muted); flex-shrink: 0; }
+.itemDanger { color: var(--danger); }
+.itemDanger > svg { color: var(--danger); }
+.itemDanger:hover { background: color-mix(in oklab, var(--danger) 8%, transparent); }

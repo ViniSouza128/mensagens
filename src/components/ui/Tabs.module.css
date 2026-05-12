@@ -1,0 +1,38 @@
+.tabs {
+  display: flex; gap: 2px;
+  background: var(--surface-2);
+  border-radius: var(--radius-pill);
+  padding: 4px;
+}
+.tab {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  transition: background var(--t-fast), color var(--t-fast);
+  /* Sem quebra de linha — todas as abas alinhadas em uma altura uniforme. */
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  line-height: 1.2;
+}
+.tab:hover { color: var(--text); }
+.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow-1); }
+.badge {
+  background: var(--surface-3);
+  color: var(--text-muted);
+  border-radius: var(--radius-pill);
+  padding: 0 7px;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.active .badge { background: var(--accent); color: var(--accent-contrast); }

@@ -1,0 +1,103 @@
+@import '../styles/tokens.css';
+@import '../styles/reset.css';
+
+/* Layout helpers */
+.row { display: flex; align-items: center; gap: var(--space-2); }
+.col { display: flex; flex-direction: column; gap: var(--space-2); }
+.grow { flex: 1; min-width: 0; }
+.center { display: flex; align-items: center; justify-content: center; }
+
+/* Surfaces */
+.surface { background: var(--surface); color: var(--text); }
+.surface-2 { background: var(--surface-2); color: var(--text); }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-3);
+  box-shadow: var(--shadow-1);
+}
+
+/* Tipografia utilitária */
+.muted { color: var(--text-muted); }
+.faint { color: var(--text-faint); }
+.h1 { font-size: var(--text-section-title); font-weight: 700; letter-spacing: -0.01em; }
+.h2 { font-size: var(--text-xl); font-weight: 600; letter-spacing: -0.005em; }
+.small { font-size: var(--text-sm); }
+.xs { font-size: var(--text-xs); }
+.truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Badges */
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--accent); color: var(--accent-contrast);
+  font-size: 11px; font-weight: 700;
+}
+.badge.muted { background: var(--surface-3); color: var(--text-muted); }
+
+/* Skeleton */
+.skel {
+  background: linear-gradient(90deg, var(--surface-2), var(--surface-3), var(--surface-2));
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-2);
+}
+@keyframes shimmer { 0% { background-position: 0 0; } 100% { background-position: -200% 0; } }
+
+/* Util */
+.divider { height: 1px; background: var(--border); }
+.spacer { flex: 1; }
+
+/* Tooltip simples via title-like (CSS only) */
+[data-tip] { position: relative; }
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: var(--text); color: var(--bg);
+  font-size: var(--text-xs); padding: 4px 8px; border-radius: var(--radius-2);
+  white-space: nowrap; opacity: 0; pointer-events: none;
+  transition: opacity var(--t-fast);
+  z-index: 50;
+}
+[data-tip]:hover::after, [data-tip]:focus-visible::after { opacity: 1; }
+
+/* Variante lateral direita — usada em sidebars (evita sair da tela) */
+[data-tip][data-tip-pos='right']::after {
+  bottom: auto;
+  top: 50%;
+  left: calc(100% + 10px);
+  transform: translateY(-50%);
+  z-index: 1000;
+  box-shadow: var(--shadow-md);
+}
+[data-tip][data-tip-pos='right']::before { z-index: 1000; }
+/* Seta indicadora */
+[data-tip][data-tip-pos='right']::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 4px);
+  transform: translateY(-50%);
+  border: 5px solid transparent;
+  border-right-color: var(--text);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-fast);
+  z-index: 50;
+}
+[data-tip][data-tip-pos='right']:hover::after,
+[data-tip][data-tip-pos='right']:focus-visible::after,
+[data-tip][data-tip-pos='right']:hover::before,
+[data-tip][data-tip-pos='right']:focus-visible::before { opacity: 1; }
+
+/* Tooltip ABAIXO — usado por botões no topo da viewport (header) onde
+   o padrão (acima) sairia pela borda superior. */
+[data-tip][data-tip-pos='bottom']::after {
+  bottom: auto;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  box-shadow: var(--shadow-md);
+}

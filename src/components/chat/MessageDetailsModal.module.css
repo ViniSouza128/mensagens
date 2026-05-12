@@ -1,0 +1,33 @@
+.list {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 14px;
+  margin: 0 0 12px;
+}
+.dt { color: var(--muted); font-size: 13px; }
+.dd { font-size: 13px; margin: 0; }
+
+.h3 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin: 8px 0;
+}
+.edits {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.edit {
+  background: var(--surface-hover);
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+.editTime { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.editBody { font-size: 13px; white-space: pre-wrap; }

@@ -1,0 +1,115 @@
+/* ── Outer: main content + optional right panel side-by-side ─── */
+.outer {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  background: var(--surface);
+}
+
+/* ── Main content column ──────────────────────────────────────── */
+.wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  background: var(--surface);
+  position: relative;
+}
+/* O ChatThread (que tem flex:1) cresce para preencher; demais elementos (header, pinned, search, composer) ficam no tamanho natural. */
+
+/* ── Right info panel — slides in, pushes main content ─────────── */
+.infoPanel {
+  flex-shrink: 0;
+  width: 0;
+  overflow: hidden;
+  transition: width 260ms cubic-bezier(0.2, 0, 0, 1),
+              border-color 260ms cubic-bezier(0.2, 0, 0, 1);
+  border-left: 1px solid transparent;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+}
+
+.infoPanelOpen {
+  width: 360px;
+  border-left-color: var(--border);
+}
+
+@media (min-width: 721px) and (max-width: 1100px) {
+  .infoPanelOpen { width: 300px; }
+}
+
+/* Em telas <= 1100px (laptops menores): info-panel vira overlay sobre o chat
+   ao invés de comprimir, pra não tampar o conteúdo */
+@media (max-width: 1100px) {
+  .infoPanel {
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    z-index: 20;
+    box-shadow: var(--shadow-xl);
+    transform: translateX(100%);
+    width: 360px;
+    transition: transform 260ms cubic-bezier(0.2, 0, 0, 1);
+  }
+  .infoPanelOpen { transform: translateX(0); }
+}
+
+/* On mobile: panel cobre tela toda */
+@media (max-width: 720px) {
+  .infoPanel { width: 100% !important; }
+}
+
+/* ── Loading state ─────────────────────────────────────────────── */
+.loading {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ── Drop overlay ──────────────────────────────────────────────── */
+.dropOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: color-mix(in oklab, var(--accent) 10%, transparent);
+  border: 3px dashed var(--accent);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.dropOverlayText {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--surface);
+  padding: 16px 28px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.dropping { outline: 3px dashed var(--accent); outline-offset: -4px; }
+
+/* ── Report modal textarea ─────────────────────────────────────── */
+.reportInput {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2);
+  padding: var(--space-3);
+  font: inherit;
+  font-size: var(--text-sm);
+  background: var(--surface);
+  color: var(--text);
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+.reportInput:focus { border-color: var(--accent); box-shadow: var(--focus-ring); }

@@ -1,0 +1,19 @@
+﻿<!doctype html><html><body><script>
+document.cookie = 'mensagens_session=eyJhbGciOiJIUzI1NiJ9.eyJ1aWQiOiJld213a3JwbzM3djM3MGNtIiwic2lkIjoiaHl1NTU1emhlZWhtZDU0MCIsImlhdCI6MTc3ODQ0NTU3NiwiZXhwIjoxNzgxMDM3NTc2fQ.v-hR_0dMIGbGYw2LQ96CSCAzkPN1lozalz3wy_DnQnE; path=/; max-age=86400';
+const iframe = document.createElement('iframe');
+iframe.src = '/chats/q8wuxec7u1c6e34s';
+iframe.style.cssText = 'width:1600px;height:900px;border:0;display:block';
+iframe.onload = () => {
+  setTimeout(() => {
+    const doc = iframe.contentDocument;
+    // Click info button
+    const btns = doc.querySelectorAll('button');
+    for (const b of btns) {
+      const al = b.getAttribute('aria-label') || '';
+      if (al.toLowerCase().includes('informa')) { b.click(); break; }
+    }
+  }, 4000);
+};
+document.body.style.margin = '0';
+document.body.appendChild(iframe);
+</script></body></html>

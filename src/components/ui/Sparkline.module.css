@@ -1,0 +1,8 @@
+.svg {
+  display: block;
+  color: var(--accent);
+}
+.placeholder {
+  display: inline-block;
+  border-radius: 4px;
+}

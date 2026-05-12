@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Avatares — Mensagens DS</title>
+<link rel="stylesheet" href="_base.css"/><link rel="stylesheet" href="_components.css"/>
+<style>
+.av-stack{display:flex;align-items:center}
+.av-stack .av{border:2px solid var(--surface);margin-left:-10px}
+.av-stack .av:first-child{margin-left:0}
+.av-stack .more{margin-left:-10px;background:var(--surface-2);color:var(--muted);font-size:12px;font-weight:600;border:2px solid var(--surface)}
+.av.img{background-size:cover;background-position:center}
+</style></head>
+<body>
+<div class="sd-shell"><aside class="sd-nav" id="sdNav"></aside><main class="sd-main">
+<div class="sd-breadcrumb"><a href="index.html">Design System</a><span class="sep">/</span><span>Componentes</span><span class="sep">/</span><span>Avatares</span></div>
+<header class="sd-header"><div><h1 class="title">Avatares</h1><p class="lead">Identificadores visuais. 7 tamanhos, 8 gradientes, indicador online, fotos reais via i.pravatar.cc.</p></div><button class="theme-toggle"></button></header>
+
+<section class="section"><h2>Tamanhos</h2>
+<div class="showcase row" style="gap:16px;align-items:flex-end">
+<div style="text-align:center"><div class="av s24 bg-2">VR</div><div class="muted xs" style="margin-top:4px">24px</div></div>
+<div style="text-align:center"><div class="av s32 bg-2">VR</div><div class="muted xs" style="margin-top:4px">32px</div></div>
+<div style="text-align:center"><div class="av s40 bg-2">VR</div><div class="muted xs" style="margin-top:4px">40px</div></div>
+<div style="text-align:center"><div class="av s56 bg-2">VR</div><div class="muted xs" style="margin-top:4px">56px</div></div>
+<div style="text-align:center"><div class="av s72 bg-2">VR</div><div class="muted xs" style="margin-top:4px">72px</div></div>
+<div style="text-align:center"><div class="av s96 bg-2">VR</div><div class="muted xs" style="margin-top:4px">96px</div></div>
+<div style="text-align:center"><div class="av s120 bg-2">VR</div><div class="muted xs" style="margin-top:4px">120px</div></div>
+</div>
+<table class="tokens"><thead><tr><th>Classe</th><th>Tamanho</th><th>Uso</th></tr></thead><tbody>
+<tr><td>.av.s24</td><td class="value">24×24</td><td>Inline, listas densas</td></tr>
+<tr><td>.av.s32</td><td class="value">32×32</td><td>Mensagens em grupo, members</td></tr>
+<tr><td>.av.s40</td><td class="value">40×40</td><td>Lista de contatos, drawer members</td></tr>
+<tr><td>.av (default)</td><td class="value">44×44</td><td>Lista de chats, header</td></tr>
+<tr><td>.av.s56</td><td class="value">56×56</td><td>Auth screens</td></tr>
+<tr><td>.av.s72</td><td class="value">72×72</td><td>Drawer profile (mobile)</td></tr>
+<tr><td>.av.s96</td><td class="value">96×96</td><td>Drawer profile (desktop)</td></tr>
+<tr><td>.av.s120</td><td class="value">120×120</td><td>Página de perfil</td></tr>
+</tbody></table>
+</section>
+
+<section class="section"><h2>Gradientes (8 cores)</h2>
+<div class="showcase row" style="gap:16px">
+<div style="text-align:center"><div class="av bg-1">A</div><div class="muted xs" style="margin-top:4px">bg-1 indigo</div></div>
+<div style="text-align:center"><div class="av bg-2">B</div><div class="muted xs" style="margin-top:4px">bg-2 teal</div></div>
+<div style="text-align:center"><div class="av bg-3">C</div><div class="muted xs" style="margin-top:4px">bg-3 rose</div></div>
+<div style="text-align:center"><div class="av bg-4">D</div><div class="muted xs" style="margin-top:4px">bg-4 emerald</div></div>
+<div style="text-align:center"><div class="av bg-5">E</div><div class="muted xs" style="margin-top:4px">bg-5 violet</div></div>
+<div style="text-align:center"><div class="av bg-6">F</div><div class="muted xs" style="margin-top:4px">bg-6 sky</div></div>
+<div style="text-align:center"><div class="av bg-7">G</div><div class="muted xs" style="margin-top:4px">bg-7 amber</div></div>
+<div style="text-align:center"><div class="av bg-8">H</div><div class="muted xs" style="margin-top:4px">bg-8 pink</div></div>
+</div>
+</section>
+
+<section class="section"><h2>Indicador online</h2>
+<div class="showcase row" style="gap:16px;align-items:flex-end">
+<div class="av s32 bg-2">VR<span class="dot"></span></div>
+<div class="av s40 bg-2">VR<span class="dot"></span></div>
+<div class="av bg-2">VR<span class="dot"></span></div>
+<div class="av s56 bg-2">VR<span class="dot"></span></div>
+<div class="av s72 bg-2">VR<span class="dot"></span></div>
+<div class="av s96 bg-2">VR<span class="dot"></span></div>
+</div>
+</section>
+
+<section class="section"><h2>Avatares com FOTOS REAIS</h2>
+<p class="lead">Quando o usuário tem foto, o gradiente é substituído. Imagens via <code class="inline">i.pravatar.cc</code>.</p>
+<div class="showcase row" style="gap:18px;align-items:flex-end">
+<div style="text-align:center"><div class="av s32 img" style="background-image:url(https://i.pravatar.cc/64?img=12)"></div><div class="muted xs" style="margin-top:4px">32px</div></div>
+<div style="text-align:center"><div class="av s40 img" style="background-image:url(https://i.pravatar.cc/80?img=5)"></div><div class="muted xs" style="margin-top:4px">40px</div></div>
+<div style="text-align:center"><div class="av img" style="background-image:url(https://i.pravatar.cc/88?img=8)"><span class="dot"></span></div><div class="muted xs" style="margin-top:4px">44px • online</div></div>
+<div style="text-align:center"><div class="av s56 img" style="background-image:url(https://i.pravatar.cc/112?img=16)"></div><div class="muted xs" style="margin-top:4px">56px</div></div>
+<div style="text-align:center"><div class="av s72 img" style="background-image:url(https://i.pravatar.cc/144?img=15)"><span class="dot"></span></div><div class="muted xs" style="margin-top:4px">72px • online</div></div>
+<div style="text-align:center"><div class="av s96 img" style="background-image:url(https://i.pravatar.cc/192?img=33)"></div><div class="muted xs" style="margin-top:4px">96px</div></div>
+<div style="text-align:center"><div class="av s120 img" style="background-image:url(https://i.pravatar.cc/240?img=47)"><span class="dot"></span></div><div class="muted xs" style="margin-top:4px">120px • online</div></div>
+</div>
+<h3>Como usar</h3>
+<pre class="code">&lt;div class="av s56 img" style="background-image: url(...)"&gt;&lt;/div&gt;
+
+&lt;!-- Com indicador online --&gt;
+&lt;div class="av s56 img" style="background-image: url(...)"&gt;
+  &lt;span class="dot"/&gt;
+&lt;/div&gt;</pre>
+</section>
+
+<section class="section"><h2>Avatar stack (grupos)</h2>
+<p class="lead">Sobreposição negativa de 10px para representar membros.</p>
+<div class="showcase row" style="gap:32px">
+<div class="av-stack">
+<div class="av s40 bg-2">VR</div>
+<div class="av s40 bg-3">MS</div>
+<div class="av s40 bg-5">JP</div>
+</div>
+<div class="av-stack">
+<div class="av s40 img" style="background-image:url(https://i.pravatar.cc/80?img=12)"></div>
+<div class="av s40 img" style="background-image:url(https://i.pravatar.cc/80?img=5)"></div>
+<div class="av s40 img" style="background-image:url(https://i.pravatar.cc/80?img=8)"></div>
+<div class="av s40 img" style="background-image:url(https://i.pravatar.cc/80?img=16)"></div>
+<div class="av s40 more">+12</div>
+</div>
+</div>
+</section>
+
+<section class="section"><h2>Regras</h2>
+<div class="callout info"><div><strong>Iniciais:</strong> sempre 2 letras.</div></div>
+<div class="callout warn"><div><strong>Cor consistente:</strong> hash do username determina a cor.</div></div>
+<div class="callout success"><div><strong>Indicador online é opcional</strong> — respeite privacidade.</div></div>
+</section>
+</main></div>
+<script src="_nav.js"></script><script src="_assets.js"></script>
+<script>document.getElementById('sdNav').innerHTML = window.SD_NAV;</script>
+</body></html>

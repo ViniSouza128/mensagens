@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Espaçamento — Mensagens DS</title>
+<link rel="stylesheet" href="_base.css"/><link rel="stylesheet" href="_components.css"/>
+<style>
+.sp-row{display:grid;grid-template-columns:120px 100px 1fr;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);gap:var(--space-4)}
+.sp-row:last-child{border-bottom:0}
+.sp-row .name{font-family:var(--font-mono);color:var(--accent-strong);font-size:13px;font-weight:600}
+.sp-row .value{font-family:var(--font-mono);color:var(--muted);font-size:12.5px}
+.sp-bar{height:16px;background:var(--accent);border-radius:4px;box-shadow:0 2px 6px color-mix(in oklab,var(--accent) 40%,transparent)}
+.demo-stack{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-4)}
+.demo-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-2);padding:var(--space-5)}
+.demo-block .gap-demo{display:flex;gap:var(--space-3)}
+.demo-block .gap-demo>div{width:56px;height:56px;background:var(--accent-soft);border-radius:var(--r-1)}
+.stack-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-3);overflow:hidden}
+</style></head>
+<body>
+<div class="sd-shell">
+<aside class="sd-nav" id="sdNav"></aside>
+<main class="sd-main">
+<div class="sd-breadcrumb"><a href="index.html">Design System</a><span class="sep">/</span><span>Fundamentos</span><span class="sep">/</span><span>Espaçamento</span></div>
+<header class="sd-header"><div><h1 class="title">Espaçamento</h1><p class="lead">Escala de 4px de base. Toda margem, padding e gap deve usar um destes tokens.</p></div><button class="theme-toggle"></button></header>
+
+<section class="section"><h2>Spacing scale</h2>
+<div class="stack-list">
+  <div class="sp-row"><div class="name">--space-1</div><div class="value">4px</div><div><div class="sp-bar" style="width:4px"></div></div></div>
+  <div class="sp-row"><div class="name">--space-2</div><div class="value">8px</div><div><div class="sp-bar" style="width:8px"></div></div></div>
+  <div class="sp-row"><div class="name">--space-3</div><div class="value">12px</div><div><div class="sp-bar" style="width:12px"></div></div></div>
+  <div class="sp-row"><div class="name">--space-4</div><div class="value">16px</div><div><div class="sp-bar" style="width:16px"></div></div></div>
+  <div class="sp-row"><div class="name">--space-5</div><div class="value">20px</div><div><div class="sp-bar" style="width:20px"></div></div></div>
+  <div class="sp-row"><div class="name">--space-6</div><div class="value">24px</div><div><div class="sp-bar" style="width:24px"></div></div></div>
+  <div class="sp-row"><div class="name">--space-8</div><div class="value">32px</div><div><div class="sp-bar" style="width:32px"></div></div></div>
+  <div class="sp-row"><div class="name">--space-10</div><div class="value">40px</div><div><div class="sp-bar" style="width:40px"></div></div></div>
+  <div class="sp-row"><div class="name">--space-12</div><div class="value">48px</div><div><div class="sp-bar" style="width:48px"></div></div></div>
+  <div class="sp-row"><div class="name">--space-16</div><div class="value">64px</div><div><div class="sp-bar" style="width:64px"></div></div></div>
+</div>
+</section>
+
+<section class="section"><h2>Quando usar cada um</h2>
+<table class="tokens"><thead><tr><th>Token</th><th>Uso típico</th></tr></thead><tbody>
+<tr><td class="token">--space-1</td><td>Gaps de ícone-texto, micro-espaçamento</td></tr>
+<tr><td class="token">--space-2</td><td>Gap entre elementos relacionados (icon+label)</td></tr>
+<tr><td class="token">--space-3</td><td>Padding interno de chips, gap em listas densas</td></tr>
+<tr><td class="token">--space-4</td><td>Padding padrão de cards, gap entre componentes</td></tr>
+<tr><td class="token">--space-5</td><td>Padding de cards confortável, margem entre subseções</td></tr>
+<tr><td class="token">--space-6</td><td>Padding generoso, margem entre subseções</td></tr>
+<tr><td class="token">--space-8</td><td>Margem entre seções de página, padding de hero</td></tr>
+<tr><td class="token">--space-10</td><td>Padding do main, espaçamento de página</td></tr>
+<tr><td class="token">--space-12</td><td>Margem grande entre blocos</td></tr>
+<tr><td class="token">--space-16</td><td>Margem hero / between-sections em landing</td></tr>
+</tbody></table>
+</section>
+
+<section class="section"><h2>Visualização</h2>
+<div class="demo-stack">
+<div class="demo-block"><div class="eyebrow" style="margin-bottom:8px">GAP --space-3</div><div class="gap-demo" style="gap:12px"><div></div><div></div><div></div></div></div>
+<div class="demo-block"><div class="eyebrow" style="margin-bottom:8px">GAP --space-4</div><div class="gap-demo" style="gap:16px"><div></div><div></div><div></div></div></div>
+<div class="demo-block"><div class="eyebrow" style="margin-bottom:8px">PADDING --space-4</div><div style="background:var(--accent-soft);padding:16px;border-radius:8px;font-size:13px">Conteúdo interno</div></div>
+<div class="demo-block"><div class="eyebrow" style="margin-bottom:8px">PADDING --space-6</div><div style="background:var(--accent-soft);padding:24px;border-radius:8px;font-size:13px">Conteúdo interno</div></div>
+</div>
+</section>
+
+<section class="section"><h2>Regras</h2>
+<div class="callout info"><div><strong>Múltiplos de 4:</strong> qualquer valor não-token deve ser múltiplo de 4.</div></div>
+<div class="callout warn"><div><strong>Não usar números mágicos:</strong> nunca <code class="inline">padding: 13px</code>, sempre <code class="inline">var(--space-3)</code>.</div></div>
+</section>
+</main></div>
+<script src="_nav.js"></script><script src="_assets.js"></script>
+<script>document.getElementById('sdNav').innerHTML = window.SD_NAV;</script>
+</body></html>

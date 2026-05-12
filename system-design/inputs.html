@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Inputs &amp; campos — Mensagens Design System</title>
+<link rel="stylesheet" href="_base.css" />
+<link rel="stylesheet" href="_components.css" />
+</head>
+<body>
+<div class="sd-shell">
+  <aside class="sd-nav" id="sdNav"></aside>
+  <main class="sd-main">
+
+    <div class="sd-breadcrumb">
+      <a href="index.html">Design System</a>
+      <span class="sep">/</span>
+      <span>Componentes</span>
+      <span class="sep">/</span>
+      <span>Inputs &amp; campos</span>
+    </div>
+    <header class="sd-header">
+      <div>
+        <h1 class="title">Inputs &amp; campos</h1>
+        <p class="lead">Todos os controles de formulário: text, textarea, select, switch, radio group e variações.</p>
+      </div>
+      <button class="theme-toggle"></button>
+    </header>
+
+    <!-- ─── INPUT TEXT ─── -->
+    <section class="section">
+      <h2>Input de texto</h2>
+
+      <h3>Default</h3>
+      <div class="showcase" style="max-width:480px">
+        <div class="field">
+          <label>Nome de usuário</label>
+          <input class="input" placeholder="@maria.silva" />
+          <div class="hint">Letras, números, _ ou . — entre 3 e 24 caracteres</div>
+        </div>
+      </div>
+
+      <h3>Com ícone (search)</h3>
+      <div class="showcase" style="max-width:480px">
+        <input class="input input-search" placeholder="Buscar conversas e contatos" />
+      </div>
+
+      <h3>Focus</h3>
+      <div class="showcase" style="max-width:480px">
+        <input class="input" value="Conteúdo digitado" autofocus style="border-color:var(--accent);box-shadow:var(--focus)" />
+      </div>
+
+      <h3>Error</h3>
+      <div class="showcase" style="max-width:480px">
+        <div class="field">
+          <label>E-mail</label>
+          <input class="input error" value="email-invalido" />
+          <div class="err">Formato de e-mail inválido</div>
+        </div>
+      </div>
+
+      <h3>Disabled</h3>
+      <div class="showcase" style="max-width:480px">
+        <input class="input" value="Campo bloqueado" disabled style="opacity:.5;cursor:not-allowed" />
+      </div>
+    </section>
+
+    <!-- ─── TEXTAREA ─── -->
+    <section class="section">
+      <h2>Textarea</h2>
+      <div class="showcase" style="max-width:480px">
+        <div class="field">
+          <label>Bio</label>
+          <textarea class="textarea" placeholder="Conte um pouco sobre você...">Designer apaixonado por criar coisas legais. Café e código ☕💻</textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SELECT NATIVO ─── -->
+    <section class="section">
+      <h2>Select nativo (com seta animada)</h2>
+      <p class="lead">Select padrão do navegador, mas com seta SVG customizada que muda de cor no hover, gira ao receber foco e desliza ligeiramente.</p>
+      <div class="showcase" style="max-width:480px">
+        <div class="field">
+          <label>Tema</label>
+          <select class="select">
+            <option>Claro</option>
+            <option>Escuro</option>
+            <option>Automático</option>
+          </select>
+        </div>
+        <div class="field" style="margin-top:14px">
+          <label>Idioma</label>
+          <select class="select">
+            <option>Português (Brasil)</option>
+            <option>English</option>
+            <option>Español</option>
+            <option>Français</option>
+          </select>
+        </div>
+      </div>
+
+      <table class="tokens">
+        <thead><tr><th>Estado</th><th>Visual</th></tr></thead>
+        <tbody>
+          <tr><td>Default</td><td class="value">Border var(--border), seta cinza</td></tr>
+          <tr><td>Hover</td><td class="value">Border var(--accent), seta accent, slide right -2px</td></tr>
+          <tr><td>Focus</td><td class="value">Box-shadow accent ring, seta vira ↑ (rotated)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ─── CUSTOM SELECT (DROPDOWN RICO) ─── -->
+    <section class="section">
+      <h2>Custom select <code class="inline">.cselect</code> (dropdown rico)</h2>
+      <p class="lead">Quando o select nativo é insuficiente: ícones, avatares, descrições, multi-níveis. JS injeta comportamento.</p>
+
+      <div class="showcase column" style="max-width:480px">
+        <div class="field">
+          <label>Selecione um contato</label>
+          <div class="cselect">
+            <button type="button" class="cselect-trigger">
+              <div class="av s32 bg-2" style="width:24px;height:24px;font-size:10px">VR</div>
+              <span class="val">Vinícius Rodrigues</span>
+              <svg class="arr"><use href="#i-down"/></svg>
+            </button>
+            <div class="cselect-menu">
+              <div class="cselect-opt active" data-value="vini" data-label="Vinícius Rodrigues">
+                <div class="av s32 bg-2" style="width:24px;height:24px;font-size:10px">VR</div>
+                <span>Vinícius Rodrigues</span>
+                <svg class="check icon-sm"><use href="#i-check"/></svg>
+              </div>
+              <div class="cselect-opt" data-value="maria" data-label="Maria Silva">
+                <div class="av s32 bg-3" style="width:24px;height:24px;font-size:10px">MS</div>
+                <span>Maria Silva</span>
+                <svg class="check icon-sm"><use href="#i-check"/></svg>
+              </div>
+              <div class="cselect-opt" data-value="joao" data-label="João Pereira">
+                <div class="av s32 bg-5" style="width:24px;height:24px;font-size:10px">JP</div>
+                <span>João Pereira</span>
+                <svg class="check icon-sm"><use href="#i-check"/></svg>
+              </div>
+              <div class="cselect-opt" data-value="carla" data-label="Carla Mendes">
+                <div class="av s32 bg-6" style="width:24px;height:24px;font-size:10px">CM</div>
+                <span>Carla Mendes</span>
+                <svg class="check icon-sm"><use href="#i-check"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Status de privacidade</label>
+          <div class="cselect">
+            <button type="button" class="cselect-trigger">
+              <svg class="icon-sm" style="color:var(--success)"><use href="#i-globe"/></svg>
+              <span class="val">Todos podem ver</span>
+              <svg class="arr"><use href="#i-down"/></svg>
+            </button>
+            <div class="cselect-menu">
+              <div class="cselect-opt active" data-label="Todos podem ver">
+                <svg class="icon-sm" style="color:var(--success)"><use href="#i-globe"/></svg>
+                <span>Todos podem ver</span>
+                <svg class="check icon-sm"><use href="#i-check"/></svg>
+              </div>
+              <div class="cselect-opt" data-label="Apenas contatos">
+                <svg class="icon-sm" style="color:var(--accent)"><use href="#i-users"/></svg>
+                <span>Apenas contatos</span>
+                <svg class="check icon-sm"><use href="#i-check"/></svg>
+              </div>
+              <div class="cselect-opt" data-label="Ninguém">
+                <svg class="icon-sm" style="color:var(--muted)"><use href="#i-eye-off"/></svg>
+                <span>Ninguém</span>
+                <svg class="check icon-sm"><use href="#i-check"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <div>O dropdown abre com animação <strong>scale(.97) → scale(1)</strong> + <strong>opacity 0 → 1</strong> em 180ms (ease-out). Fecha por clique fora ou Esc.</div>
+      </div>
+    </section>
+
+    <!-- ─── RADIO GROUP (opts) ─── -->
+    <section class="section">
+      <h2>Radio group (opts)</h2>
+      <p class="lead">Para escolhas mutuamente exclusivas com até ~6 opções. Mais que isso, use <code class="inline">.select</code>.</p>
+      <div class="showcase column" style="max-width:480px">
+        <div class="field">
+          <label>Tema</label>
+          <div class="opts">
+            <div class="opt active">☀️ Claro</div>
+            <div class="opt">🌙 Escuro</div>
+            <div class="opt">⚙️ Auto</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Densidade</label>
+          <div class="opts">
+            <div class="opt">Compacto</div>
+            <div class="opt active">Confortável</div>
+            <div class="opt">Espaçoso</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SWITCH ─── -->
+    <section class="section">
+      <h2>Switch</h2>
+      <p class="lead">Para configurações on/off de efeito imediato. Sem botão "salvar".</p>
+      <div class="showcase column" style="max-width:520px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <strong>Confirmações de leitura</strong>
+            <div class="muted" style="font-size:12.5px;margin-top:2px">Mostrar quando você leu uma mensagem</div>
+          </div>
+          <button class="switch on" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <strong>Bloquear desconhecidos</strong>
+            <div class="muted" style="font-size:12.5px;margin-top:2px">Apenas contatos podem te enviar mensagens</div>
+          </div>
+          <button class="switch" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0">
+          <div>
+            <strong>Sons</strong>
+            <div class="muted" style="font-size:12.5px;margin-top:2px">Tocar som ao receber mensagem</div>
+          </div>
+          <button class="switch on" onclick="this.classList.toggle('on')"></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── ANATOMIA DO FIELD ─── -->
+    <section class="section">
+      <h2>Anatomia do field</h2>
+      <pre class="code"><span class="k">&lt;div class</span>=<span class="s">"field"</span><span class="k">&gt;</span>
+  <span class="k">&lt;label&gt;</span>Nome do campo<span class="k">&lt;/label&gt;</span>
+  <span class="k">&lt;input class</span>=<span class="s">"input"</span> <span class="k">placeholder</span>=<span class="s">"..."</span> <span class="k">/&gt;</span>
+  <span class="k">&lt;div class</span>=<span class="s">"hint"</span><span class="k">&gt;</span>Texto de ajuda opcional<span class="k">&lt;/div&gt;</span>
+  <span class="c">&lt;!-- ou --&gt;</span>
+  <span class="k">&lt;div class</span>=<span class="s">"err"</span><span class="k">&gt;</span>Mensagem de erro<span class="k">&lt;/div&gt;</span>
+<span class="k">&lt;/div&gt;</span></pre>
+
+      <table class="tokens">
+        <thead><tr><th>Parte</th><th>Spec</th></tr></thead>
+        <tbody>
+          <tr><td>Label</td><td class="value">13px / weight 500 / margin-bottom 6px</td></tr>
+          <tr><td>Input</td><td class="value">padding 10px 14px / border 1.5px / radius var(--r-2) / font-size 14px</td></tr>
+          <tr><td>Hint</td><td class="value">12px / cor --muted / margin-top 4px</td></tr>
+          <tr><td>Error</td><td class="value">12px / cor --danger / margin-top 4px</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ─── REGRAS ─── -->
+    <section class="section">
+      <h2>Regras</h2>
+      <div class="callout info">
+        <div><strong>Always-visible labels:</strong> placeholders nunca substituem labels (acessibilidade).</div>
+      </div>
+      <div class="callout warn">
+        <div><strong>Switch vs checkbox:</strong> switch para configurações com efeito imediato; checkbox para listas de seleção em formulários.</div>
+      </div>
+    </section>
+
+  </main>
+</div>
+<script src="_nav.js"></script>
+<script src="_assets.js"></script>
+<script>document.getElementById('sdNav').innerHTML = window.SD_NAV;</script>
+</body>
+</html>

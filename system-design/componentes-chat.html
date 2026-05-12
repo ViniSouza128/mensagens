@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Componentes de chat — Mensagens DS</title>
+<link rel="stylesheet" href="_base.css"/><link rel="stylesheet" href="_components.css"/>
+<style>
+.chat-preview{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-3);overflow:hidden;display:flex;flex-direction:column;height:480px}
+.ch-head{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--glass-strong);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.ch-head .who-text{flex:1;min-width:0}
+.ch-head .name{font-weight:600;font-size:15px}
+.ch-head .status{font-size:12px;color:var(--success)}
+.ch-head .status::before{content:"";display:inline-block;width:6px;height:6px;background:var(--success);border-radius:50%;margin-right:5px}
+.ch-pinned{display:flex;align-items:center;gap:10px;padding:10px 16px;background:color-mix(in oklab,var(--accent) 6%,var(--surface));border-bottom:1px solid var(--border);font-size:13px}
+.ch-pinned .pi{color:var(--accent)}
+.ch-pinned .lab{font-weight:600;color:var(--accent);margin-right:6px;font-size:12px}
+.ch-thread{flex:1;overflow-y:auto;padding:12px;background:var(--bg);display:flex;flex-direction:column;gap:4px}
+.ch-thread .date{text-align:center;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:8px 0 4px}
+.ch-msg{display:flex;gap:8px;align-items:flex-end;padding:0 4px}
+.ch-msg.mine{justify-content:flex-end}
+.ch-composer{display:flex;gap:4px;align-items:flex-end;padding:10px;background:var(--surface);border-top:1px solid var(--border)}
+.ch-composer .ta{flex:1;background:var(--surface-2);border:1.5px solid transparent;border-radius:22px;padding:10px 14px;font-size:14px;color:var(--text);outline:none;min-height:24px}
+.list-preview{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-3);overflow:hidden}
+.li-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 14px;cursor:pointer;transition:background var(--t-fast);position:relative;border-bottom:1px solid color-mix(in oklab,var(--border) 50%,transparent)}
+.li-row:last-child{border-bottom:0}
+.li-row:hover{background:var(--hover)}
+.li-row.active{background:var(--accent-soft)}
+.li-row.active::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;background:var(--accent);border-radius:0 4px 4px 0}
+.li-row .meta{min-width:0}
+.li-row .row1{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.li-row .name{font-weight:600;font-size:14.5px}
+.li-row .time{font-size:11px;color:var(--faint);flex-shrink:0}
+.li-row .preview{font-size:13px;color:var(--muted)}
+.li-row .preview.typing{color:var(--accent);font-style:italic;font-weight:500}
+.li-row .right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.li-row .un{background:var(--accent);color:#fff;min-width:20px;height:20px;padding:0 6px;border-radius:999px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.av.img{background-size:cover;background-position:center}
+</style></head>
+<body>
+<div class="sd-shell"><aside class="sd-nav" id="sdNav"></aside><main class="sd-main">
+<div class="sd-breadcrumb"><a href="index.html">Design System</a><span class="sep">/</span><span>Componentes</span><span class="sep">/</span><span>Componentes de chat</span></div>
+<header class="sd-header"><div><h1 class="title">Componentes de chat</h1><p class="lead">Bubble, header, composer, list item, info panel, pinned bar.</p></div><button class="theme-toggle"></button></header>
+
+<section class="section"><h2>Bubble (mensagem)</h2>
+<div class="showcase column" style="background:var(--bg);padding:24px;gap:6px">
+<div class="bubble" style="align-self:flex-start"><div class="body">Olá! Tudo bem?</div><div class="meta">10:30</div></div>
+<div class="bubble mine" style="align-self:flex-end"><div class="body">Tudo ótimo, e você?</div><div class="meta">10:32 ✓✓</div></div>
+<div class="bubble" style="align-self:flex-start"><div class="body">Tô bem também 😄</div><div class="meta">10:33</div></div>
+</div>
+
+<h3>Com mídia</h3>
+<div class="showcase column" style="background:var(--bg);padding:24px">
+<div class="bubble" style="align-self:flex-start;padding:6px 6px 4px">
+<img src="https://picsum.photos/seed/bub1/400/280" style="width:280px;height:180px;object-fit:cover;border-radius:10px;display:block"/>
+<div class="body" style="padding:6px 6px 0">Olha que vista!</div>
+<div class="meta" style="padding:0 6px">10:45</div>
+</div>
+</div>
+
+<h3>Com reply / quote</h3>
+<div class="showcase column" style="background:var(--bg);padding:24px">
+<div class="bubble mine" style="align-self:flex-end">
+<div style="border-left:3px solid currentColor;padding:4px 10px;background:rgba(255,255,255,.1);border-radius:8px;margin-bottom:6px;font-size:12.5px">
+<strong style="display:block;font-size:11.5px;font-weight:700">Vinícius</strong>
+<div style="opacity:.85">Você viu o novo design?</div>
+</div>
+<div class="body">Vi sim! Ficou incrível 🎉</div>
+<div class="meta">10:40 ✓✓</div>
+</div>
+</div>
+
+<h3>Reactions</h3>
+<div class="showcase column" style="background:var(--bg);padding:24px">
+<div class="bubble" style="align-self:flex-start">
+<div class="body">Tô bem também 😄</div>
+<div style="display:flex;gap:4px;margin-top:6px">
+<span style="background:var(--accent-soft);color:var(--accent);border:1px solid color-mix(in oklab,var(--accent) 20%,transparent);padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600">❤️ 1</span>
+<span style="background:var(--surface);border:1px solid var(--border);padding:2px 8px;border-radius:999px;font-size:12px;color:var(--text)">👍 2</span>
+</div>
+<div class="meta" style="margin-top:4px">10:33</div>
+</div>
+</div>
+
+<h3>Hover &amp; ações de mensagem</h3>
+<p class="lead" style="max-width:720px">
+Padrão clonado do <strong>WhatsApp Web</strong>: bolha fica <em>limpa</em> em estado normal.
+No hover/focus aparecem dois affordances pontuais e nada mais. Os popovers
+abertos são renderizados via <code>React Portal</code> com <code>position: fixed</code>
+e <strong>top/left clampados à viewport</strong> — nunca cortam fora da tela.
+</p>
+<div class="showcase column" style="background:var(--bg);padding:32px;gap:24px">
+
+<!-- Mensagem recebida — smile à DIREITA da bolha, chevron no canto sup. dir. -->
+<div style="display:flex;align-items:center;gap:8px;align-self:flex-start;max-width:560px">
+  <div class="bubble" style="position:relative;margin:0">
+    <div class="body">Oi! Tudo bem?</div>
+    <div class="meta">10:30</div>
+    <button aria-label="Opções" title="Opções" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.2);color:inherit;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(6px)">
+      <svg class="icon-sm"><use href="#i-down"/></svg>
+    </button>
+  </div>
+  <button aria-label="Reagir" title="Reagir" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow-sm);flex-shrink:0">
+    <svg class="icon"><use href="#i-smile"/></svg>
+  </button>
+</div>
+
+<!-- Mensagem minha — smile à ESQUERDA da bolha, chevron no canto sup. dir. -->
+<div style="display:flex;align-items:center;gap:8px;align-self:flex-end;max-width:560px">
+  <button aria-label="Reagir" title="Reagir" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow-sm);flex-shrink:0">
+    <svg class="icon"><use href="#i-smile"/></svg>
+  </button>
+  <div class="bubble mine" style="position:relative;margin:0">
+    <div class="body">Tudo ótimo, e você?</div>
+    <div class="meta">10:32 ✓✓</div>
+    <button aria-label="Opções" title="Opções" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.32);color:inherit;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(6px)">
+      <svg class="icon-sm"><use href="#i-down"/></svg>
+    </button>
+  </div>
+</div>
+
+</div>
+
+<div class="showcase" style="background:var(--bg);padding:24px;gap:16px;flex-wrap:wrap">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-2);padding:14px 16px;flex:1;min-width:240px">
+    <div style="font-weight:600;margin-bottom:4px">Smile (esquerda das minhas / direita das recebidas)</div>
+    <p style="margin:0;color:var(--muted);font-size:13px;line-height:1.5">
+      Click abre apenas o <strong>ReactionPicker</strong> (linha de emojis em portal flutuante).
+      Sem menu de itens, sem ruído.
+    </p>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-2);padding:14px 16px;flex:1;min-width:240px">
+    <div style="font-weight:600;margin-bottom:4px">Chevron ⌄ (canto superior direito da bolha)</div>
+    <p style="margin:0;color:var(--muted);font-size:13px;line-height:1.5">
+      Click abre apenas o <strong>menu de itens</strong> (Dados, Responder, Copiar,
+      Encaminhar, Fixar, Favoritar, Selecionar, Editar, Apagar/Denunciar).
+    </p>
+  </div>
+</div>
+
+<div class="showcase" style="background:var(--bg);padding:16px 24px">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-2);padding:14px 16px;width:100%">
+    <div style="font-weight:600;margin-bottom:6px">Regras de ouro</div>
+    <ul style="margin:0;padding-left:18px;color:var(--muted);font-size:13px;line-height:1.7">
+      <li>Default: <strong>nada</strong> visível além de bolha + meta. Sem reactions row, sem dots permanentes.</li>
+      <li>Hover/focus revela <strong>somente</strong> o smile externo + o chevron interno.</li>
+      <li>Reações e itens de menu vivem em <strong>botões separados</strong> — cada um faz uma coisa.</li>
+      <li>Popovers são <strong>portalizados</strong> em <code>document.body</code> com <code>position: fixed</code>.</li>
+      <li>Posição é recomputada em <code>resize</code> e <code>scroll</code>; clampada a <code>[PAD, viewport - dim - PAD]</code>.</li>
+      <li>Bolha <strong>nunca</strong> usa <code>contain: layout</code> (recortaria o chevron).</li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<section class="section"><h2>Chat header</h2>
+<div class="showcase">
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-3);overflow:hidden;width:100%">
+<div class="ch-head">
+<div class="av img" style="background-image:url(https://i.pravatar.cc/88?img=12)"><span class="dot"></span></div>
+<div class="who-text"><div class="name">Vinícius Rodrigues</div><div class="status">on-line</div></div>
+<button class="ibtn"><svg class="icon"><use href="#i-search"/></svg></button>
+<button class="ibtn"><svg class="icon"><use href="#i-info"/></svg></button>
+</div>
+</div>
+</div>
+</section>
+
+<section class="section"><h2>Pinned bar</h2>
+<div class="showcase">
+<div class="ch-pinned" style="border-radius:var(--r-3);width:100%">
+<svg class="icon-sm pi"><use href="#i-pin"/></svg>
+<div style="flex:1"><span class="lab">Fixada:</span>Reunião amanhã às 14h, não esqueça!</div>
+</div>
+</div>
+</section>
+
+<section class="section"><h2>List item (com fotos reais)</h2>
+<div class="showcase">
+<div class="list-preview" style="width:100%;max-width:380px">
+<div class="li-row active">
+<div class="av img" style="background-image:url(https://i.pravatar.cc/88?img=12)"><span class="dot"></span></div>
+<div class="meta">
+<div class="row1"><span class="name">Vinícius Rodrigues</span><span class="time">12:30</span></div>
+<div class="preview">Oi, como vc tá hoje?</div>
+</div>
+<div class="right"><svg class="icon-sm" style="color:var(--muted)"><use href="#i-pin"/></svg></div>
+</div>
+<div class="li-row">
+<div class="av img" style="background-image:url(https://i.pravatar.cc/88?img=5)"><span class="dot"></span></div>
+<div class="meta">
+<div class="row1"><span class="name">Maria Silva</span><span class="time">11:45</span></div>
+<div class="preview typing">digitando…</div>
+</div>
+<div class="right"><span class="un">2</span></div>
+</div>
+<div class="li-row">
+<div class="av bg-4">D</div>
+<div class="meta">
+<div class="row1"><span class="name">Equipe de Design</span><span class="time">10:20</span></div>
+<div class="preview">João: Acabei o protótipo!</div>
+</div>
+<div class="right"><span class="un">5</span></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="section"><h2>Composer</h2>
+<div class="showcase">
+<div class="ch-composer" style="border:1px solid var(--border);border-radius:var(--r-3);width:100%;border-top:1px solid var(--border)">
+<button class="ibtn"><svg class="icon"><use href="#i-paperclip"/></svg></button>
+<button class="ibtn"><svg class="icon"><use href="#i-image"/></svg></button>
+<div class="ta" contenteditable="true" style="display:flex;align-items:center">Mensagem (Enter para enviar)</div>
+<button class="ibtn"><svg class="icon"><use href="#i-smile"/></svg></button>
+<button class="send-btn"><svg class="icon-sm"><use href="#i-send"/></svg></button>
+</div>
+</div>
+</section>
+
+<section class="section"><h2>Tudo junto</h2>
+<div class="showcase" style="padding:0;background:transparent;border:0">
+<div class="chat-preview">
+<div class="ch-head">
+<div class="av img" style="background-image:url(https://i.pravatar.cc/88?img=12)"><span class="dot"></span></div>
+<div class="who-text"><div class="name">Vinícius Rodrigues</div><div class="status">on-line</div></div>
+<button class="ibtn"><svg class="icon"><use href="#i-search"/></svg></button>
+<button class="ibtn"><svg class="icon"><use href="#i-info"/></svg></button>
+</div>
+<div class="ch-pinned"><svg class="icon-sm pi"><use href="#i-pin"/></svg><div style="flex:1"><span class="lab">Fixada:</span>Reunião 14h amanhã</div></div>
+<div class="ch-thread">
+<div class="date">HOJE</div>
+<div class="ch-msg"><div class="av s32 img" style="background-image:url(https://i.pravatar.cc/64?img=12)"></div><div class="bubble"><div class="body">Oi! Tudo bem?</div><div class="meta">10:30</div></div></div>
+<div class="ch-msg mine"><div class="bubble mine"><div class="body">Tudo ótimo!</div><div class="meta">10:32 ✓✓</div></div></div>
+<div class="ch-msg"><div class="av s32 img" style="background-image:url(https://i.pravatar.cc/64?img=12)"></div><div class="bubble"><div class="body">😊</div><div class="meta">10:33</div></div></div>
+</div>
+<div class="ch-composer">
+<button class="ibtn"><svg class="icon"><use href="#i-paperclip"/></svg></button>
+<div class="ta" contenteditable="true" style="display:flex;align-items:center">Mensagem...</div>
+<button class="send-btn"><svg class="icon-sm"><use href="#i-send"/></svg></button>
+</div>
+</div>
+</div>
+</section>
+</main></div>
+<script src="_nav.js"></script><script src="_assets.js"></script>
+<script>document.getElementById('sdNav').innerHTML = window.SD_NAV;</script>
+</body></html>

@@ -1,0 +1,131 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.preview {
+  display: grid;
+  place-items: center;
+  background: #0b0b0b;
+  border-radius: 10px;
+  min-height: 280px;
+  max-height: 60vh;
+  padding: 8px;
+  overflow: hidden;
+}
+.image, .video {
+  max-width: 100%;
+  max-height: 56vh;
+  border-radius: 8px;
+  transition: transform 0.18s ease;
+}
+.audio { width: 100%; }
+.fileBox {
+  color: #ddd;
+  text-align: center;
+  padding: 30px;
+}
+.fileName { font-weight: 600; font-size: 16px; word-break: break-all; }
+.fileSize { font-size: 13px; color: #999; margin-top: 4px; }
+
+.captionRow { display: flex; gap: 8px; }
+
+/* Upload progress bar */
+.progressWrap {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progressBar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.2s ease;
+}
+
+/* Footer layout */
+.footerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.footerLeft { display: flex; gap: 6px; flex-wrap: wrap; }
+.footerRight { display: flex; align-items: center; gap: 8px; }
+.progressLabel { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* ── Crop overlay ──────────────────────────────────────── */
+.cropWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cropContainer {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #0b0b0b;
+  line-height: 0; /* remove gap under img */
+}
+
+.cropImg {
+  display: block;
+  max-width: 100%;
+  max-height: 60vh;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Semi-transparent dark overlay pieces */
+.cropDark {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+/* Selection box */
+.cropSel {
+  position: absolute;
+  border: 1.5px solid rgba(255,255,255,0.9);
+  cursor: move;
+  box-sizing: border-box;
+}
+
+/* Rule-of-thirds grid inside selection */
+.cropGrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px);
+  background-size: 33.333% 33.333%;
+  pointer-events: none;
+}
+
+/* Corner handles */
+.cropHandle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border: 1.5px solid rgba(0,0,0,0.3);
+  border-radius: 2px;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+.cH_nw { cursor: nwse-resize; }
+.cH_ne { cursor: nesw-resize; }
+.cH_sw { cursor: nesw-resize; }
+.cH_se { cursor: nwse-resize; }
+
+.cropActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

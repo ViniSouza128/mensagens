@@ -1,0 +1,104 @@
+.swipeWrap {
+  position: relative;
+  overflow: hidden;
+  margin: 2px var(--space-2);
+}
+
+.actionLayer {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: flex;
+  width: 160px;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms var(--t-fast);
+}
+/* Apenas em dispositivos touch e quando o item foi arrastado para revelar */
+.swipeWrap:has(.item[style*="translateX"]) .actionLayer {
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (hover: hover) and (pointer: fine) {
+  /* Desktop: jamais mostrar a camada de ações por trás (não há swipe). */
+  .actionLayer { display: none; }
+}
+.action {
+  flex: 1;
+  border: 0;
+  cursor: pointer;
+  color: var(--accent-contrast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.actionPin { background: var(--accent); }
+.actionMute { background: var(--warning); }
+.actionArchive { background: var(--text-muted); border-top-right-radius: var(--radius-3); border-bottom-right-radius: var(--radius-3); }
+
+.item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--density-list-row-pad, var(--space-3)) var(--space-3);
+  min-height: var(--density-row-min, 56px);
+  border-radius: var(--radius-3);
+  color: var(--text);
+  background: var(--surface);
+  transition: background var(--t-fast), transform 220ms var(--ease-out);
+  position: relative;
+  z-index: 1;
+  /* Isola layout/paint do item — repaints da lista não invalidam toda a árvore. */
+  contain: paint;
+  content-visibility: auto;
+  contain-intrinsic-size: auto var(--density-row-min, 56px);
+}
+.item:hover { background: var(--surface-2); text-decoration: none; }
+.item.active { background: var(--accent-soft); }
+
+.body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.row1 { display: flex; align-items: center; gap: var(--space-2); }
+.row2 { display: flex; align-items: center; gap: var(--space-2); }
+.name { flex: 1; font-weight: 600; font-size: var(--text-list-name); }
+.time { font-size: var(--text-list-time); color: var(--text-faint); flex: none; }
+.preview { flex: 1; font-size: var(--text-list-preview); color: var(--text-muted); }
+.meta { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.metaIcon { color: var(--text-faint); display: inline-flex; }
+.unread {
+  min-width: 20px; height: 20px; padding: 0 6px;
+  background: var(--accent); color: var(--accent-contrast);
+  border-radius: var(--radius-pill); font-size: 11px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  animation: pulseRing 1.4s ease-out 1;
+}
+.iconRow { display: inline-flex; align-items: center; gap: 4px; }
+.draftTag { color: var(--danger); font-weight: 600; }
+.typing {
+  color: var(--accent);
+  font-style: italic;
+  font-weight: 500;
+}
+.botBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  height: 16px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: var(--radius-pill);
+  flex: none;
+}
+
+.mentionMark {
+  background: var(--accent-soft);
+  color: var(--accent);
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}

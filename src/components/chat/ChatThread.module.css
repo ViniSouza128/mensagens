@@ -1,0 +1,104 @@
+.wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--chat-wallpaper, transparent);
+  /* Scroll fluido + isolamento de pintura — o thread é uma camada compositada. */
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  contain: layout paint;
+  -webkit-overflow-scrolling: touch;
+}
+.sentinel { height: 1px; flex-shrink: 0; }
+/* Quando há poucas mensagens, empurra-as para a base do scroll
+   (estilo iMessage/WhatsApp). Auto-margin no primeiro item após o sentinel
+   colapsa para 0 quando o conteúdo já transborda, então o scroll continua natural. */
+.scroll > :nth-child(2) { margin-top: auto; }
+
+.dateChip {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
+}
+.dateChip > span {
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-xs);
+}
+
+/* Sticky date label flutuando no topo enquanto rola */
+.stickyDate {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  pointer-events: none;
+  animation: fadeIn 180ms var(--ease-out) both;
+}
+.stickyDate > span {
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  backdrop-filter: blur(6px);
+}
+
+.scrollBtn {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,.18);
+  cursor: pointer;
+  z-index: 5;
+  animation: slideUp 180ms var(--ease-out) both;
+}
+.scrollBtn:hover { background: var(--surface-2); }
+.scrollBtnUnread { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); }
+.scrollBtnUnread:hover { filter: brightness(.95); background: var(--accent); }
+.scrollBtnBadge {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: var(--danger);
+  color: var(--accent-contrast);
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--surface);
+}

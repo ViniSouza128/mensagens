@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Iconografia — Mensagens DS</title>
+<link rel="stylesheet" href="_base.css"/><link rel="stylesheet" href="_components.css"/>
+<style>
+.icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:var(--space-3)}
+.icon-cell{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-2);padding:var(--space-4);text-align:center;transition:all var(--t-fast);cursor:pointer}
+.icon-cell:hover{border-color:var(--accent);transform:translateY(-2px)}
+.icon-cell .icon{width:24px;height:24px;color:var(--text);margin:0 auto 8px}
+.icon-cell .name{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+</style></head>
+<body>
+<div class="sd-shell"><aside class="sd-nav" id="sdNav"></aside><main class="sd-main">
+<div class="sd-breadcrumb"><a href="index.html">Design System</a><span class="sep">/</span><span>Fundamentos</span><span class="sep">/</span><span>Iconografia</span></div>
+<header class="sd-header"><div><h1 class="title">Iconografia</h1><p class="lead">Biblioteca SVG, estilo Lucide. Stroke 2px, line caps round, viewBox 24×24.</p></div><button class="theme-toggle"></button></header>
+
+<section class="section"><h2>Especificação</h2>
+<table class="tokens"><thead><tr><th>Atributo</th><th>Valor</th></tr></thead><tbody>
+<tr><td>ViewBox</td><td class="value">0 0 24 24</td></tr>
+<tr><td>Stroke</td><td class="value">currentColor</td></tr>
+<tr><td>Stroke-width</td><td class="value">2px</td></tr>
+<tr><td>Linecap/linejoin</td><td class="value">round</td></tr>
+<tr><td>Fill</td><td class="value">none</td></tr>
+</tbody></table>
+<h3>Tamanhos</h3>
+<div class="showcase row">
+<div style="text-align:center"><svg class="icon-sm"><use href="#i-bell"/></svg><div class="muted xs" style="margin-top:6px">.icon-sm 16px</div></div>
+<div style="text-align:center"><svg class="icon"><use href="#i-bell"/></svg><div class="muted xs" style="margin-top:6px">.icon 20px</div></div>
+<div style="text-align:center"><svg class="icon-lg"><use href="#i-bell"/></svg><div class="muted xs" style="margin-top:6px">.icon-lg 24px</div></div>
+<div style="text-align:center"><svg class="icon-xl"><use href="#i-bell"/></svg><div class="muted xs" style="margin-top:6px">.icon-xl 36px</div></div>
+</div>
+</section>
+
+<section class="section"><h2>Biblioteca</h2>
+<div class="icon-grid" id="iconGrid"></div>
+</section>
+
+<section class="section"><h2>Como usar</h2>
+<pre class="code">&lt;svg class="icon"&gt;&lt;use href="#i-bell" /&gt;&lt;/svg&gt;
+&lt;svg class="icon-sm"&gt;&lt;use href="#i-x" /&gt;&lt;/svg&gt;</pre>
+</section>
+
+<section class="section"><h2>Regras</h2>
+<div class="callout info"><div><strong>Cor herdada:</strong> ícones usam <code class="inline">stroke: currentColor</code>.</div></div>
+<div class="callout warn"><div><strong>Não escale com transform:</strong> use as classes de tamanho.</div></div>
+</section>
+</main></div>
+<script src="_nav.js"></script><script src="_assets.js"></script>
+<script>
+document.getElementById('sdNav').innerHTML = window.SD_NAV;
+const ICONS = ['home','grid','type','droplet','ruler','radius','layers','image','button','input','tag','user','card','chats','modal','sparkle','volume','brand','sun','moon','search','send','paperclip','smile','x','check','check2','info','bell','bell-off','trash','star','pin','edit','reply','forward','flag','back','down','up','right','plus','clock','more','cog','shield','archive','users','logout','mic','camera','link','file','download','play','pause','video','phone','chart','bookmark','thread','at','poll','gif','globe','eye','eye-off','zap','heart','sticker','calendar','circle-play'];
+document.getElementById('iconGrid').innerHTML = ICONS.map(n => `<div class="icon-cell"><svg class="icon-lg"><use href="#i-${n}"/></svg><div class="name">i-${n}</div></div>`).join('');
+</script>
+</body></html>

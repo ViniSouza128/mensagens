@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Marca — Mensagens DS</title>
+<link rel="stylesheet" href="_base.css"/><link rel="stylesheet" href="_components.css"/>
+<style>
+.logo{width:var(--lg-w,56px);height:var(--lg-w,56px);border-radius:var(--lg-r,16px);background:var(--accent-grad);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;letter-spacing:-.04em;font-size:calc(var(--lg-w,56px) * .47);box-shadow:0 var(--lg-shadow-y,8px) var(--lg-shadow-blur,24px) color-mix(in oklab,var(--accent) 32%,transparent)}
+.logo.s32{--lg-w:32px;--lg-r:9px;--lg-shadow-y:3px;--lg-shadow-blur:8px}
+.logo.s48{--lg-w:48px;--lg-r:14px;--lg-shadow-y:4px;--lg-shadow-blur:12px}
+.logo.s64{--lg-w:64px;--lg-r:18px;--lg-shadow-y:6px;--lg-shadow-blur:16px}
+.logo.s96{--lg-w:96px;--lg-r:26px;--lg-shadow-y:12px;--lg-shadow-blur:32px}
+.logo.s128{--lg-w:128px;--lg-r:32px;--lg-shadow-y:16px;--lg-shadow-blur:40px}
+.lockup{display:inline-flex;align-items:center;gap:14px}
+.lockup .wordmark{font-size:28px;font-weight:800;letter-spacing:-.03em;color:var(--text)}
+.biz-card{width:380px;height:220px;border-radius:var(--r-3);padding:var(--space-5);color:#fff;background:var(--accent-grad);box-shadow:var(--shadow-lg);position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between}
+.biz-card::before{content:"";position:absolute;bottom:-60px;right:-60px;width:220px;height:220px;background:rgba(255,255,255,.08);border-radius:50%}
+.biz-card .top{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+.biz-card .wm{font-size:20px;font-weight:700;letter-spacing:-.02em}
+.biz-card .info{position:relative;z-index:1;font-size:13px;line-height:1.55}
+.biz-card .info strong{font-size:16px}
+.sub-brand{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-3);padding:var(--space-5);text-align:center;transition:all var(--t-fast)}
+.sub-brand:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.sub-brand .logo{margin-bottom:12px}
+.sub-brand h3{margin:0 0 4px;font-size:15px}
+.sub-brand .desc{font-size:12.5px;color:var(--muted)}
+.dont{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-2);padding:var(--space-4);text-align:center;position:relative}
+.dont::after{content:"✕";position:absolute;top:6px;right:8px;color:var(--danger);font-weight:700;font-size:16px}
+.dont.do::after{content:"✓";color:var(--success)}
+.dont .lab{font-size:11.5px;color:var(--muted);margin-top:8px}
+.clearspace-demo{background:var(--doc-bg);border:1px dashed var(--border-strong);padding:28px;display:inline-flex}
+.clearspace-demo .logo{outline:2px dashed var(--accent);outline-offset:28px}
+</style></head>
+<body>
+<div class="sd-shell"><aside class="sd-nav" id="sdNav"></aside><main class="sd-main">
+<div class="sd-breadcrumb"><a href="index.html">Design System</a><span class="sep">/</span><span>Fundamentos</span><span class="sep">/</span><span>Marca</span></div>
+<header class="sd-header"><div><h1 class="title">Marca &amp; logo</h1><p class="lead">Símbolo, lockup, sub-marcas, regras de uso e cartão de visita.</p></div><button class="theme-toggle"></button></header>
+
+<section class="section"><h2>Símbolo (mark)</h2>
+<p class="lead">Letra <strong>M</strong> em quadrado de cantos arredondados, gradient da brand.</p>
+<div class="showcase center" style="background:var(--doc-bg);min-height:240px"><div class="logo s128">M</div></div>
+<table class="tokens"><thead><tr><th>Spec</th><th>Valor</th></tr></thead><tbody>
+<tr><td>Background</td><td class="value">var(--accent-grad)</td></tr>
+<tr><td>Letra</td><td class="value">M maiúsculo, weight 800, tracking -.04em</td></tr>
+<tr><td>Aspect ratio</td><td class="value">1:1</td></tr>
+<tr><td>Radius</td><td class="value">~25% do lado (proporcional)</td></tr>
+<tr><td>Sombra</td><td class="value">color-mix(in oklab, var(--accent) 32%, transparent)</td></tr>
+</tbody></table>
+</section>
+
+<section class="section"><h2>Escalas de uso</h2>
+<div class="showcase row" style="gap:24px;align-items:flex-end">
+<div style="text-align:center"><div class="logo s32">M</div><div class="muted xs" style="margin-top:8px">32px • favicon, nav</div></div>
+<div style="text-align:center"><div class="logo s48">M</div><div class="muted xs" style="margin-top:8px">48px • header app</div></div>
+<div style="text-align:center"><div class="logo s64">M</div><div class="muted xs" style="margin-top:8px">64px • auth screens</div></div>
+<div style="text-align:center"><div class="logo s96">M</div><div class="muted xs" style="margin-top:8px">96px • splash, hero</div></div>
+<div style="text-align:center"><div class="logo s128">M</div><div class="muted xs" style="margin-top:8px">128px • marketing</div></div>
+</div>
+</section>
+
+<section class="section"><h2>Lockup</h2>
+<div class="showcase center" style="background:var(--doc-bg);min-height:160px"><div class="lockup"><div class="logo s64">M</div><div class="wordmark">Mensagens</div></div></div>
+</section>
+
+<section class="section"><h2>Clear space</h2>
+<p class="lead">Mínimo de 50% da altura do logo livre ao redor.</p>
+<div class="showcase center" style="background:var(--doc-bg);min-height:240px"><div class="clearspace-demo"><div class="logo s64">M</div></div></div>
+</section>
+
+<section class="section"><h2>Dos &amp; Don'ts</h2>
+<div class="cols-3">
+<div class="dont do"><div class="logo s64">M</div><div class="lab">USAR gradiente original</div></div>
+<div class="dont"><div class="logo s64" style="background:#ff0000">M</div><div class="lab">NÃO trocar a cor</div></div>
+<div class="dont"><div class="logo s64" style="border-radius:50%">M</div><div class="lab">NÃO mudar o radius</div></div>
+<div class="dont"><div class="logo s64" style="transform:rotate(15deg)">M</div><div class="lab">NÃO rotacionar</div></div>
+<div class="dont"><div class="logo s64" style="opacity:.4">M</div><div class="lab">NÃO baixa opacidade</div></div>
+<div class="dont do"><div class="logo s64" style="background:#000">M</div><div class="lab">USAR fundo sólido em casos especiais</div></div>
+</div>
+</section>
+
+<section class="section"><h2>Sub-marcas</h2>
+<p class="lead">Quando lançarmos produtos derivados, eles compartilham a estrutura mas trocam o accent.</p>
+<div class="cols-3">
+<div class="sub-brand" style="--accent:#6366f1;--accent-grad:linear-gradient(135deg,#818cf8,#4f46e5)"><div class="logo">M</div><h3>Mensagens</h3><div class="desc">Chat principal — indigo</div></div>
+<div class="sub-brand" style="--accent:#10b981;--accent-grad:linear-gradient(135deg,#6ee7b7,#059669)"><div class="logo">B</div><h3>Mensagens Business</h3><div class="desc">Para empresas — emerald</div></div>
+<div class="sub-brand" style="--accent:#f43f5e;--accent-grad:linear-gradient(135deg,#fb7185,#e11d48)"><div class="logo">L</div><h3>Mensagens Live</h3><div class="desc">Streaming + chat — rose</div></div>
+<div class="sub-brand" style="--accent:#0ea5e9;--accent-grad:linear-gradient(135deg,#7dd3fc,#0284c7)"><div class="logo">D</div><h3>Mensagens Dev</h3><div class="desc">Comunidade dev — sky</div></div>
+<div class="sub-brand" style="--accent:#8b5cf6;--accent-grad:linear-gradient(135deg,#c4b5fd,#7c3aed)"><div class="logo">P</div><h3>Mensagens Pro</h3><div class="desc">Premium — violet</div></div>
+<div class="sub-brand" style="--accent:#f59e0b;--accent-grad:linear-gradient(135deg,#fcd34d,#d97706)"><div class="logo">S</div><h3>Mensagens Studio</h3><div class="desc">Criadores — amber</div></div>
+</div>
+</section>
+
+<section class="section"><h2>Cartão de visita</h2>
+<p class="lead">Modelo padrão. Frente com brand + nome + cargo, verso (opcional) com símbolo grande.</p>
+<div class="showcase row" style="gap:24px;background:var(--doc-bg);justify-content:center">
+<div class="biz-card">
+<div class="top"><div class="logo s48">M</div><div class="wm">Mensagens</div></div>
+<div class="info"><strong>Maria Silva</strong><br/>Head of Design<br/><span style="opacity:.85">maria@mensagens.app · @maria.silva</span></div>
+</div>
+<div class="biz-card" style="background:var(--surface);color:var(--text);align-items:center;justify-content:center">
+<div class="logo s96">M</div>
+<div style="position:relative;z-index:1;font-size:13px;color:var(--muted);text-align:center">mensagens.app</div>
+</div>
+</div>
+<p class="muted small" style="text-align:center;margin-top:12px">Dimensão: 380×220px (proporção 85×55mm)</p>
+</section>
+
+<section class="section"><h2>Paleta oficial</h2>
+<table class="tokens"><thead><tr><th>Cor</th><th>Hex</th><th>Uso</th></tr></thead><tbody>
+<tr><td class="swatch"><span style="background:#818cf8"></span></td><td class="value">#818cf8</td><td>Indigo claro — gradient stop 1</td></tr>
+<tr><td class="swatch"><span style="background:#6366f1"></span></td><td class="value">#6366f1</td><td>Indigo brand</td></tr>
+<tr><td class="swatch"><span style="background:#4f46e5"></span></td><td class="value">#4f46e5</td><td>Indigo escuro — gradient stop 2</td></tr>
+<tr><td class="swatch"><span style="background:#0f172a"></span></td><td class="value">#0f172a</td><td>Texto principal</td></tr>
+<tr><td class="swatch"><span style="background:#fff;border-color:#cfd4db"></span></td><td class="value">#ffffff</td><td>Background</td></tr>
+</tbody></table>
+</section>
+</main></div>
+<script src="_nav.js"></script><script src="_assets.js"></script>
+<script>document.getElementById('sdNav').innerHTML = window.SD_NAV;</script>
+</body></html>

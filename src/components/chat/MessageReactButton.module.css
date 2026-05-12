@@ -1,0 +1,52 @@
+/* Botão smile — fica FORA da bolha (posicionado em MessageBubble.module.css
+   via .row.right .reactBtnWrap / .row.left .reactBtnWrap). Centralizado
+   verticalmente no eixo da bolha. */
+.button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms var(--t-fast), background var(--t-fast), color var(--t-fast), transform var(--t-fast);
+  pointer-events: none;
+  box-shadow: var(--shadow-sm);
+}
+.button:hover { background: var(--surface-2); color: var(--text); transform: scale(1.06); }
+.buttonOpen   { opacity: 1; pointer-events: auto; background: var(--surface-2); color: var(--text); }
+
+/* ── Picker (portal) ───────────────────────────────────────────────── */
+.picker {
+  position: fixed;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: var(--shadow-xl);
+  padding: 6px;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: scaleIn 140ms var(--ease-out);
+}
+.row { display: flex; gap: 2px; justify-content: center; }
+.emojiBtn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 80ms, background var(--t-fast);
+}
+.emojiBtn:hover { background: var(--surface-2); transform: scale(1.25); }
+.moreBtn { font-size: 18px; color: var(--text-muted); }

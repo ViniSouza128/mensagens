@@ -1,0 +1,40 @@
+.file {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 4px;
+  width: 280px;
+  max-width: 100%;
+}
+.thumb {
+  width: 44px; height: 52px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.thumbSvg { width: 100%; height: 100%; display: block; }
+.info { flex: 1; min-width: 0; }
+.name {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.det {
+  font-size: 11.5px;
+  opacity: .75;
+  margin-top: 2px;
+}
+.dl {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--text) 6%, transparent);
+  border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; color: inherit;
+  transition: background var(--t-fast);
+}
+.dl:hover { background: color-mix(in oklab, var(--text) 12%, transparent); }
+.mine .dl { background: var(--overlay-bg-soft); color: var(--overlay-fg); }
+.mine .dl:hover { background: var(--overlay-bg-strong); }

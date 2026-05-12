@@ -1,0 +1,12 @@
+User-agent: *
+Disallow: /api/
+Disallow: /admin
+Disallow: /settings
+Disallow: /chats
+Disallow: /profile
+Disallow: /contacts
+Disallow: /requests
+Disallow: /search
+Disallow: /archived
+Allow: /login
+Allow: /register

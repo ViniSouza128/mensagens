@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mídia &amp; arquivos — Mensagens Design System</title>
+<link rel="stylesheet" href="_base.css" />
+<link rel="stylesheet" href="_components.css" />
+<style>
+  /* PHOTO BUBBLE — para mensagens de imagem */
+  .pic-bubble {
+    background: var(--bubble-in);
+    border-radius: 16px;
+    padding: 4px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
+    max-width: 320px;
+  }
+  .pic-bubble img {
+    display: block;
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 12px;
+  }
+  .pic-bubble .cap { padding: 8px 8px 4px; font-size: 14px; }
+  .pic-bubble .meta { display: flex; justify-content: flex-end; gap: 4px; padding: 0 8px 4px; font-size: 11px; color: var(--muted); }
+
+  /* GALLERY GRID (chat de fotos múltiplas) */
+  .pic-grid {
+    display: grid;
+    gap: 4px;
+    border-radius: 16px;
+    overflow: hidden;
+    max-width: 320px;
+  }
+  .pic-grid.g2 { grid-template-columns: 1fr 1fr; }
+  .pic-grid.g3 { grid-template-columns: 1fr 1fr 1fr; }
+  .pic-grid.g4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+  .pic-grid img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+  .pic-grid .more {
+    position: relative;
+  }
+  .pic-grid .more::after {
+    content: attr(data-more);
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,.55);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 700;
+  }
+
+  /* VIDEO BUBBLE */
+  .vid-bubble {
+    position: relative;
+    width: 320px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #000;
+    border: 1px solid var(--border);
+  }
+  .vid-bubble img { display: block; width: 100%; height: 200px; object-fit: cover; }
+  .vid-bubble .play {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(180deg, rgba(0,0,0,.1) 0%, rgba(0,0,0,.4) 100%);
+  }
+  .vid-bubble .play .btn-play {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.95);
+    color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    transition: transform var(--t-fast);
+  }
+  .vid-bubble:hover .play .btn-play { transform: scale(1.08); }
+  .vid-bubble .duration {
+    position: absolute; bottom: 8px; right: 8px;
+    background: rgba(0,0,0,.7); color: #fff;
+    font-size: 11px; font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .vid-bubble .live {
+    position: absolute; top: 8px; left: 8px;
+    background: var(--danger); color: #fff;
+    font-size: 10px; font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 999px;
+    text-transform: uppercase; letter-spacing: .04em;
+  }
+
+  /* AUDIO MESSAGE / VOICE */
+  .voice-bubble {
+    background: var(--bubble-in);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 10px 12px;
+    display: flex; align-items: center; gap: 12px;
+    width: 280px;
+    box-shadow: var(--shadow-xs);
+  }
+  .voice-bubble.mine {
+    background: var(--bubble-out-grad);
+    color: #fff; border-color: transparent;
+  }
+  .voice-bubble .play-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    border: 0; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; cursor: pointer;
+    box-shadow: 0 2px 6px color-mix(in oklab, var(--accent) 30%, transparent);
+  }
+  .voice-bubble.mine .play-btn { background: rgba(255,255,255,.25); }
+  .voice-bubble .wave { flex: 1; height: 28px; display: flex; align-items: center; gap: 2px; }
+  .voice-bubble .wave .b {
+    flex: 1; background: var(--border-strong); border-radius: 1px;
+    transition: background var(--t-fast);
+  }
+  .voice-bubble.played .wave .b.played { background: var(--accent); }
+  .voice-bubble.mine .wave .b { background: rgba(255,255,255,.4); }
+  .voice-bubble.mine.played .wave .b.played { background: #fff; }
+  .voice-bubble .time {
+    font-size: 11.5px; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+  .voice-bubble.mine .time { color: rgba(255,255,255,.85); }
+
+  /* FILE BUBBLE */
+  .file-bubble {
+    background: var(--bubble-in);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 14px;
+    display: flex; align-items: center; gap: 12px;
+    width: 320px;
+    box-shadow: var(--shadow-xs);
+  }
+  .file-bubble.mine { background: var(--bubble-out-grad); color: #fff; border-color: transparent; }
+  .file-bubble .thumb {
+    width: 48px; height: 56px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+  }
+  .file-bubble .info { flex: 1; min-width: 0; }
+  .file-bubble .info strong { display: block; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-bubble .info .det { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .file-bubble.mine .info .det { color: rgba(255,255,255,.8); }
+  .file-bubble .dl {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    color: var(--muted);
+    border: 0;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; cursor: pointer;
+    transition: all var(--t-fast);
+  }
+  .file-bubble .dl:hover { background: var(--accent-soft); color: var(--accent); }
+  .file-bubble.mine .dl { background: rgba(255,255,255,.18); color: #fff; }
+  .file-bubble.mine .dl:hover { background: rgba(255,255,255,.3); }
+
+  /* GALLERY (info panel) */
+  .info-gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    max-width: 380px;
+  }
+  .info-gallery .thumb {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+  }
+  .info-gallery .thumb img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform var(--t-fast);
+  }
+  .info-gallery .thumb:hover img { transform: scale(1.06); }
+  .info-gallery .thumb.video::after {
+    content: ""; position: absolute; inset: 0;
+    background: rgba(0,0,0,.3);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .info-gallery .thumb.video::before {
+    content: "▶"; position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    color: #fff; font-size: 22px;
+    z-index: 1;
+  }
+</style>
+</head>
+<body>
+<div class="sd-shell">
+  <aside class="sd-nav" id="sdNav"></aside>
+  <main class="sd-main">
+
+    <div class="sd-breadcrumb">
+      <a href="index.html">Design System</a>
+      <span class="sep">/</span>
+      <span>Componentes</span>
+      <span class="sep">/</span>
+      <span>Mídia &amp; arquivos</span>
+    </div>
+    <header class="sd-header">
+      <div>
+        <h1 class="title">Mídia &amp; arquivos</h1>
+        <p class="lead">Como exibir fotos, vídeos, áudios (mensagens de voz) e arquivos no chat. Inclui galeria múltipla, player de vídeo e file cards com preview.</p>
+      </div>
+      <button class="theme-toggle"></button>
+    </header>
+
+    <!-- ─── FOTO ─── -->
+    <section class="section">
+      <h2>Bubble de foto</h2>
+      <p class="lead">Imagem com cantos arredondados, padding 4px no bubble, max-width 320px. Caption opcional abaixo.</p>
+      <div class="showcase column" style="background:var(--bg);padding:24px;align-items:flex-start">
+        <div class="pic-bubble">
+          <img src="https://picsum.photos/seed/sunset1/640/440" alt="Foto" loading="lazy" />
+          <div class="cap">Olha que vista!</div>
+          <div class="meta">10:45 ✓✓</div>
+        </div>
+      </div>
+
+      <h3>Galeria múltipla (2-4+ fotos)</h3>
+      <div class="showcase row" style="background:var(--bg);padding:24px;gap:24px;align-items:flex-start;flex-wrap:wrap">
+        <div class="pic-grid g2">
+          <img src="https://picsum.photos/seed/g1a/300/300" alt="" />
+          <img src="https://picsum.photos/seed/g1b/300/300" alt="" />
+        </div>
+        <div class="pic-grid g3">
+          <img src="https://picsum.photos/seed/g2a/200/200" alt="" />
+          <img src="https://picsum.photos/seed/g2b/200/200" alt="" />
+          <img src="https://picsum.photos/seed/g2c/200/200" alt="" />
+        </div>
+        <div class="pic-grid g4">
+          <img src="https://picsum.photos/seed/g3a/200/200" alt="" />
+          <img src="https://picsum.photos/seed/g3b/200/200" alt="" />
+          <img src="https://picsum.photos/seed/g3c/200/200" alt="" />
+          <div class="more" data-more="+8"><img src="https://picsum.photos/seed/g3d/200/200" alt="" /></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── VIDEO ─── -->
+    <section class="section">
+      <h2>Bubble de vídeo</h2>
+      <p class="lead">Thumbnail + overlay com botão de play centralizado. Duração no canto inferior direito. Badge "AO VIVO" opcional.</p>
+      <div class="showcase row" style="background:var(--bg);padding:24px;gap:16px;align-items:flex-start;flex-wrap:wrap">
+        <div class="vid-bubble">
+          <img src="https://picsum.photos/seed/vid1/640/400" alt="" />
+          <div class="play"><button class="btn-play"><svg class="icon-lg"><use href="#i-play"/></svg></button></div>
+          <span class="duration">2:34</span>
+        </div>
+        <div class="vid-bubble">
+          <img src="https://picsum.photos/seed/vid2/640/400" alt="" />
+          <div class="play"><button class="btn-play"><svg class="icon-lg"><use href="#i-play"/></svg></button></div>
+          <span class="live">● AO VIVO</span>
+          <span class="duration">3.2k assistindo</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── VOICE ─── -->
+    <section class="section">
+      <h2>Mensagem de voz</h2>
+      <p class="lead">Player compacto: botão play + waveform + duração. Variante <code class="inline">.mine</code> usa o gradiente.</p>
+      <div class="showcase column" style="background:var(--bg);padding:24px;gap:8px">
+        <div class="voice-bubble played">
+          <button class="play-btn"><svg class="icon-sm"><use href="#i-play"/></svg></button>
+          <div class="wave" id="wave1"></div>
+          <span class="time">0:42</span>
+        </div>
+        <div class="voice-bubble mine played" style="align-self:flex-end">
+          <button class="play-btn"><svg class="icon-sm"><use href="#i-pause"/></svg></button>
+          <div class="wave" id="wave2"></div>
+          <span class="time">1:18</span>
+        </div>
+      </div>
+
+      <h3>Anatomia</h3>
+      <table class="tokens">
+        <thead><tr><th>Parte</th><th>Spec</th></tr></thead>
+        <tbody>
+          <tr><td>Play button</td><td class="value">40×40 circular, accent / branco translúcido (mine)</td></tr>
+          <tr><td>Waveform</td><td class="value">~32 barras de 2px width, height variável (4-26px)</td></tr>
+          <tr><td>Cor da onda</td><td class="value">var(--border-strong) padrão, var(--accent) em barras já reproduzidas</td></tr>
+          <tr><td>Duração</td><td class="value">11.5px, font-variant-numeric tabular-nums</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ─── FILE / DOCUMENTO ─── -->
+    <section class="section">
+      <h2>Bubble de arquivo (com thumbnail real)</h2>
+      <p class="lead">Cada tipo de arquivo tem sua "miniatura" característica gerada via SVG. Sempre inclui nome, tamanho e botão de download.</p>
+      <div class="showcase column" style="background:var(--bg);padding:24px;gap:10px;align-items:flex-start">
+        <div class="file-bubble">
+          <div class="thumb" id="thumb-pdf"></div>
+          <div class="info"><strong>Proposta-comercial-2026.pdf</strong><div class="det">PDF • 2.4 MB • 18 páginas</div></div>
+          <button class="dl"><svg class="icon-sm"><use href="#i-download"/></svg></button>
+        </div>
+        <div class="file-bubble">
+          <div class="thumb" id="thumb-doc"></div>
+          <div class="info"><strong>Briefing-projeto-X.docx</strong><div class="det">Word • 384 KB</div></div>
+          <button class="dl"><svg class="icon-sm"><use href="#i-download"/></svg></button>
+        </div>
+        <div class="file-bubble">
+          <div class="thumb" id="thumb-xls"></div>
+          <div class="info"><strong>Métricas-Q3-2026.xlsx</strong><div class="det">Excel • 1.1 MB • 5 abas</div></div>
+          <button class="dl"><svg class="icon-sm"><use href="#i-download"/></svg></button>
+        </div>
+        <div class="file-bubble mine" style="align-self:flex-end">
+          <div class="thumb" id="thumb-fig"></div>
+          <div class="info"><strong>Design-system-v2.fig</strong><div class="det">Figma • 12.8 MB</div></div>
+          <button class="dl"><svg class="icon-sm"><use href="#i-download"/></svg></button>
+        </div>
+        <div class="file-bubble">
+          <div class="thumb" id="thumb-zip"></div>
+          <div class="info"><strong>Assets-mockup.zip</strong><div class="det">ZIP • 38.5 MB • 142 arquivos</div></div>
+          <button class="dl"><svg class="icon-sm"><use href="#i-download"/></svg></button>
+        </div>
+      </div>
+
+      <h3>Variantes de thumb por tipo</h3>
+      <p class="lead">5 tipos de thumbnail SVG, cada um com cor temática:</p>
+      <div class="cols-4">
+        <div style="text-align:center;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-2)">
+          <div style="width:60px;height:75px;margin:0 auto 8px" id="ex-pdf"></div>
+          <div class="muted xs">PDF — vermelho</div>
+        </div>
+        <div style="text-align:center;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-2)">
+          <div style="width:60px;height:75px;margin:0 auto 8px" id="ex-doc"></div>
+          <div class="muted xs">DOC — azul</div>
+        </div>
+        <div style="text-align:center;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-2)">
+          <div style="width:60px;height:75px;margin:0 auto 8px" id="ex-xls"></div>
+          <div class="muted xs">XLS — verde</div>
+        </div>
+        <div style="text-align:center;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-2)">
+          <div style="width:60px;height:75px;margin:0 auto 8px" id="ex-zip"></div>
+          <div class="muted xs">ZIP — laranja</div>
+        </div>
+        <div style="text-align:center;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-2)">
+          <div style="width:60px;height:75px;margin:0 auto 8px" id="ex-fig"></div>
+          <div class="muted xs">FIG — roxo</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── GALERIA INFO PANEL ─── -->
+    <section class="section">
+      <h2>Galeria de mídia (info panel)</h2>
+      <p class="lead">Grid 3 colunas exibindo todas as mídias trocadas em uma conversa. Vídeos têm overlay com play.</p>
+      <div class="showcase center" style="background:var(--bg);padding:24px">
+        <div class="info-gallery">
+          <div class="thumb"><img src="https://picsum.photos/seed/m1/200/200" /></div>
+          <div class="thumb"><img src="https://picsum.photos/seed/m2/200/200" /></div>
+          <div class="thumb"><img src="https://picsum.photos/seed/m3/200/200" /></div>
+          <div class="thumb video"><img src="https://picsum.photos/seed/m4/200/200" /></div>
+          <div class="thumb"><img src="https://picsum.photos/seed/m5/200/200" /></div>
+          <div class="thumb"><img src="https://picsum.photos/seed/m6/200/200" /></div>
+          <div class="thumb"><img src="https://picsum.photos/seed/m7/200/200" /></div>
+          <div class="thumb video"><img src="https://picsum.photos/seed/m8/200/200" /></div>
+          <div class="thumb"><img src="https://picsum.photos/seed/m9/200/200" /></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── REGRAS ─── -->
+    <section class="section">
+      <h2>Regras</h2>
+      <div class="callout info">
+        <div><strong>Lazy loading sempre:</strong> use <code class="inline">loading="lazy"</code> em todas as imagens da galeria/info panel.</div>
+      </div>
+      <div class="callout warn">
+        <div><strong>Aspect ratio fixo:</strong> use <code class="inline">aspect-ratio: 1</code> em thumbs para evitar layout shift enquanto carregam.</div>
+      </div>
+      <div class="callout success">
+        <div><strong>File thumbs são SVG inline:</strong> sem assets externos, 0 requisições, escalam perfeitamente.</div>
+      </div>
+    </section>
+
+  </main>
+</div>
+<script src="_nav.js"></script>
+<script src="_assets.js"></script>
+<script>
+document.getElementById('sdNav').innerHTML = window.SD_NAV;
+
+// Render file thumbs from _assets.js
+['pdf','doc','xls','zip','fig'].forEach(k => {
+  const t1 = document.getElementById('thumb-' + k);
+  const t2 = document.getElementById('ex-' + k);
+  if (t1) t1.innerHTML = window.fileThumb(k);
+  if (t2) t2.innerHTML = window.fileThumb(k);
+});
+
+// Render waveforms
+function renderWave(id, played = .5) {
+  const el = document.getElementById(id); if (!el) return;
+  const heights = [4,8,12,18,22,16,10,6,14,24,20,14,8,12,18,26,22,14,8,4,10,16,22,18,12,6,10,14,20,16,8,4];
+  const total = heights.length;
+  const playedTo = Math.floor(total * played);
+  el.innerHTML = heights.map((h, i) =>
+    `<div class="b ${i < playedTo ? 'played' : ''}" style="height:${h}px"></div>`
+  ).join('');
+}
+renderWave('wave1', .65);
+renderWave('wave2', .35);
+</script>
+</body>
+</html>

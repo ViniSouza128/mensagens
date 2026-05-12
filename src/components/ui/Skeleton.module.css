@@ -1,0 +1,17 @@
+.block { display: inline-block; vertical-align: middle; }
+
+.list { display: flex; flex-direction: column; padding: var(--space-2); gap: 2px; }
+.row {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-3);
+}
+.rowBody { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.rowLine { display: flex; align-items: center; gap: var(--space-2); justify-content: space-between; }
+
+.thread { display: flex; flex-direction: column; gap: 6px; padding: var(--space-3); }
+.bubbleRow { display: flex; }
+.bubbleRow.left { justify-content: flex-start; }
+.bubbleRow.right { justify-content: flex-end; }
+.bubbleMine { background: linear-gradient(90deg, var(--bubble-out) 0%, color-mix(in oklab, var(--bubble-out) 70%, var(--surface)) 50%, var(--bubble-out) 100%); }
+.bubbleTheirs { background: linear-gradient(90deg, var(--bubble-in) 0%, color-mix(in oklab, var(--bubble-in) 70%, var(--surface-2)) 50%, var(--bubble-in) 100%); }

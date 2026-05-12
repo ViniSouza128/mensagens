@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Layout — Mensagens DS</title>
+<link rel="stylesheet" href="_base.css"/><link rel="stylesheet" href="_components.css"/>
+<style>
+.layout-demo{border:1px solid var(--border);border-radius:var(--r-3);overflow:hidden;height:320px;display:grid;background:var(--surface)}
+.layout-demo>div{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-right:1px dashed var(--border-strong)}
+.layout-demo>div:last-child{border-right:0}
+.layout-demo .nav-area{background:var(--accent-soft);color:var(--accent)}
+.layout-demo .list-area{background:var(--surface-2)}
+.layout-demo .main-area{background:var(--surface)}
+.layout-demo .info-area{background:color-mix(in oklab,var(--accent) 10%,var(--surface));color:var(--accent)}
+.bp-row{display:grid;grid-template-columns:160px 120px 1fr;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px}
+.bp-row:last-child{border-bottom:0}
+.bp-row .name{font-weight:600}
+.bp-row .px{font-family:var(--font-mono);color:var(--muted)}
+</style></head>
+<body>
+<div class="sd-shell"><aside class="sd-nav" id="sdNav"></aside><main class="sd-main">
+<div class="sd-breadcrumb"><a href="index.html">Design System</a><span class="sep">/</span><span>Sistema vivo</span><span class="sep">/</span><span>Layout</span></div>
+<header class="sd-header"><div><h1 class="title">Layout &amp; grid</h1><p class="lead">App shell, breakpoints, containers e regras responsivas.</p></div><button class="theme-toggle"></button></header>
+
+<section class="section"><h2>App shell — desktop</h2>
+<p class="lead">Grid de 2 colunas: nav (auto) + main (1fr). O main hospeda views que ocupam a mesma célula.</p>
+<div class="layout-demo" style="grid-template-columns:76px 1fr"><div class="nav-area">Nav<br/>76px</div><div class="main-area">Main</div></div>
+<h3>View "chats" — 2 colunas internas</h3>
+<div class="layout-demo" style="grid-template-columns:76px 360px 1fr"><div class="nav-area">Nav</div><div class="list-area">List<br/>360px</div><div class="main-area">Chat</div></div>
+<h3>Com info panel aberto</h3>
+<div class="layout-demo" style="grid-template-columns:76px 360px 1fr 360px"><div class="nav-area">Nav</div><div class="list-area">List</div><div class="main-area">Chat</div><div class="info-area">Info<br/>360px</div></div>
+</section>
+
+<section class="section"><h2>Mobile (≤768px)</h2>
+<p class="lead">Bottom nav fixa, lista full-width. Conversa cobre a lista.</p>
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+<div style="width:240px;height:420px;border:1px solid var(--border);border-radius:var(--r-3);overflow:hidden;display:flex;flex-direction:column">
+<div style="padding:14px;border-bottom:1px solid var(--border)"><strong style="font-size:18px">Conversas</strong></div>
+<div style="flex:1;background:var(--surface-2);font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:center">Lista</div>
+<div style="height:64px;background:var(--glass-strong);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(4,1fr);font-size:10px;text-align:center">
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--accent)"><svg class="icon-sm"><use href="#i-chats"/></svg>Conversas</div>
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted)"><svg class="icon-sm"><use href="#i-user"/></svg>Contatos</div>
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted)"><svg class="icon-sm"><use href="#i-search"/></svg>Buscar</div>
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted)"><svg class="icon-sm"><use href="#i-cog"/></svg>Ajustes</div>
+</div>
+</div>
+<div style="width:240px;height:420px;border:1px solid var(--border);border-radius:var(--r-3);overflow:hidden;display:flex;flex-direction:column">
+<div style="padding:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+<button class="ibtn sm"><svg class="icon-sm"><use href="#i-back"/></svg></button>
+<div class="av s32 bg-2">VR</div>
+<strong style="font-size:14px">Vinícius</strong>
+</div>
+<div style="flex:1;background:var(--bg);font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:center">Chat</div>
+<div style="padding:10px;border-top:1px solid var(--border);background:var(--surface);font-size:11px;color:var(--muted);text-align:center">Composer</div>
+</div>
+</div>
+</section>
+
+<section class="section"><h2>Breakpoints</h2>
+<div class="card" style="padding:0">
+<div class="bp-row" style="background:var(--surface-2);font-weight:700;font-size:11px;text-transform:uppercase;color:var(--muted)"><div>Nome</div><div>Largura</div><div>Comportamento</div></div>
+<div class="bp-row"><div class="name">Mobile</div><div class="px">≤ 768px</div><div>Sidebar vira bottom nav, modais viram bottom sheets</div></div>
+<div class="bp-row"><div class="name">Mobile small</div><div class="px">≤ 420px</div><div>Padding reduzido, fontes menores</div></div>
+<div class="bp-row"><div class="name">Mobile sheet</div><div class="px">≤ 540px</div><div>Modal vira bottom sheet</div></div>
+<div class="bp-row"><div class="name">Tablet</div><div class="px">≤ 1180px</div><div>Info panel reduz para 320px</div></div>
+<div class="bp-row"><div class="name">Desktop</div><div class="px">≥ 769px</div><div>Layout completo 2-3 colunas</div></div>
+<div class="bp-row"><div class="name">Wide</div><div class="px">≥ 1900px</div><div>Container expande para 1100/1700px</div></div>
+</div>
+</section>
+
+<section class="section"><h2>Containers</h2>
+<table class="tokens"><thead><tr><th>Classe</th><th>Max-width</th><th>Uso</th></tr></thead><tbody>
+<tr><td>.container.narrow</td><td class="value">640px</td><td>Formulários simples</td></tr>
+<tr><td>.container</td><td class="value">920px (1100 ≥1900)</td><td>Páginas com cards</td></tr>
+<tr><td>.container.wide</td><td class="value">1440px (1700 ≥1900)</td><td>Dashboards admin</td></tr>
+</tbody></table>
+</section>
+
+<section class="section"><h2>Regras</h2>
+<div class="callout info"><div><strong>Mobile-first:</strong> CSS base para mobile, media-queries para desktop.</div></div>
+<div class="callout warn"><div><strong>min-width: 0</strong> em containers flex/grid.</div></div>
+</section>
+</main></div>
+<script src="_nav.js"></script><script src="_assets.js"></script>
+<script>document.getElementById('sdNav').innerHTML = window.SD_NAV;</script>
+</body></html>

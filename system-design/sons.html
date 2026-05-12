@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sons — Mensagens DS</title>
+<link rel="stylesheet" href="_base.css"/><link rel="stylesheet" href="_components.css"/>
+<style>
+.sfx-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-3);padding:var(--space-5)}
+.sfx-card .name{font-family:var(--font-mono);color:var(--accent-strong);font-size:13px;font-weight:600}
+.sfx-card h3{margin:0 0 4px;font-size:16px}
+.sfx-card .desc{font-size:13px;color:var(--muted);margin:0 0 var(--space-3)}
+.sfx-card .specs{display:flex;flex-wrap:wrap;gap:8px;font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:14px}
+.sfx-card .specs>span{background:var(--surface-2);padding:3px 8px;border-radius:6px}
+.play-btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;padding:8px 16px;border:0;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer}
+.play-btn:hover{filter:brightness(1.1)}
+.play-btn::before{content:"";display:block;width:10px;height:10px;border-radius:50%;background:#fff}
+</style></head>
+<body>
+<div class="sd-shell"><aside class="sd-nav" id="sdNav"></aside><main class="sd-main">
+<div class="sd-breadcrumb"><a href="index.html">Design System</a><span class="sep">/</span><span>Sistema vivo</span><span class="sep">/</span><span>Sons</span></div>
+<header class="sd-header"><div><h1 class="title">Sons</h1><p class="lead">Efeitos sonoros sintéticos via Web Audio API. Sem assets. Curtos (50-200ms), volume baixo (~5%).</p></div><button class="theme-toggle"></button></header>
+
+<section class="section"><h2>Biblioteca de SFX</h2>
+<div class="cols-2">
+<div class="sfx-card"><div class="name">sfx.send()</div><h3>Enviar mensagem</h3><p class="desc">Duas notas ascendentes (880 Hz → 1320 Hz).</p><div class="specs"><span>880 Hz</span><span>+50ms</span><span>1320 Hz</span><span>sine</span><span>vol .05</span></div><button class="play-btn" onclick="play('send')">Reproduzir</button></div>
+<div class="sfx-card"><div class="name">sfx.receive()</div><h3>Receber mensagem</h3><p class="desc">Duas notas descendentes (660 → 440 Hz).</p><div class="specs"><span>660 Hz</span><span>+60ms</span><span>440 Hz</span><span>sine</span><span>vol .05</span></div><button class="play-btn" onclick="play('receive')">Reproduzir</button></div>
+<div class="sfx-card"><div class="name">sfx.click()</div><h3>Click micro</h3><p class="desc">Tap curto e seco (220 Hz square).</p><div class="specs"><span>220 Hz</span><span>30ms</span><span>square</span><span>vol .018</span></div><button class="play-btn" onclick="play('click')">Reproduzir</button></div>
+<div class="sfx-card"><div class="name">sfx.open()</div><h3>Abrir modal/chat</h3><p class="desc">Duas notas ascendentes mais brandas.</p><div class="specs"><span>440 Hz</span><span>+40ms</span><span>660 Hz</span><span>sine</span><span>vol .04</span></div><button class="play-btn" onclick="play('open')">Reproduzir</button></div>
+<div class="sfx-card"><div class="name">sfx.notif()</div><h3>Notificação</h3><p class="desc">Duas notas agudas (1200 → 1600 Hz).</p><div class="specs"><span>1200 Hz</span><span>+50ms</span><span>1600 Hz</span><span>sine</span><span>vol .06</span></div><button class="play-btn" onclick="play('notif')">Reproduzir</button></div>
+<div class="sfx-card"><div class="name">sfx.error()</div><h3>Erro</h3><p class="desc">Tom grave + descenso (220 Hz square).</p><div class="specs"><span>220 Hz</span><span>+80ms</span><span>165 Hz</span><span>square</span><span>vol .04</span></div><button class="play-btn" onclick="play('error')">Reproduzir</button></div>
+</div>
+</section>
+
+<section class="section"><h2>Implementação</h2>
+<pre class="code">let audioCtx;
+function tone(freq, dur=0.08, type='sine', vol=0.05) {
+  if (!soundsOn) return;
+  const ctx = audioCtx ||= new (AudioContext||webkitAudioContext)();
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, ctx.currentTime);
+  g.gain.setValueAtTime(vol, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(); o.stop(ctx.currentTime + dur);
+}</pre>
+</section>
+
+<section class="section"><h2>Mapeamento de eventos</h2>
+<table class="tokens"><thead><tr><th>Evento</th><th>SFX</th></tr></thead><tbody>
+<tr><td>Enter pressionado / Send clicado</td><td class="value">sfx.send()</td></tr>
+<tr><td>Mensagem recebida</td><td class="value">sfx.receive()</td></tr>
+<tr><td>Toggle switch</td><td class="value">sfx.click()</td></tr>
+<tr><td>Tab/chip selecionado</td><td class="value">sfx.click()</td></tr>
+<tr><td>Modal abriu</td><td class="value">sfx.open()</td></tr>
+<tr><td>Conversa selecionada</td><td class="value">sfx.open()</td></tr>
+<tr><td>Nova solicitação de contato</td><td class="value">sfx.notif()</td></tr>
+<tr><td>Erro de envio</td><td class="value">sfx.error()</td></tr>
+</tbody></table>
+</section>
+
+<section class="section"><h2>Regras</h2>
+<div class="callout info"><div><strong>Sempre opt-in/out:</strong> usuário pode desligar nos settings.</div></div>
+<div class="callout warn"><div><strong>Volume baixo (3-6%):</strong> som não pode interromper o foco.</div></div>
+<div class="callout warn"><div><strong>Curto:</strong> nada acima de 200ms.</div></div>
+<div class="callout danger"><div><strong>Não toque ao abrir o app.</strong> Web Audio precisa de gesto do usuário.</div></div>
+</section>
+</main></div>
+<script src="_nav.js"></script><script src="_assets.js"></script>
+<script>
+document.getElementById('sdNav').innerHTML = window.SD_NAV;
+let audioCtx;
+function tone(freq, dur=0.08, type='sine', vol=0.05) {
+  try {
+    const ctx = audioCtx ||= new (window.AudioContext||window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, ctx.currentTime);
+    g.gain.setValueAtTime(vol, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(); o.stop(ctx.currentTime + dur);
+  } catch {}
+}
+const sfx = {
+  send: () => { tone(880, .06); setTimeout(()=>tone(1320, .08), 50); },
+  receive: () => { tone(660, .07); setTimeout(()=>tone(440, .1), 60); },
+  click: () => tone(220, .03, 'square', .018),
+  open: () => { tone(440, .05); setTimeout(()=>tone(660, .06), 40); },
+  notif: () => { tone(1200, .06); setTimeout(()=>tone(1600, .08), 50); },
+  error: () => { tone(220, .08, 'square', .04); setTimeout(()=>tone(165, .12, 'square', .04), 90); },
+};
+function play(name) { sfx[name]?.(); }
+</script>
+</body></html>

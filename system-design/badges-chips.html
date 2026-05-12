@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Badges &amp; chips — Mensagens DS</title>
+<link rel="stylesheet" href="_base.css"/><link rel="stylesheet" href="_components.css"/></head>
+<body>
+<div class="sd-shell"><aside class="sd-nav" id="sdNav"></aside><main class="sd-main">
+<div class="sd-breadcrumb"><a href="index.html">Design System</a><span class="sep">/</span><span>Componentes</span><span class="sep">/</span><span>Badges &amp; chips</span></div>
+<header class="sd-header"><div><h1 class="title">Badges &amp; chips</h1><p class="lead">Pequenos elementos: status, contadores, filtros, eyebrows, tags.</p></div><button class="theme-toggle"></button></header>
+
+<section class="section"><h2>Badge numérico</h2>
+<div class="showcase row">
+<span class="badge-dot">3</span>
+<span class="badge-dot">12</span>
+<span class="badge-dot">99+</span>
+<span class="badge-dot" style="background:var(--accent)">5</span>
+</div>
+<h3>Em uso (icon button + badge)</h3>
+<div class="showcase row">
+<div style="position:relative;display:inline-block">
+<button class="ibtn lg"><svg class="icon"><use href="#i-bell"/></svg></button>
+<span class="badge-dot" style="position:absolute;top:4px;right:4px;border:2px solid var(--surface);min-width:16px;height:16px">7</span>
+</div>
+<div style="position:relative;display:inline-block">
+<button class="ibtn lg"><svg class="icon"><use href="#i-chats"/></svg></button>
+<span class="badge-dot" style="position:absolute;top:4px;right:4px;border:2px solid var(--surface)">99+</span>
+</div>
+</div>
+</section>
+
+<section class="section"><h2>Status tags</h2>
+<div class="showcase row">
+<span class="tag tag-active">Ativo</span>
+<span class="tag tag-suspended">Suspenso</span>
+<span class="tag tag-banned">Banido</span>
+<span class="tag tag-admin">Admin</span>
+<span class="tag tag-info">Info</span>
+</div>
+</section>
+
+<section class="section"><h2>Filter chips</h2>
+<div class="showcase">
+<div class="chips">
+<button class="chip on">Todas</button>
+<button class="chip">Não lidas</button>
+<button class="chip">Grupos</button>
+<button class="chip">Fixadas</button>
+</div>
+</div>
+</section>
+
+<section class="section"><h2>Eyebrow</h2>
+<div class="showcase column">
+<div><div class="eyebrow">CONFIGURAÇÃO</div><h2 style="margin:4px 0 0;font-size:22px;font-weight:700">Aparência do app</h2></div>
+<div><div class="eyebrow" style="color:var(--accent)">NOVO</div><h2 style="margin:4px 0 0;font-size:22px;font-weight:700">Modo escuro disponível</h2></div>
+</div>
+</section>
+
+<section class="section"><h2>Badge pill genérica</h2>
+<div class="showcase row">
+<span class="badge-pill" style="background:var(--accent-soft);color:var(--accent)">PRO</span>
+<span class="badge-pill" style="background:var(--success-soft);color:var(--success)">NOVO</span>
+<span class="badge-pill" style="background:var(--warning-soft);color:#b45309">BETA</span>
+<span class="badge-pill" style="background:var(--danger-soft);color:var(--danger)">ALERTA</span>
+<span class="badge-pill" style="background:var(--surface-2);color:var(--muted)">RASCUNHO</span>
+</div>
+</section>
+
+<section class="section"><h2>Specs</h2>
+<table class="tokens"><thead><tr><th>Componente</th><th>Padding</th><th>Font</th><th>Radius</th></tr></thead><tbody>
+<tr><td>.badge-dot</td><td class="value">0 6px</td><td class="value">10px / 700</td><td class="value">999px</td></tr>
+<tr><td>.tag</td><td class="value">2px 8px</td><td class="value">10.5px / 700 / uppercase</td><td class="value">999px</td></tr>
+<tr><td>.chip</td><td class="value">5px 12px</td><td class="value">12.5px / 500</td><td class="value">999px</td></tr>
+<tr><td>.eyebrow</td><td class="value">—</td><td class="value">11px / 700 / uppercase</td><td class="value">—</td></tr>
+</tbody></table>
+</section>
+
+<section class="section"><h2>Regras</h2>
+<div class="callout info"><div><strong>Badges não são botões.</strong></div></div>
+<div class="callout warn"><div><strong>Não empilhar dois badges</strong> sobre o mesmo elemento.</div></div>
+</section>
+</main></div>
+<script src="_nav.js"></script><script src="_assets.js"></script>
+<script>document.getElementById('sdNav').innerHTML = window.SD_NAV;</script>
+</body></html>

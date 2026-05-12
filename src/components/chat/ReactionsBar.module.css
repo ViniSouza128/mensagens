@@ -1,0 +1,90 @@
+.wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.chipWrap { position: relative; display: inline-flex; align-items: center; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  color: inherit;
+  transition: transform var(--t-fast), border-color var(--t-fast);
+}
+.chip:hover { background: var(--surface); transform: translateY(-1px); }
+.chip.mine { border-color: var(--accent); background: var(--accent-soft); }
+.emoji { font-size: 14px; line-height: 1; }
+.count { font-weight: 600; }
+
+.dotBtn {
+  position: absolute;
+  right: -4px; top: -4px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.chipWrap:hover .dotBtn { display: inline-flex; }
+
+.popover {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-2);
+  min-width: 180px;
+  padding: 8px;
+  z-index: 50;
+  animation: scaleIn .14s var(--ease-out);
+}
+.popHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.popEmoji { font-size: 16px; }
+.popList { list-style: none; padding: 0; margin: 0; max-height: 220px; overflow-y: auto; }
+.popItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 6px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+.popItem:hover { background: var(--surface-2); }
+.popName { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.popRemove {
+  background: transparent;
+  border: 0;
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.popRemove:hover { background: color-mix(in oklab, var(--danger) 10%, transparent); }

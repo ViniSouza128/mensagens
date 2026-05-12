@@ -1,0 +1,132 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 0 8px;
+  background: var(--glass-strong, var(--surface));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  min-height: 64px;
+  box-shadow: var(--shadow-xs);
+  z-index: 5;
+  flex-shrink: 0;
+}
+
+.back {
+  display: none;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  padding: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--t-fast);
+}
+.back:hover { background: var(--surface-hover); }
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  color: inherit;
+  transition: background var(--t-fast);
+}
+.identity:hover { background: var(--surface-hover); }
+
+.avatarWrap { position: relative; flex-shrink: 0; }
+
+.titleArea { flex: 1; min-width: 0; }
+
+.title {
+  font-weight: 600;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.subtitleOnline {
+  color: var(--success);
+  font-weight: 500;
+}
+.subtitleOnline::before {
+  content: "";
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--success);
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: 1px;
+  animation: pulseDot 2s ease-in-out infinite;
+}
+.subtitleTyping {
+  color: var(--accent);
+  font-weight: 500;
+  font-style: italic;
+}
+.subtitleTyping::before {
+  content: "";
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: 1px;
+  animation: pulseDot 1.2s ease-in-out infinite;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* Active search button */
+.searchActive {
+  color: var(--accent) !important;
+  background: color-mix(in oklab, var(--accent) 12%, transparent) !important;
+}
+
+/* Info button active when panel is open */
+.infoActive {
+  color: var(--accent) !important;
+  background: color-mix(in oklab, var(--accent) 12%, transparent) !important;
+}
+
+/* Selection mode bar */
+.selectionBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+.selectionCount {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .back { display: inline-flex; }
+}

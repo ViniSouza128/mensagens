@@ -1,0 +1,46 @@
+{
+  "id": "/",
+  "name": "Mensagens",
+  "short_name": "Mensagens",
+  "description": "Mensageiro web moderno e responsivo.",
+  "start_url": "/chats",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "any",
+  "background_color": "#0b0f17",
+  "theme_color": "#6366f1",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": ["social", "communication"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Conversas",
+      "short_name": "Chats",
+      "url": "/chats",
+      "icons": [{ "src": "/icon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Contatos",
+      "short_name": "Contatos",
+      "url": "/contacts",
+      "icons": [{ "src": "/icon.svg", "sizes": "any" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

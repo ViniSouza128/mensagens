@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Elevação — Mensagens DS</title>
+<link rel="stylesheet" href="_base.css"/><link rel="stylesheet" href="_components.css"/>
+<style>
+.elev-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--space-6);background:var(--doc-bg);padding:var(--space-8);border-radius:var(--r-3);border:1px solid var(--border)}
+.elev-card{background:var(--surface);border-radius:var(--r-3);padding:var(--space-5);text-align:center;transition:transform var(--t-fast)}
+.elev-card:hover{transform:translateY(-3px)}
+.elev-card .name{font-family:var(--font-mono);color:var(--accent-strong);font-weight:600;font-size:13px}
+.elev-card .px{font-size:11px;color:var(--muted);margin-top:2px;font-family:var(--font-mono)}
+.elev-card .use{font-size:11.5px;color:var(--muted);margin-top:8px}
+.e-xs{box-shadow:0 1px 1px rgba(15,23,42,.04)}
+.e-sm{box-shadow:0 1px 3px rgba(15,23,42,.06),0 1px 2px rgba(15,23,42,.04)}
+.e-md{box-shadow:0 4px 12px rgba(15,23,42,.08),0 2px 4px rgba(15,23,42,.04)}
+.e-lg{box-shadow:0 12px 28px rgba(15,23,42,.12),0 4px 8px rgba(15,23,42,.06)}
+.e-xl{box-shadow:0 24px 60px rgba(15,23,42,.18),0 8px 16px rgba(15,23,42,.08)}
+</style></head>
+<body>
+<div class="sd-shell">
+<aside class="sd-nav" id="sdNav"></aside>
+<main class="sd-main">
+<div class="sd-breadcrumb"><a href="index.html">Design System</a><span class="sep">/</span><span>Fundamentos</span><span class="sep">/</span><span>Elevação</span></div>
+<header class="sd-header"><div><h1 class="title">Elevação</h1><p class="lead">Sombras criam hierarquia espacial. 5 níveis cobrem todos os casos.</p></div><button class="theme-toggle"></button></header>
+
+<section class="section"><h2>Escala de elevação</h2>
+<div class="elev-grid">
+<div class="elev-card e-xs"><div class="name">--shadow-xs</div><div class="px">1 levels</div><div class="use">Bordas sutis em cards</div></div>
+<div class="elev-card e-sm"><div class="name">--shadow-sm</div><div class="px">2 levels</div><div class="use">Hover de cards estáticos</div></div>
+<div class="elev-card e-md"><div class="name">--shadow-md</div><div class="px">2 levels</div><div class="use">Hover de stat cards, dropdowns</div></div>
+<div class="elev-card e-lg"><div class="name">--shadow-lg</div><div class="px">2 levels</div><div class="use">Toasts, tooltips elaborados</div></div>
+<div class="elev-card e-xl"><div class="name">--shadow-xl</div><div class="px">2 levels</div><div class="use">Modais, lightbox, drawers</div></div>
+</div>
+</section>
+
+<section class="section"><h2>Filosofia</h2>
+<p class="lead">Cada nível tem 2 sombras: uma forte próxima (define a borda) e uma difusa distante (cria profundidade).</p>
+<table class="tokens"><thead><tr><th>Token</th><th>Valor CSS</th></tr></thead><tbody>
+<tr><td class="token">--shadow-xs</td><td class="value">0 1px 1px rgba(15,23,42,.04)</td></tr>
+<tr><td class="token">--shadow-sm</td><td class="value">0 1px 3px rgba(15,23,42,.06), 0 1px 2px rgba(15,23,42,.04)</td></tr>
+<tr><td class="token">--shadow-md</td><td class="value">0 4px 12px rgba(15,23,42,.08), 0 2px 4px rgba(15,23,42,.04)</td></tr>
+<tr><td class="token">--shadow-lg</td><td class="value">0 12px 28px rgba(15,23,42,.12), 0 4px 8px rgba(15,23,42,.06)</td></tr>
+<tr><td class="token">--shadow-xl</td><td class="value">0 24px 60px rgba(15,23,42,.18), 0 8px 16px rgba(15,23,42,.08)</td></tr>
+</tbody></table>
+</section>
+
+<section class="section"><h2>Sombras coloridas (CTA)</h2>
+<div class="showcase row">
+<button class="btn btn-primary">Botão primário</button>
+<button class="send-btn"><svg class="icon"><use href="#i-send"/></svg></button>
+<button class="fab"><svg class="icon"><use href="#i-send"/></svg></button>
+</div>
+</section>
+
+<section class="section"><h2>Glassmorphism</h2>
+<div class="showcase" style="height:160px;background:var(--accent-grad);position:relative;overflow:hidden">
+<div style="position:absolute;top:0;left:0;right:0;height:60px;background:var(--glass-strong);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;font-weight:600">Header com glass effect</div>
+</div>
+</section>
+
+<section class="section"><h2>Regras</h2>
+<div class="callout info"><div><strong>Combine elevação com hover:</strong> shadow menor → maior simula "lift".</div></div>
+<div class="callout warn"><div><strong>Modal sobre modal é proibido.</strong></div></div>
+</section>
+</main></div>
+<script src="_nav.js"></script><script src="_assets.js"></script>
+<script>document.getElementById('sdNav').innerHTML = window.SD_NAV;</script>
+</body></html>

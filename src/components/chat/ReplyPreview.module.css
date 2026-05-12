@@ -1,0 +1,38 @@
+.wrap {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--surface-hover);
+  border-radius: 8px;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  color: inherit;
+}
+.wrap.dim { opacity: 0.85; }
+.bar {
+  width: 3px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+.body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.preview {
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.deleted { color: var(--muted); font-style: italic; }

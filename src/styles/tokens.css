@@ -1,0 +1,295 @@
+/* Design tokens centrais (v3) — cores refinadas, novos shadows, motion spring. */
+
+:root {
+  /* Espaçamento (4px-base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Raios (v3 refinado) */
+  --radius-1: 0.375rem;   /* 6px  */
+  --radius-2: 0.625rem;   /* 10px */
+  --radius-3: 0.875rem;   /* 14px */
+  --radius-4: 1.125rem;   /* 18px */
+  --radius-5: 1.5rem;     /* 24px */
+  --radius-pill: 999px;
+
+  /* Tipografia */
+  --font-base: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  --text-xs: 0.6875rem;   /* 11px */
+  --text-sm: 0.8125rem;   /* 13px */
+  --text-base: 0.875rem;  /* 14px */
+  --text-md: 0.9375rem;   /* 15px */
+  --text-lg: 1.0625rem;   /* 17px */
+  --text-xl: 1.25rem;     /* 20px */
+  --text-2xl: 1.5rem;     /* 24px */
+  --text-3xl: 2rem;       /* 32px */
+  --text-4xl: 2.75rem;    /* 44px */
+
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+  --tracking-tight: -.03em;
+  --tracking-snug:  -.01em;
+  --tracking-wide:   .04em;
+
+  /* Tamanho de fonte do app (alterado por configuração).
+     O html font-size também muda (88/100/120) — então tudo em rem escala automaticamente. */
+  --font-scale: 1;
+
+  /* Hierarquia tipográfica semântica por contexto (escala 10/11/12/13/14/15/22).
+     Em rem para escalar com data-font no <html>. Variação sutil entre regiões
+     mantém ar profissional sem destoar como WhatsApp/Slack/Linear. */
+  --text-sidebar:        0.625rem;    /* 10px — labels minúsculas do nav */
+  --text-list-name:      0.875rem;    /* 14px — nome do chat */
+  --text-list-preview:   0.8125rem;   /* 13px — preview da última msg */
+  --text-list-time:      0.6875rem;   /* 11px — horário na lista */
+  --text-chat:           0.9375rem;   /* 15px — texto da bolha (chat) */
+  --text-chat-meta:      0.6875rem;   /* 11px — horário/check na bolha */
+  --text-chat-author:    0.75rem;     /* 12px — autor em grupos */
+  --text-composer:       0.9375rem;   /* 15px — input do composer */
+  --text-section-title:  1.375rem;    /* 22px — h1 das seções */
+
+  /* Densidade do app — ajusta padding de itens de lista, mensagens, header.
+     --density-bubble-pad escala o padding interno das bolhas. */
+  --density-pad: 1;
+  --density-row-min: 64px;
+  --density-bubble-pad-y: 0.5rem;
+  --density-bubble-pad-x: 0.75rem;
+  --density-bubble-gap: 6px;
+  --density-list-row-pad: 0.75rem;
+
+  /* Sombras (v3 — 5 níveis com 2 sombras cada para profundidade) */
+  --shadow-xs: 0 1px 1px rgba(15,23,42,.04);
+  --shadow-sm: 0 1px 3px rgba(15,23,42,.06), 0 1px 2px rgba(15,23,42,.04);
+  --shadow-md: 0 4px 12px rgba(15,23,42,.08), 0 2px 4px rgba(15,23,42,.04);
+  --shadow-lg: 0 12px 28px rgba(15,23,42,.12), 0 4px 8px rgba(15,23,42,.06);
+  --shadow-xl: 0 24px 60px rgba(15,23,42,.18), 0 8px 16px rgba(15,23,42,.08);
+  /* Aliases backward-compat */
+  --shadow-1: var(--shadow-sm);
+  --shadow-2: var(--shadow-md);
+  --shadow-3: var(--shadow-xl);
+
+  /* Motion (v3 — spring para feedback) */
+  --t-fast: 140ms cubic-bezier(.4,0,.2,1);
+  --t-mid:  220ms cubic-bezier(.4,0,.2,1);
+  --t-slow: 320ms cubic-bezier(.4,0,.2,1);
+  --t-spring: 400ms cubic-bezier(.34,1.56,.64,1);
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-in: cubic-bezier(.7, 0, .84, 0);
+  --ease-in-out: cubic-bezier(.83, 0, .17, 1);
+
+  /* Layout */
+  --sidebar-w: 76px;
+  --sidebar-w-expanded: 220px;
+  --chatlist-w: 360px;
+  --chat-max-w: 760px;
+  --bottom-nav-h: 64px;
+  --info-w: 360px;
+
+  /* Cores neutras (v3 refinado, levemente mais cool) */
+  --bg: #fafbfc;
+  --surface: #ffffff;
+  --surface-2: #f4f6f8;
+  --surface-3: #e9ecef;
+  --hover: #f0f3f6;
+  --border: #e5e8ec;
+  --border-strong: #cfd4db;
+  --text: #0f172a;
+  --text-muted: #5b6574;
+  --text-faint: #8b94a3;
+  --invert-text: #ffffff;
+
+  /* Cores estado */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger:  #ef4444;
+  --info:    #3b82f6;
+  --link:    #2563eb;
+  --success-soft: #ecfdf5;
+  --warning-soft: #fffbeb;
+  --danger-soft:  #fef2f2;
+  --info-soft:    #eff6ff;
+
+  /* Acento (default indigo) */
+  --accent: #6366f1;
+  --accent-soft: #eef2ff;
+  --accent-strong: #4f46e5;
+  --accent-contrast: #ffffff;
+  --accent-grad: linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #4f46e5 100%);
+
+  /* Bolhas de mensagem (v3 — mine usa gradiente accent) */
+  --bubble-in: #ffffff;
+  --bubble-in-text: #0f172a;
+  --bubble-out: #6366f1;
+  --bubble-out-grad: linear-gradient(135deg, #6366f1, #4f46e5);
+  --bubble-out-text: #ffffff;
+  --bubble-shadow: 0 1px 1px rgba(15,23,42,.05);
+
+  /* Glass / backdrop */
+  --glass: rgba(255,255,255,.78);
+  --glass-strong: rgba(255,255,255,.92);
+
+  /* Backdrops e overlays */
+  --backdrop: color-mix(in oklab, var(--text) 60%, transparent);
+  --overlay-fg: #ffffff;
+  --overlay-bg-soft: rgba(255,255,255,.1);
+  --overlay-bg-strong: rgba(255,255,255,.34);
+
+  /* Texto sobre warning */
+  --warning-text: #2a1a00;
+
+  /* Z-index scale */
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 1000;
+  --z-modal: 1100;
+  --z-toast: 1200;
+  --z-tooltip: 1300;
+
+  /* Foco */
+  --focus-ring: 0 0 0 3px rgba(99, 102, 241, .35);
+
+  /* Aliases backward-compat */
+  --muted: var(--text-muted);
+  --faint: var(--text-faint);
+  --surface-hover: var(--hover);
+  --surface-elevated: var(--surface);
+
+  /* Skeleton shimmer */
+  --skeleton-base: var(--surface-2);
+  --skeleton-shine: var(--surface-3);
+}
+
+[data-theme='dark'] {
+  --bg: #0a0d14;
+  --surface: #131822;
+  --surface-2: #1a2030;
+  --surface-3: #232b3d;
+  --hover: #1c2333;
+  --border: #2a3346;
+  --border-strong: #3b465e;
+  --text: #e8ebf1;
+  --text-muted: #97a0b3;
+  --text-faint: #6a7388;
+  --invert-text: #0a0d14;
+
+  --bubble-in: #1c2434;
+  --bubble-in-text: #e8ebf1;
+  --bubble-out: #6366f1;
+  --bubble-out-grad: linear-gradient(135deg, #6366f1, #4338ca);
+  --bubble-out-text: #ffffff;
+  --bubble-shadow: 0 1px 1px rgba(0,0,0,.4);
+
+  --shadow-xs: 0 1px 1px rgba(0,0,0,.3);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.4);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.45);
+  --shadow-lg: 0 12px 28px rgba(0,0,0,.5);
+  --shadow-xl: 0 24px 60px rgba(0,0,0,.6);
+
+  --accent: #818cf8;
+  --accent-soft: rgba(129,140,248,.15);
+  --accent-strong: #6366f1;
+  --accent-grad: linear-gradient(135deg, #a5b4fc, #818cf8 50%, #6366f1);
+
+  --glass: rgba(19,24,34,.78);
+  --glass-strong: rgba(19,24,34,.92);
+
+  --success-soft: rgba(16,185,129,.15);
+  --warning-soft: rgba(245,158,11,.15);
+  --danger-soft:  rgba(239,68,68,.15);
+  --info-soft:    rgba(59,130,246,.15);
+
+  --backdrop: rgba(0,0,0,.7);
+  --warning-text: #1a0f00;
+
+  --skeleton-base: var(--surface-2);
+  --skeleton-shine: var(--surface-3);
+}
+
+/* Tamanhos de letra (configurável).
+   font-size no <html> escala TODOS os rem do app — mas como temos muitos px no
+   CSS, o efeito é mais sutil. Por isso usamos range mais agressivo. */
+[data-font='small']  { --font-scale: 0.88; font-size: 88%;  }
+[data-font='normal'] { --font-scale: 1;    font-size: 100%; }
+[data-font='large']  { --font-scale: 1.20; font-size: 120%; }
+
+/* Densidade — afeta padding/gap de listas e bolhas de mensagem.
+   Diferenças exageradas o suficiente para serem visíveis sem ficarem feias. */
+[data-density='compact'] {
+  --density-pad: 0.6;
+  --density-row-min: 48px;
+  --density-bubble-pad-y: 0.25rem;
+  --density-bubble-pad-x: 0.55rem;
+  --density-bubble-gap: 2px;
+  --density-list-row-pad: 0.4rem;
+}
+[data-density='comfortable'] {
+  --density-pad: 1;
+  --density-row-min: 64px;
+  --density-bubble-pad-y: 0.55rem;
+  --density-bubble-pad-x: 0.85rem;
+  --density-bubble-gap: 8px;
+  --density-list-row-pad: 0.75rem;
+}
+[data-density='spacious'] {
+  --density-pad: 1.4;
+  --density-row-min: 80px;
+  --density-bubble-pad-y: 0.95rem;
+  --density-bubble-pad-x: 1.1rem;
+  --density-bubble-gap: 16px;
+  --density-list-row-pad: 1.1rem;
+}
+
+/* Cores de acento (LIGHT theme defaults) */
+[data-accent='indigo']  { --accent: #6366f1; --accent-strong: #4f46e5; --accent-soft: #eef2ff; --accent-grad: linear-gradient(135deg,#818cf8,#6366f1,#4f46e5); --bubble-out-grad: linear-gradient(135deg,#6366f1,#4f46e5); --focus-ring: 0 0 0 3px rgba(99,102,241,.35); }
+[data-accent='teal']    { --accent: #14b8a6; --accent-strong: #0d9488; --accent-soft: #f0fdfa; --accent-grad: linear-gradient(135deg,#5eead4,#14b8a6,#0d9488); --bubble-out-grad: linear-gradient(135deg,#14b8a6,#0d9488); --focus-ring: 0 0 0 3px rgba(20,184,166,.35); }
+[data-accent='rose']    { --accent: #f43f5e; --accent-strong: #e11d48; --accent-soft: #fff1f2; --accent-grad: linear-gradient(135deg,#fb7185,#f43f5e,#e11d48); --bubble-out-grad: linear-gradient(135deg,#f43f5e,#e11d48); --focus-ring: 0 0 0 3px rgba(244,63,94,.35); }
+[data-accent='amber']   { --accent: #f59e0b; --accent-strong: #d97706; --accent-soft: #fffbeb; --accent-grad: linear-gradient(135deg,#fcd34d,#f59e0b,#d97706); --bubble-out-grad: linear-gradient(135deg,#f59e0b,#d97706); --focus-ring: 0 0 0 3px rgba(245,158,11,.35); }
+[data-accent='emerald'] { --accent: #10b981; --accent-strong: #059669; --accent-soft: #ecfdf5; --accent-grad: linear-gradient(135deg,#6ee7b7,#10b981,#059669); --bubble-out-grad: linear-gradient(135deg,#10b981,#059669); --focus-ring: 0 0 0 3px rgba(16,185,129,.35); }
+[data-accent='sky']     { --accent: #0ea5e9; --accent-strong: #0284c7; --accent-soft: #f0f9ff; --accent-grad: linear-gradient(135deg,#7dd3fc,#0ea5e9,#0284c7); --bubble-out-grad: linear-gradient(135deg,#0ea5e9,#0284c7); --focus-ring: 0 0 0 3px rgba(14,165,233,.35); }
+[data-accent='violet']  { --accent: #8b5cf6; --accent-strong: #7c3aed; --accent-soft: #f5f3ff; --accent-grad: linear-gradient(135deg,#c4b5fd,#8b5cf6,#7c3aed); --bubble-out-grad: linear-gradient(135deg,#8b5cf6,#7c3aed); --focus-ring: 0 0 0 3px rgba(139,92,246,.35); }
+
+/* DARK theme: --accent-soft fica translúcido pra contrastar contra fundos escuros */
+[data-theme='dark'][data-accent='indigo']  { --accent-soft: rgba(99,102,241,.18); }
+[data-theme='dark'][data-accent='teal']    { --accent-soft: rgba(20,184,166,.18); }
+[data-theme='dark'][data-accent='rose']    { --accent-soft: rgba(244,63,94,.18); }
+[data-theme='dark'][data-accent='amber']   { --accent-soft: rgba(245,158,11,.18); }
+[data-theme='dark'][data-accent='emerald'] { --accent-soft: rgba(16,185,129,.18); }
+[data-theme='dark'][data-accent='sky']     { --accent-soft: rgba(14,165,233,.18); }
+[data-theme='dark'][data-accent='violet']  { --accent-soft: rgba(139,92,246,.18); }
+
+/* Keyframes globais reutilizáveis */
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes fadeOut { from { opacity: 1 } to { opacity: 0 } }
+@keyframes scaleIn { from { transform: scale(.94); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+@keyframes slideUp { from { transform: translateY(10px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+@keyframes slideInRight { from { transform: translateX(40px); opacity: 0 } to { transform: translateX(0); opacity: 1 } }
+@keyframes slideInLeft { from { transform: translateX(-40px); opacity: 0 } to { transform: translateX(0); opacity: 1 } }
+@keyframes pulseRing { 0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 60%, transparent) } 100% { box-shadow: 0 0 0 16px transparent } }
+@keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1) } 50% { opacity: .4; transform: scale(.85) } }
+@keyframes shimmer { 0% { background-position: -200% 0 } 100% { background-position: 200% 0 } }
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: .5; }
+  40% { transform: translateY(-3px); opacity: 1; }
+}
+@keyframes bounceIn {
+  0% { transform: scale(.3); opacity: 0; }
+  60% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); }
+}
+@keyframes recordPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: .6; }
+}

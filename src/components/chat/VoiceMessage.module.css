@@ -1,0 +1,60 @@
+.voice {
+  display: flex; align-items: center; gap: 12px;
+  width: 240px; min-width: 200px;
+  padding: 4px 0;
+}
+.play {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px color-mix(in oklab, var(--accent) 25%, transparent);
+  transition: transform 100ms, filter 100ms;
+}
+.play:hover { filter: brightness(1.08); }
+.play:active { transform: scale(.92); }
+.mine .play { background: rgba(255,255,255,.25); }
+.mine .play:hover { background: rgba(255,255,255,.4); }
+.wave {
+  flex: 1;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.bar {
+  flex: 1;
+  background: var(--border-strong);
+  border-radius: 1px;
+  transition: background var(--t-fast);
+}
+.mine .bar { background: rgba(255,255,255,.4); }
+.barPlayed { background: var(--accent) !important; }
+.mine .barPlayed { background: #fff !important; }
+.time {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.mine .time { color: rgba(255,255,255,.85); }
+
+.download {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  text-decoration: none;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.download:hover { background: var(--surface-3); color: var(--text); text-decoration: none; }
+.mine .download { background: rgba(255,255,255,.2); color: rgba(255,255,255,.9); }
+.mine .download:hover { background: rgba(255,255,255,.32); color: var(--bubble-out-text); }

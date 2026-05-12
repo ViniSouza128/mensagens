@@ -1,0 +1,17 @@
+.wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  overflow-y: auto;
+}
+.header { padding-bottom: 4px; }
+.list { display: flex; flex-direction: column; gap: 2px; }
+.empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--muted);
+}
