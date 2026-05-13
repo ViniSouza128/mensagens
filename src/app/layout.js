@@ -3,9 +3,20 @@ import { ToastProvider } from '@/components/ui/Toast';
 import { ThemeProvider } from '@/components/layout/ThemeProvider';
 import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration';
 
+// metadataBase é usado pelo Next pra resolver URLs relativas em og:image,
+// twitter:image etc. WhatsApp/Telegram exigem URL absoluta no preview.
+// NEXT_PUBLIC_SITE_URL é a forma de configurar isso em produção (tunnel
+// Cloudflare, domínio próprio…). Fallback pra localhost em dev.
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.NEXT_PUBLIC_VERCEL_URL ||
+  'http://localhost:3000';
+
 export const metadata = {
-  title: 'Mensagens',
-  description: 'Mensageiro web moderno e responsivo',
+  metadataBase: new URL(siteUrl),
+  title: 'Mensagens — mensageiro web moderno',
+  description:
+    'Mensageiro web com chats, grupos, mídia e bots de IA local. Rápido, responsivo e privado.',
   manifest: '/manifest.webmanifest',
   applicationName: 'Mensagens',
   appleWebApp: {
@@ -14,6 +25,25 @@ export const metadata = {
     statusBarStyle: 'black-translucent',
   },
   formatDetection: { telephone: false },
+  // OpenGraph é o que o WhatsApp lê pra montar o preview de link.
+  // A imagem em si é gerada por src/app/opengraph-image.js (1200×630).
+  openGraph: {
+    type: 'website',
+    siteName: 'Mensagens',
+    title: 'Mensagens — mensageiro web moderno',
+    description:
+      'Mensageiro web com chats, grupos, mídia e bots de IA local. Rápido, responsivo e privado.',
+    locale: 'pt_BR',
+    url: '/',
+  },
+  // Twitter card — alguns apps (Slack, Discord) preferem ele ao OpenGraph.
+  // 'summary_large_image' garante a imagem grande horizontal.
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Mensagens — mensageiro web moderno',
+    description:
+      'Mensageiro web com chats, grupos, mídia e bots de IA local. Rápido, responsivo e privado.',
+  },
   other: {
     'mobile-web-app-capable': 'yes',
   },
