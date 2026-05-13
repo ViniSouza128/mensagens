@@ -3,6 +3,7 @@ import { HttpError } from '@/server/auth';
 import { directKey, newId } from '@/lib/id';
 import { publish } from '@/server/events';
 import { isBlocked, isContact } from '@/server/handlers/contacts';
+import { decryptMessageRow } from '@/server/crypto/messageCrypto';
 
 export function getChat(chatId) {
   return getDb().prepare('SELECT * FROM chats WHERE id = ?').get(chatId);
@@ -106,7 +107,7 @@ export function listChatsForUser(userId, { archived = false } = {}) {
 
   // Batch 2: última mensagem por chat com ROW_NUMBER (1 query)
   const lastMsgMap = {};
-  for (const m of db.prepare(
+  for (const raw of db.prepare(
     `WITH ranked AS (
        SELECT m.id, m.chat_id, m.type, m.body, m.sender_id, m.created_at, m.deleted,
               u.name AS sender_name,
@@ -116,6 +117,7 @@ export function listChatsForUser(userId, { archived = false } = {}) {
      )
      SELECT * FROM ranked WHERE rn = 1`
   ).all(...chatIds)) {
+    const m = decryptMessageRow(raw);
     lastMsgMap[m.chat_id] = m;
   }
 
@@ -197,14 +199,14 @@ export function decorateChatForUser(row, userId) {
     partner = m || null;
   }
   // última mensagem
-  const last = db
+  const last = decryptMessageRow(db
     .prepare(
       `SELECT m.id, m.type, m.body, m.sender_id, m.created_at, m.deleted,
               u.name AS sender_name
        FROM messages m LEFT JOIN users u ON u.id = m.sender_id
        WHERE m.chat_id = ? ORDER BY m.created_at DESC LIMIT 1`
     )
-    .get(row.id);
+    .get(row.id));
   // contador de não lidas (mensagens após last_read_at, não do próprio usuário)
   const unread = db
     .prepare(

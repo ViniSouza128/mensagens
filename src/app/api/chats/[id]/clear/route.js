@@ -51,6 +51,9 @@ export async function POST(_req, props) {
       ).run(chatId);
       // Remove todas as mensagens — cascata cuida de attachments,
       // message_receipts, message_reactions, message_stars, message_edits.
+      const rows = db.prepare('SELECT rowid FROM messages WHERE chat_id = ?').all(chatId);
+      const delFts = db.prepare('DELETE FROM messages_fts WHERE rowid = ?');
+      for (const row of rows) delFts.run(row.rowid);
       db.prepare('DELETE FROM messages WHERE chat_id = ?').run(chatId);
       // Zera o ponteiro de "última mensagem" do chat — a lista mostra "Sem
       // mensagens ainda" depois disso.

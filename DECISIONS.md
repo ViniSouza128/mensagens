@@ -23,6 +23,15 @@ Resumo das principais escolhas técnicas e o porquê de cada uma.
 - Senhas com **bcryptjs** (custo 10) — pure JS, sem dependências nativas extras.
 - Middleware/handlers usam `requireUser()` / `requireAdmin()` que lêem o cookie e validam a sessão.
 
+## Criptografia em repouso (Nivel 2)
+
+- **AES-256-GCM por mensagem**: `messages.body` e `message_edits.body_before` sao cifrados antes de gravar no SQLite no formato `v1:<iv>:<tag>:<ciphertext>`. O IV e aleatorio por mensagem para que textos iguais nao gerem ciphertext igual.
+- **Chave mestra em env**: `MESSAGE_ENCRYPTION_KEY` precisa ter 32 bytes em base64. O boot falha cedo se a chave estiver ausente/invalida, porque iniciar sem chave criaria um banco misto e perigoso.
+- **Nao e E2E**: o servidor tem a chave e entrega plaintext ao cliente autenticado. O objetivo aqui e reduzir dano se alguem copiar `data/mensagens.db`; nao proteger contra o proprio servidor.
+- **`messages.extra` parcial**: o JSON continua estruturalmente legivel para nao quebrar UI e filtros, mas campos textuais sensiveis (`caption`, `poll.question`, `poll.options[].text`, `voice.transcript`) sao cifrados individualmente.
+- **FTS plaintext como trade-off consciente**: `messages_fts.body` guarda plaintext para busca textual continuar funcionando. Isso e o ponto fraco conhecido do Nivel 2: quem roubar o SQLite ainda pode ler termos indexados na FTS. A decisao foi manter UX de busca agora e documentar uma futura evolucao para indice por tokens deterministos/hashed.
+- **Rotacao futura**: criar `MESSAGE_ENCRYPTION_KEY_NEXT`, aceitar decrypt com chave atual/anterior por versao (`v2:`), recriptografar em lote numa transacao e so entao promover a nova chave. Enquanto a FTS guardar plaintext, a rotacao da chave nao elimina o vazamento do indice de busca.
+
 ## UX de mensagens
 
 - **UI otimista**: ao enviar, criamos uma mensagem `tmp_<client_id>` no estado e fazemos POST. Ao receber a confirmação (resposta direta ou eco do SSE) substituímos pela versão server pelo `client_id`. Falhas marcam `status: 'failed'` e mostram retry.
@@ -49,7 +58,9 @@ Resumo das principais escolhas técnicas e o porquê de cada uma.
 
 ## Admin
 
-- **Princípio do menor privilégio**: admin **não** acessa chats privados arbitrariamente. A única visão de mensagens disponível é o **contexto de denúncia**: 15 mensagens anteriores + 5 posteriores ao alvo, e somente quando uma denúncia existe. Toda visualização de contexto fica no log de auditoria.
+- **Leitura administrativa auditada**: admins podem acessar `/admin/spy` para listar usuarios, abrir conversas e exportar mensagens em JSON. Esse acesso existe para suporte/moderacao, bypassa `message_hides`, respeita `deleted=1` global e registra toda chamada `/api/admin/spy/*` em `audit_log` com IP, user-agent, rota e query.
+- **Rate limit do spy**: `requireAdmin(req)` aplica 120 chamadas por minuto por admin nas rotas `/api/admin/spy/*`. O limite e em memoria porque o objetivo e conter varredura acidental/abuso leve sem introduzir Redis.
+- **Contexto de denuncia continua limitado**: o modal de denuncias ainda mostra 15 mensagens anteriores + 5 posteriores ao alvo para triagem rapida. O acesso completo fica separado no spy, com nome de rota explicito para aparecer claramente nos logs.
 - Promover/suspender/banir/reintegrar passa pelo mesmo POST `/api/admin/users` com um campo `action` — fluxo mais simples no front e auditoria uniforme no back.
 
 ## Segurança

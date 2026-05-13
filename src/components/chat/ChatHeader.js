@@ -9,7 +9,7 @@ import styles from './ChatHeader.module.css';
 
 export default function ChatHeader({
   chat, onOpenInfo, selectionMode, selectedCount, onClearSelection, onForwardSelection, onDeleteSelection,
-  searchOpen, onToggleSearch, infoOpen,
+  searchOpen, onToggleSearch, infoOpen, spectatorMode = false,
 }) {
   const router = useRouter();
   // Direct chat sem partner = a conta do outro lado foi apagada (bot removido
@@ -41,10 +41,12 @@ export default function ChatHeader({
 
   return (
     <header className={styles.header} role="banner">
-      <button type="button" className={styles.back} onClick={() => router.push('/chats')} aria-label="Voltar">
-        <ArrowLeftIcon />
-      </button>
-      <button type="button" className={styles.identity} onClick={onOpenInfo} aria-label="Ver informações">
+      {!spectatorMode ? (
+        <button type="button" className={styles.back} onClick={() => router.push('/chats')} aria-label="Voltar">
+          <ArrowLeftIcon />
+        </button>
+      ) : null}
+      <button type="button" className={styles.identity} onClick={spectatorMode ? undefined : onOpenInfo} aria-label="Ver informações">
         <Avatar
           name={partnerMissing ? '—' : chat?.name}
           src={partnerMissing ? null : avatarSrc}
@@ -62,7 +64,7 @@ export default function ChatHeader({
           ) : null}
         </div>
       </button>
-      <div className={styles.actions}>
+      {!spectatorMode ? <div className={styles.actions}>
         <IconButton
           label={searchOpen ? 'Fechar busca' : 'Buscar na conversa'}
           tipPos="bottom"
@@ -81,7 +83,7 @@ export default function ChatHeader({
         >
           <InfoIcon size={18} />
         </IconButton>
-      </div>
+      </div> : null}
     </header>
   );
 }

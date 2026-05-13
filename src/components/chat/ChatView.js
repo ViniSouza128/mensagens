@@ -28,7 +28,13 @@ import styles from './ChatView.module.css';
 
 const MSG_HASH_RE = /^#msg-(.+)$/;
 
-export default function ChatView({ chatId }) {
+export default function ChatView({
+  chatId,
+  spectatorMode = false,
+  spectatorChat = null,
+  messagesEndpoint = null,
+  onShowEdits = null,
+}) {
   const router = useRouter();
   const { user, subscribe, refreshChats, markChatRead } = useApp();
   const { toast } = useToast();
@@ -86,6 +92,7 @@ export default function ChatView({ chatId }) {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [reportTarget, setReportTarget] = useState(null);
   const [reportReason, setReportReason] = useState('');
+  const messagePageSize = spectatorMode ? 100 : 40;
 
   // Detect mobile (<=720px) to switch drawer mode: inline vs overlay
   useEffect(() => {
@@ -127,6 +134,10 @@ export default function ChatView({ chatId }) {
   // ── Data fetching ─────────────────────────────────────────────────────────
 
   const loadChat = useCallback(async () => {
+    if (spectatorMode) {
+      setChat(spectatorChat ? { ...spectatorChat, id: spectatorChat.id || spectatorChat.chat_id, pinned: spectatorChat.pinned || [] } : null);
+      return;
+    }
     try {
       const c = await api.get(`/api/chats/${chatId}`);
       setChat(c);
@@ -136,23 +147,26 @@ export default function ChatView({ chatId }) {
         router.replace('/chats');
       }
     }
-  }, [chatId, router, toast]);
+  }, [chatId, router, spectatorChat, spectatorMode, toast]);
 
   const loadMessages = useCallback(async (opts = {}) => {
     setLoading(true);
     try {
-      const url = opts.before
-        ? `/api/chats/${chatId}/messages?before=${opts.before}`
-        : `/api/chats/${chatId}/messages`;
+      const base = messagesEndpoint || `/api/chats/${chatId}/messages`;
+      const qs = new URLSearchParams();
+      qs.set('limit', String(messagePageSize));
+      if (opts.before) qs.set('before', String(opts.before));
+      const url = `${base}${base.includes('?') ? '&' : '?'}${qs.toString()}`;
       const data = await api.get(url);
       if (opts.before) {
         setMessages((prev) => [...data, ...prev]);
-        setHasMore(data.length >= 40);
+        setHasMore(data.length >= messagePageSize);
       } else {
         setMessages(data);
-        setHasMore(data.length >= 40);
+        setHasMore(data.length >= messagePageSize);
         // Cache da última página de mensagens p/ pintura instantânea ao reabrir o chat.
         try {
+          if (spectatorMode) return;
           const ric = window.requestIdleCallback || ((cb) => setTimeout(cb, 200));
           ric(() => {
             try {
@@ -165,17 +179,21 @@ export default function ChatView({ chatId }) {
     } finally {
       setLoading(false);
     }
-  }, [chatId]);
+  }, [chatId, messagePageSize, messagesEndpoint, spectatorMode]);
 
   useEffect(() => {
     // Hidrata do cache ANTES de fazer o fetch — mensagens aparecem instantaneamente
     // mesmo em conexão lenta. O fetch substitui pelos dados frescos quando chega.
-    try {
-      const cached = window.localStorage.getItem(`mensagens.cache.msgs.${chatId}`);
-      const arr = cached ? JSON.parse(cached) : null;
-      setMessages(Array.isArray(arr) ? arr : []);
-    } catch {
+    if (spectatorMode) {
       setMessages([]);
+    } else {
+      try {
+        const cached = window.localStorage.getItem(`mensagens.cache.msgs.${chatId}`);
+        const arr = cached ? JSON.parse(cached) : null;
+        setMessages(Array.isArray(arr) ? arr : []);
+      } catch {
+        setMessages([]);
+      }
     }
     setHasMore(true);
     setReply(null);
@@ -188,14 +206,15 @@ export default function ChatView({ chatId }) {
     setTyping([]);
     setBotQueueInfo(null);
     lastReadMsgIdRef.current = null;
-    markChatRead(chatId);
+    if (!spectatorMode) markChatRead(chatId);
     loadChat();
     loadMessages();
-  }, [chatId, loadChat, loadMessages, markChatRead]);
+  }, [chatId, loadChat, loadMessages, markChatRead, spectatorMode]);
 
   // ── SSE: atualizações em tempo real ───────────────────────────────────────
 
   useEffect(() => {
+    if (spectatorMode) return undefined;
     return subscribe((ev) => {
       if (!ev || ev.chat_id !== chatId) return;
       if (ev.type === 'message.new') {
@@ -323,10 +342,11 @@ export default function ChatView({ chatId }) {
         }
       }
     });
-  }, [subscribe, chatId, user, loadChat, toast, router]);
+  }, [subscribe, chatId, user, loadChat, toast, router, spectatorMode]);
 
   // ── Read receipt ──────────────────────────────────────────────────────────
   useEffect(() => {
+    if (spectatorMode) return;
     if (!messages.length) return;
     const last = messages[messages.length - 1];
     if (!last || last.sender_id === user?.id) return;
@@ -334,7 +354,7 @@ export default function ChatView({ chatId }) {
     lastReadMsgIdRef.current = last.id;
     markChatRead(chatId);
     api.post(`/api/chats/${chatId}/read`, { message_id: last.id, ts: Date.now() }).catch(() => {});
-  }, [messages, chatId, user, markChatRead]);
+  }, [messages, chatId, user, markChatRead, spectatorMode]);
 
   // ── URL hash → highlight on load ──────────────────────────────────────────
   useEffect(() => {
@@ -406,6 +426,7 @@ export default function ChatView({ chatId }) {
 
   // ── Send message ──────────────────────────────────────────────────────────
   async function send({ body, attachments, type, voice, poll, extra }) {
+    if (spectatorMode) return;
     const currentReply = replyRef.current;
     const client_id = newShortId();
     const msgType = type || (attachments?.length ? attachments[0].kind : 'text');
@@ -753,24 +774,28 @@ export default function ChatView({ chatId }) {
       {/* ── Main content column ───────────────────────────────────── */}
       <div
         className={[styles.wrap, dropping ? styles.dropping : ''].join(' ')}
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onDrop={onDrop}
+        onDragOver={spectatorMode ? undefined : onDragOver}
+        onDragLeave={spectatorMode ? undefined : onDragLeave}
+        onDrop={spectatorMode ? undefined : onDrop}
       >
         <ChatHeader
           chat={chat}
           onOpenInfo={() => setDrawerOpen((v) => !v)}
-          selectionMode={selectionMode}
+          selectionMode={spectatorMode ? false : selectionMode}
           selectedCount={selected.size}
           onClearSelection={clearSelection}
           onForwardSelection={() => setForwardSel([...selected])}
           onDeleteSelection={() => bulkDeleteForMe([...selected])}
-          searchOpen={chatSearch}
+          searchOpen={spectatorMode ? false : chatSearch}
           onToggleSearch={() => setChatSearch((s) => !s)}
           infoOpen={drawerOpen}
+          spectatorMode={spectatorMode}
         />
-        <PinnedBar chat={chat} messages={messages} onUnpin={(m) => pin(m, false)} />
-        {chatSearch ? (
+        {spectatorMode ? (
+          <div className={styles.spectatorBanner}>🔍 Visualização administrativa — esta sessão está sendo auditada</div>
+        ) : null}
+        {!spectatorMode ? <PinnedBar chat={chat} messages={messages} onUnpin={(m) => pin(m, false)} /> : null}
+        {chatSearch && !spectatorMode ? (
           <InChatSearch chatId={chatId} onGoTo={goToMessage} onClose={() => setChatSearch(false)} />
         ) : null}
         <ChatThread
@@ -799,7 +824,10 @@ export default function ChatView({ chatId }) {
           onToggleSelect={toggleSelection}
           onStartSelection={handleStartSel}
           highlightedMsgId={highlightedMsgId}
+          readOnly={spectatorMode}
+          onShowEdits={onShowEdits}
         />
+        {!spectatorMode ? (
         <Composer
           chat={chat}
           me={user}
@@ -818,7 +846,8 @@ export default function ChatView({ chatId }) {
           lockedSince={lockedSinceRef.current}
           onCancelBot={botBusy ? cancelBotReply : null}
         />
-        {dropping ? (
+        ) : null}
+        {dropping && !spectatorMode ? (
           <div className={styles.dropOverlay} aria-hidden>
             <span className={styles.dropOverlayText}>Solte para anexar</span>
           </div>
@@ -826,7 +855,7 @@ export default function ChatView({ chatId }) {
       </div>
 
       {/* ── Right inline info panel (desktop only) ────────────────── */}
-      {!isMobile && (
+      {!spectatorMode && !isMobile && (
         <div className={[styles.infoPanel, drawerOpen ? styles.infoPanelOpen : ''].join(' ')}>
           {chat?.type === 'group' ? (
             <GroupDrawer
@@ -842,7 +871,7 @@ export default function ChatView({ chatId }) {
       )}
 
       {/* ── Mobile: overlay drawers ───────────────────────────────── */}
-      {isMobile && (
+      {!spectatorMode && isMobile && (
         chat?.type === 'group' ? (
           <GroupDrawer
             {...drawerProps}

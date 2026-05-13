@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "node scripts/seed.mjs",
-    "migrate": "node scripts/migrate.mjs"
+    "migrate": "node scripts/migrate.mjs",
+    "encrypt-existing": "node scripts/encryptExistingMessages.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

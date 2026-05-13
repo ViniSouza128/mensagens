@@ -6,17 +6,45 @@ import { isBlocked, isContact, createContactRequest } from '@/server/handlers/co
 import { publish } from '@/server/events';
 import { audit } from '@/server/audit';
 import { maybeBotReply } from '@/server/llm/bots';
+import {
+  decryptMessageBody,
+  decryptMessageEditRow,
+  decryptMessageRow,
+  encryptMessageBody,
+  encryptMessageExtra,
+} from '@/server/crypto/messageCrypto';
 
 function safeParse(s) { try { return JSON.parse(s) || {}; } catch { return {}; } }
 
 const EDIT_WINDOW_MS = 4 * 60 * 60 * 1000;
 
+function parseExtra(row) {
+  return row?.extra ? safeParse(row.extra) : {};
+}
+
+function indexMessagePlaintext(db, messageId, plaintext) {
+  const row = db.prepare('SELECT rowid FROM messages WHERE id = ?').get(messageId);
+  if (!row) return;
+  // messages_fts guarda plaintext de proposito: o body cifrado protege o
+  // SQLite principal, mas a busca precisa de tokens legiveis. A decisao esta
+  // documentada em DECISIONS.md.
+  db.prepare('DELETE FROM messages_fts WHERE rowid = ?').run(row.rowid);
+  db.prepare('INSERT INTO messages_fts(rowid, body) VALUES (?, ?)').run(row.rowid, plaintext || '');
+}
+
+export function removeMessageFromFts(db, messageId) {
+  const row = db.prepare('SELECT rowid FROM messages WHERE id = ?').get(messageId);
+  if (!row) return;
+  db.prepare('DELETE FROM messages_fts WHERE rowid = ?').run(row.rowid);
+}
+
 export function buildMessage(row, viewerId) {
   if (!row) return null;
+  row = decryptMessageRow(row);
   const db = getDb();
   const attachments = db.prepare('SELECT * FROM attachments WHERE message_id = ?').all(row.id);
   const reactions = db.prepare('SELECT user_id, emoji FROM message_reactions WHERE message_id = ?').all(row.id);
-  const reply = row.reply_to_id ? db.prepare('SELECT id, sender_id, body, type, deleted FROM messages WHERE id=?').get(row.reply_to_id) : null;
+  const reply = row.reply_to_id ? decryptMessageRow(db.prepare('SELECT id, sender_id, body, type, deleted FROM messages WHERE id=?').get(row.reply_to_id)) : null;
   const starred = viewerId
     ? !!db.prepare('SELECT 1 FROM message_stars WHERE message_id=? AND user_id=?').get(row.id, viewerId)
     : false;
@@ -62,7 +90,7 @@ export function buildMessage(row, viewerId) {
     starred,
     status,
     created_at: row.created_at,
-    ...(row.extra ? safeParse(row.extra) : {}),
+    ...parseExtra(row),
   };
 }
 
@@ -73,6 +101,7 @@ export function buildMessage(row, viewerId) {
  */
 export function buildMessages(rows, viewerId) {
   if (!rows.length) return [];
+  rows = rows.map((row) => decryptMessageRow(row));
   const db = getDb();
   const ids = rows.map((r) => r.id);
   const ph = ids.map(() => '?').join(',');
@@ -103,7 +132,8 @@ export function buildMessages(rows, viewerId) {
   if (replyIds.length) {
     const rph = replyIds.map(() => '?').join(',');
     for (const r of db.prepare(`SELECT id, sender_id, body, type, deleted FROM messages WHERE id IN (${rph})`).all(...replyIds)) {
-      replyMap[r.id] = r;
+      const plain = decryptMessageRow(r);
+      replyMap[plain.id] = plain;
     }
   }
 
@@ -179,7 +209,7 @@ export function buildMessages(rows, viewerId) {
       status,
       created_at: row.created_at,
       // Espalha campos de extra (poll, voice) ao topo da mensagem para facilitar uso no front
-      ...(row.extra ? safeParse(row.extra) : {}),
+      ...parseExtra(row),
     };
   });
 }
@@ -258,11 +288,13 @@ export function sendMessage({
 
   const id = newId();
   const now = Date.now();
-  const extraJson = extra ? JSON.stringify(extra) : null;
+  const encryptedBody = encryptMessageBody(trimmedBody);
+  const extraJson = extra ? JSON.stringify(encryptMessageExtra(extra)) : null;
   db.prepare(
     `INSERT INTO messages (id, chat_id, sender_id, type, body, reply_to_id, forwarded_from_id, extra, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(id, chatId, senderId, type, trimmedBody, replyToId, forwardedFromId, extraJson, now);
+  ).run(id, chatId, senderId, type, encryptedBody, replyToId, forwardedFromId, extraJson, now);
+  indexMessagePlaintext(db, id, trimmedBody);
 
   // attachments
   for (const att of attachments || []) {
@@ -340,10 +372,13 @@ export function editMessage({ messageId, userId, body }) {
   if (typeof body !== 'string' || body.trim().length === 0) throw new HttpError(400, 'empty_message');
   if (body.length > 8000) throw new HttpError(413, 'message_too_long');
 
+  const previousBody = decryptMessageBody(m.body);
+  const nextBody = body.trim();
   db.prepare(`INSERT INTO message_edits (message_id, body_before, edited_at) VALUES (?, ?, ?)`)
-    .run(messageId, m.body, Date.now());
+    .run(messageId, encryptMessageBody(previousBody), Date.now());
   db.prepare(`UPDATE messages SET body = ?, edited_at = ?, edit_count = edit_count + 1 WHERE id = ?`)
-    .run(body.trim(), Date.now(), messageId);
+    .run(encryptMessageBody(nextBody), Date.now(), messageId);
+  indexMessagePlaintext(db, messageId, nextBody);
 
   const built = buildMessage(db.prepare('SELECT * FROM messages WHERE id = ?').get(messageId), userId);
   const members = listMembers(m.chat_id);
@@ -379,6 +414,7 @@ export function deleteMessage({ messageId, userId }) {
   if (!m) throw new HttpError(404, 'message_not_found');
   if (m.sender_id !== userId) throw new HttpError(403, 'forbidden');
   db.prepare(`UPDATE messages SET deleted = 1, deleted_at = ?, body = NULL WHERE id = ?`).run(Date.now(), messageId);
+  removeMessageFromFts(db, messageId);
   // remove anexos do FS opcionalmente — mantemos por enquanto (apenas marca deletado)
   const built = buildMessage(db.prepare('SELECT * FROM messages WHERE id = ?').get(messageId), userId);
   const members = listMembers(m.chat_id);
@@ -425,7 +461,8 @@ export function getMessageDetails({ messageId, viewerId }) {
   ensureMember(m.chat_id, viewerId);
   const edits = db
     .prepare('SELECT body_before, edited_at FROM message_edits WHERE message_id=? ORDER BY edited_at ASC')
-    .all(messageId);
+    .all(messageId)
+    .map((row) => decryptMessageEditRow(row));
   const receipts = db
     .prepare(
       `SELECT mr.user_id, mr.delivered_at, mr.read_at, u.name, u.username
@@ -469,7 +506,7 @@ export function forwardMessages({ messageIds, toChatIds, userId }) {
   for (const chatId of toChatIds) {
     ensureMember(chatId, userId);
     for (const mid of messageIds) {
-      const m = db.prepare('SELECT * FROM messages WHERE id = ?').get(mid);
+      const m = decryptMessageRow(db.prepare('SELECT * FROM messages WHERE id = ?').get(mid));
       if (!m || m.deleted) continue;
       const atts = db.prepare('SELECT * FROM attachments WHERE message_id = ?').all(mid);
       const built = sendMessage({

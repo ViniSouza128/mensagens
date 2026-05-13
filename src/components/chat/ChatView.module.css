@@ -22,6 +22,15 @@
 }
 /* O ChatThread (que tem flex:1) cresce para preencher; demais elementos (header, pinned, search, composer) ficam no tamanho natural. */
 
+.spectatorBanner {
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  color: var(--text);
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 /* ── Right info panel — slides in, pushes main content ─────────── */
 .infoPanel {
   flex-shrink: 0;

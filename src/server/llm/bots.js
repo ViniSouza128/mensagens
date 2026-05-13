@@ -28,6 +28,7 @@ import { ollamaChatStream } from '@/server/llm/ollama';
 import { publish } from '@/server/events';
 import { logger } from '@/server/logger';
 import { getBotByUsername } from '@/server/llm/personas';
+import { decryptMessageRow } from '@/server/crypto/messageCrypto';
 
 // Quantas mensagens recentes mandar como contexto para o modelo.
 const CONTEXT_WINDOW = 20;
@@ -216,6 +217,7 @@ function buildOllamaMessages(bot, chatId, fewShot = []) {
        LIMIT ?`
     )
     .all(chatId, CONTEXT_WINDOW)
+    .map((row) => decryptMessageRow(row))
     .reverse();
 
   // Identifica índices a remover: cada resposta de bot que parece um leak

@@ -15,6 +15,7 @@
 import { getDb } from '@/database/db';
 import { normalize } from '@/lib/normalize';
 import { tokenize, multipassFts, makeSnippet, markTerms } from '@/lib/searchQuery';
+import { decryptMessageRow } from '@/server/crypto/messageCrypto';
 
 // FTS5 snippet() options: 32 tokens of context, <mark> delimiters
 const SNIP = `'<mark>', '</mark>', '…', 32`;
@@ -128,23 +129,29 @@ export function globalSearch(viewerId, raw, { limitPerKind = 10, offset = 0 } = 
   if (rawMessages.length === 0) {
     const likeMsgs = db.prepare(`
       SELECT m.id, m.chat_id, m.sender_id, m.body, m.created_at, m.type,
+             f.body AS fts_body,
              sender.name AS sender_name,
              COALESCE(c.name, p.name) AS chat_name
       FROM messages m
+      JOIN messages_fts f ON f.rowid = m.rowid
       JOIN chat_members cm ON cm.chat_id = m.chat_id AND cm.user_id = ? AND cm.left_at IS NULL
       JOIN users sender ON sender.id = m.sender_id
       JOIN chats c ON c.id = m.chat_id
       LEFT JOIN chat_members cm2
         ON cm2.chat_id = m.chat_id AND cm2.user_id != cm.user_id AND c.type = 'direct'
       LEFT JOIN users p ON p.id = cm2.user_id
-      WHERE m.deleted = 0 AND LOWER(m.body) LIKE ?
+      WHERE m.deleted = 0 AND LOWER(f.body) LIKE ?
       ORDER BY m.created_at DESC LIMIT ?
     `).all(viewerId, like, fetchLimit);
-    rawMessages = likeMsgs.map((m) => ({ ...m, snippet: makeSnippet(m.body, tokens) }));
+    rawMessages = likeMsgs.map((m) => ({ ...m, snippet: makeSnippet(m.fts_body, tokens) }));
   }
 
   const hasMoreMessages = rawMessages.length > offset + limitPerKind;
-  const messages = rawMessages.slice(offset, offset + limitPerKind);
+  const messages = rawMessages.slice(offset, offset + limitPerKind).map((m) => {
+    const row = decryptMessageRow(m);
+    delete row.fts_body;
+    return row;
+  });
 
   // ── FILES ──────────────────────────────────────────────────────────────────
   let rawFiles = multipassFts(
@@ -176,10 +183,14 @@ export function globalSearch(viewerId, raw, { limitPerKind = 10, offset = 0 } = 
   }
 
   const hasMoreFiles = rawFiles.length > offset + limitPerKind;
-  const files = rawFiles.slice(offset, offset + limitPerKind).map((f) => ({
-    ...f,
-    filename_hl: markTerms(f.filename, tokens),
-  }));
+  const files = rawFiles.slice(offset, offset + limitPerKind).map((f) => {
+    const row = decryptMessageRow({ ...f, body: f.caption });
+    return {
+      ...f,
+      caption: row.body,
+      filename_hl: markTerms(f.filename, tokens),
+    };
+  });
 
   return {
     users,
@@ -228,16 +239,25 @@ export function searchInChat(chatId, viewerId, raw, { limit = 30, offset = 0 } =
     const like = `%${normalize(raw)}%`;
     const likeRows = db.prepare(`
       SELECT m.id, m.chat_id, m.sender_id, m.body, m.created_at, m.type,
+             f.body AS fts_body,
              sender.name AS sender_name, sender.username AS sender_username,
              sender.avatar_path AS sender_avatar
       FROM messages m
+      JOIN messages_fts f ON f.rowid = m.rowid
       JOIN users sender ON sender.id = m.sender_id
-      WHERE m.chat_id = ? AND m.deleted = 0 AND LOWER(m.body) LIKE ?
+      WHERE m.chat_id = ? AND m.deleted = 0 AND LOWER(f.body) LIKE ?
       ORDER BY m.created_at DESC LIMIT ?
     `).all(chatId, like, fetchLimit);
-    rawRows = likeRows.map((r) => ({ ...r, snippet: makeSnippet(r.body, tokens) }));
+    rawRows = likeRows.map((r) => ({ ...r, snippet: makeSnippet(r.fts_body, tokens) }));
   }
 
   const hasMore = rawRows.length > offset + limit;
-  return { results: rawRows.slice(offset, offset + limit), hasMore };
+  return {
+    results: rawRows.slice(offset, offset + limit).map((r) => {
+      const row = decryptMessageRow(r);
+      delete row.fts_body;
+      return row;
+    }),
+    hasMore,
+  };
 }

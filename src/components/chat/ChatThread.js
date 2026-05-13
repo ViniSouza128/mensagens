@@ -15,7 +15,7 @@ export default function ChatThread({
   chat, me, messages, hasMore, onLoadMore, loading, typing, streamingBubble,
   onReply, onEdit, onDelete, onDeleteForMe, onReact, onStar, onPin, onForward, onRetry, onDetails, onOpenPreview, onReport,
   selectionMode, selected, onToggleSelect, onStartSelection,
-  highlightedMsgId,
+  highlightedMsgId, readOnly = false, onShowEdits,
 }) {
   const scrollRef = useRef(null);
   const sentinelRef = useRef(null);
@@ -192,6 +192,8 @@ export default function ChatThread({
               onReport={onReport}
               onToggleSelect={onToggleSelect}
               onStartSelection={onStartSelection}
+              readOnly={readOnly}
+              onShowEdits={onShowEdits}
             />
           );
         })}

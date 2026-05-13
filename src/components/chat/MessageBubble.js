@@ -48,6 +48,7 @@ function MessageBubble({
   isPinned, selectionMode, selected, highlighted,
   onReply, onEdit, onDelete, onDeleteForMe, onReact, onStar, onPin, onForward,
   onRetry, onDetails, onOpenPreview, onReport, onToggleSelect, onStartSelection,
+  readOnly = false, onShowEdits,
 }) {
   const isMine = msg.sender_id === me?.id;
   const showAvatar = chat.type === 'group' && !isMine && groupLast;
@@ -61,7 +62,7 @@ function MessageBubble({
   const swipeRef = useRef(null);
   const [swipeX, setSwipeX] = useState(0);
 
-  const canEdit = isMine && !msg.deleted && (msg.type === 'text') &&
+  const canEdit = !readOnly && isMine && !msg.deleted && (msg.type === 'text') &&
     ((Date.now() - (msg.created_at || 0)) < EDIT_WINDOW_MS || (msg.status !== 'read'));
 
   function copyText() {
@@ -69,16 +70,18 @@ function MessageBubble({
   }
 
   function handleClick(e) {
-    if (selectionMode) onToggleSelect?.(msg);
+    if (!readOnly && selectionMode) onToggleSelect?.(msg);
   }
 
   function handleContextMenu(e) {
+    if (readOnly) return;
     if (msg.deleted || msg.status === 'failed') return;
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY });
   }
 
   function startLongPress(e) {
+    if (readOnly) return;
     if (msg.deleted || msg.status === 'failed' || selectionMode) return;
     if (e.touches?.length !== 1) return;
     const t = e.touches[0];
@@ -178,7 +181,7 @@ function MessageBubble({
       {/* Smile (reagir) — vive na linha (.row) ao lado da bolha. Para mine
           fica à ESQUERDA da bolha (renderizado antes); para theirs fica à
           DIREITA (renderizado depois). Sempre fora da bolha. */}
-      {isMine && !selectionMode && msg.status !== 'failed' && !msg.deleted && !editing ? (
+      {isMine && !readOnly && !selectionMode && msg.status !== 'failed' && !msg.deleted && !editing ? (
         <span className={styles.reactSlot}>
           <MessageReactButton
             isMine
@@ -219,7 +222,7 @@ function MessageBubble({
 
           {/* Chevron de opções (clone WhatsApp Web) — só ações, sem reações.
               Aparece no canto sup. dir. da bolha apenas no hover. */}
-          {!selectionMode && msg.status !== 'failed' && !msg.deleted && !editing ? (
+          {!readOnly && !selectionMode && msg.status !== 'failed' && !msg.deleted && !editing ? (
             <MessageChevronMenu
               msg={msg}
               isMine={isMine}
@@ -259,6 +262,11 @@ function MessageBubble({
 
           {!editing ? (
             <div className={styles.meta}>
+              {readOnly && msg.edit_count > 0 ? (
+                <button type="button" className={styles.editHistoryBtn} onClick={() => onShowEdits?.(msg)}>
+                  ver edições
+                </button>
+              ) : null}
               {msg.edited_at ? <span className={styles.edited}>editada</span> : null}
               {/* Em mensagens de bot LLM:
                   - `bot_reply_ms`: tempo gasto neste balão específico (1.4s)
@@ -294,10 +302,10 @@ function MessageBubble({
           ) : null}
         </div>
 
-        <ReactionsBar reactions={msg.reactions} me={me} onReact={(emoji) => onReact?.(msg, emoji)} />
+        <ReactionsBar reactions={msg.reactions} me={me} onReact={readOnly ? undefined : (emoji) => onReact?.(msg, emoji)} />
       </div>
 
-      {!isMine && !selectionMode && msg.status !== 'failed' && !msg.deleted && !editing ? (
+      {!isMine && !readOnly && !selectionMode && msg.status !== 'failed' && !msg.deleted && !editing ? (
         <span className={styles.reactSlot}>
           <MessageReactButton
             isMine={false}
@@ -306,7 +314,7 @@ function MessageBubble({
         </span>
       ) : null}
 
-      {contextMenu ? (
+      {contextMenu && !readOnly ? (
         <ContextMenuPortal
           x={contextMenu.x}
           y={contextMenu.y}
@@ -392,7 +400,9 @@ export default memo(MessageBubble, (prev, next) => {
     prev.onOpenPreview === next.onOpenPreview &&
     prev.onReport === next.onReport &&
     prev.onToggleSelect === next.onToggleSelect &&
-    prev.onStartSelection === next.onStartSelection
+    prev.onStartSelection === next.onStartSelection &&
+    prev.readOnly === next.readOnly &&
+    prev.onShowEdits === next.onShowEdits
   );
 });
 

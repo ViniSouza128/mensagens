@@ -15,7 +15,7 @@ Mensageiro web moderno e completo construído com **Next.js 15 (App Router)**, *
 - **Lista de chats** com fixados, arquivados, mute, contagem de não lidas, rascunho persistente, ordenação por última mensagem.
 - **Busca global** com SQLite FTS5 (`unicode61 remove_diacritics 2`) — usuários, chats, mensagens (com `<mark>`) e arquivos, sem distinção de acentos/maiúsculas.
 - **Configurações** — privacidade (visto/foto/bio: todos/contatos/ninguém), notificações, tema/cor/fonte/papel de parede, qualidade de mídia, auto-download, enviar com Enter.
-- **Painel administrativo** (visível apenas para admins) — visão geral, usuários (buscar, promover, suspender, banir, reintegrar), denúncias com contexto **15 anteriores + 5 posteriores** ao alvo, log de auditoria, log de erros.
+- **Painel administrativo** (visível apenas para admins) — visão geral, usuários (buscar, promover, suspender, banir, reintegrar), denúncias com contexto **15 anteriores + 5 posteriores** ao alvo, leitura administrativa auditada em `/admin/spy`, log de auditoria, log de erros.
 - **Performance** — virtualização leve, infinite scroll, lazy loading, UI otimista, EventSource (SSE) para realtime.
 - **Limpar conversa** — apaga histórico do chat de todos os membros (cascata limpa mídias, reações, fixados); preview na lista lateral é atualizado em tempo real via SSE `chat.cleared`.
 - **Acessibilidade** — navegação por teclado, foco visível, rótulos ARIA em todos os controles, contraste adequado nos dois temas.
@@ -51,6 +51,24 @@ Você pode sobrescrever a conta admin antes do primeiro `npm run dev` definindo 
 
 > **Produção:** O servidor **não sobe** se `AUTH_SECRET` for o valor padrão (`NODE_ENV=production`). Defina uma string aleatória longa via variável de ambiente. A senha padrão do admin (`admin123`) também deve ser trocada antes de expor o serviço publicamente.
 
+## Variáveis de ambiente
+
+`MESSAGE_ENCRYPTION_KEY` é obrigatória. Ela é a chave mestra AES-256-GCM usada para cifrar `messages.body`, campos sensíveis de `messages.extra` e `message_edits.body_before` antes de gravar no SQLite.
+
+Gere uma chave local com:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+Depois coloque em `.env.local`:
+
+```bash
+MESSAGE_ENCRYPTION_KEY=cole-a-chave-gerada-aqui
+```
+
+⚠️ Guarde essa chave fora do projeto. Se ela for perdida, mensagens já cifradas não podem ser recuperadas.
+
 ## Extras opcionais
 
 ### Bots LLM via Ollama
@@ -74,6 +92,7 @@ Variáveis relacionadas:
 | `npm run lint`     | Executa o ESLint                                         |
 | `npm run migrate`  | Aplica o schema SQL no banco                             |
 | `npm run seed`     | (Re)cria as contas iniciais                              |
+| `npm run encrypt-existing` | Cifra mensagens antigas e reconstrói a FTS plaintext controlada |
 
 ## Estrutura
 

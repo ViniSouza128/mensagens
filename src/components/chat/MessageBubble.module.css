@@ -248,6 +248,18 @@
 }
 .edited { font-style: italic; }
 
+.editHistoryBtn {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0 2px;
+  cursor: pointer;
+}
+.editHistoryBtn:hover { text-decoration: underline; }
+
 /* Badge "Encaminhada" — pequena tag no topo da bolha quando a mensagem
    veio de outro chat via Forward. Cor mais apagada pra não competir com
    o body da mensagem. */

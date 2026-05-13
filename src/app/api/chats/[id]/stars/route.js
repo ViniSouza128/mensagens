@@ -2,6 +2,7 @@ import { ok, withErrors } from '@/server/http';
 import { requireUser } from '@/server/auth';
 import { ensureMember } from '@/server/handlers/chats';
 import { getDb } from '@/database/db';
+import { decryptMessageRow } from '@/server/crypto/messageCrypto';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -29,6 +30,6 @@ export async function GET(req, props) {
        LIMIT ? OFFSET ?`
     ).all(u.id, params.id, limit + 1, offset);
 
-    return ok({ items: rows.slice(0, limit), hasMore: rows.length > limit, offset });
+    return ok({ items: rows.slice(0, limit).map((r) => decryptMessageRow(r)), hasMore: rows.length > limit, offset });
   });
 }

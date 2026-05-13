@@ -62,6 +62,18 @@ Veja `docs/AGENTS.md` pra detalhes de cada persona. Pontos chave:
 
 ## Convenções importantes
 
+### Criptografia em repouso (Nivel 2)
+- `MESSAGE_ENCRYPTION_KEY` e obrigatoria (32 bytes em base64). Sem ela o boot falha de proposito.
+- `src/server/crypto/messageCrypto.js` centraliza `encryptMessageBody`, `decryptMessageBody`, campos sensiveis de `messages.extra` e `decryptMessageRow`.
+- `messages.body` e `message_edits.body_before` ficam cifrados no SQLite (`v1:<iv>:<tag>:<ciphertext>`). Sempre grave via helpers de mensagem; nao faca `UPDATE messages SET body` cru.
+- `messages_fts.body` guarda plaintext por decisao pragmatica para a busca continuar funcionando. Atualize a FTS manualmente quando criar/editar/apagar mensagem.
+- Para migrar banco antigo: `npm run encrypt-existing`.
+
+### Admin spy
+- `/admin/spy` e a tela de leitura administrativa auditada. Ela usa `ChatView` com `spectatorMode`, sem composer, sem reactions/reply/edit, sem mark-as-read e sem typing/SSE.
+- Novas rotas ficam em `/api/admin/spy/*` e usam `src/server/auth/requireAdmin.js`, que aplica rate limit em memoria (120/min/admin).
+- Toda rota spy precisa chamar `auditSpyRequest(...)` antes de retornar dados. Metadata deve incluir route, query, IP e user-agent.
+
 ### "Limpar conversa" (POST `/api/chats/[id]/clear`)
 Apaga TODAS as mensagens do chat globalmente. Pra chats com bot, equivale a "começar de novo" (sem memória). Publica SSE `chat.cleared` que:
 - AppStateProvider zera `last_message` da chat na lista lateral.

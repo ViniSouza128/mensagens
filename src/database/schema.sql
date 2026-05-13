@@ -316,23 +316,15 @@ CREATE TABLE IF NOT EXISTS feedback (
 -- =====================
 -- Tabelas virtuais. tokenize 'unicode61' com remove_diacritics=2 → busca accent-insensitive e case-insensitive.
 
+-- Nivel 2 de criptografia: messages.body fica cifrado em repouso, mas este
+-- indice FTS guarda plaintext para a busca continuar funcionando. Esse e o
+-- ponto fraco conhecido do Nivel 2: quem roubar o arquivo SQLite ainda pode
+-- ler termos indexados em messages_fts. O app removeu os triggers automaticos
+-- e atualiza este indice manualmente no servidor, antes de cifrar o body.
 CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(
   body,
-  content='messages',
-  content_rowid='rowid',
   tokenize="unicode61 remove_diacritics 2"
 );
-
-CREATE TRIGGER IF NOT EXISTS messages_ai AFTER INSERT ON messages BEGIN
-  INSERT INTO messages_fts(rowid, body) VALUES (new.rowid, COALESCE(new.body, ''));
-END;
-CREATE TRIGGER IF NOT EXISTS messages_ad AFTER DELETE ON messages BEGIN
-  INSERT INTO messages_fts(messages_fts, rowid, body) VALUES('delete', old.rowid, COALESCE(old.body, ''));
-END;
-CREATE TRIGGER IF NOT EXISTS messages_au AFTER UPDATE ON messages BEGIN
-  INSERT INTO messages_fts(messages_fts, rowid, body) VALUES('delete', old.rowid, COALESCE(old.body, ''));
-  INSERT INTO messages_fts(rowid, body) VALUES (new.rowid, COALESCE(new.body, ''));
-END;
 
 CREATE VIRTUAL TABLE IF NOT EXISTS users_fts USING fts5(
   name, username, bio,
