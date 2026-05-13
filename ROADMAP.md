@@ -24,7 +24,7 @@ Itens previstos para próximas iterações, agrupados por tema. Tudo aqui é inc
 
 ### Bots LLM (Ollama)
 
-A versão atual já entrega 7 personas com modelos diversos (Zezé / Mara / Otto / Aurora / Clarice / Vera / Íris) — veja [docs/AGENTS.md](docs/AGENTS.md) para detalhes técnicos. Próximos passos previstos:
+A versão atual já entrega 9 personas com modelos diversos (Zezé / Mara / Otto / Aurora / Clarice / Vera / Íris / Caio / Nina) — veja [docs/AGENTS.md](docs/AGENTS.md) para detalhes técnicos. Próximos passos previstos:
 
 - ~~**Streaming de tokens**~~ — ✅ feito. Hoje os tokens chegam via SSE `bot.stream` e o front mostra um "ghost bubble" crescendo em tempo real. Multi-bubble com split on-the-fly em `\n\n`. Cada balão tem timing próprio + total no último.
 - **Memória persistente por bot** — hoje cada turno relê as últimas 20 mensagens do chat (`CONTEXT_WINDOW` em `bots.js`). Para conversas longas, treinar um resumidor rotativo (a cada N mensagens, resume em uma `system` injectável) ou usar `/api/embeddings` do Ollama + RAG sobre o histórico.

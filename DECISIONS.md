@@ -108,8 +108,10 @@ Resumo das principais escolhas técnicas e o porquê de cada uma.
   - `command-r:35b` (Clarice) — escritora, especializada em texto de qualidade (Cohere RAG-tuned).
   - `qwen3-vl:8b` (Vera) — vision rápida, ~3-10s por resposta.
   - `qwen3-vl:30b` (Íris) — padrão ouro multimodal (texto + visão), ~30-90s. Excede VRAM → offload CPU, mas qualidade superior em qualquer tarefa.
+  - `jaahas/qwen3.5-uncensored:27b` (Caio) — sem filtro, direto, opinião forte; uncensored permite opinar em tabus sem disclaimer vazio.
+  - `Agen/gemma-4-26B-A4B-it-uncensored-heretic` (Nina) — sem filtro, reflexiva, cruza áreas; heretic remove salvaguardas mantendo perfil articulado.
 
-A divisão é por NICHO + ESCALA — quando o usuário quer qualidade máxima, escolhe Íris; quando quer velocidade, Zezé ou Mara; quando quer um especialista, vai num dos focados (Otto/Clarice/Vera).
+A divisão é por NICHO + ESCALA — quando o usuário quer qualidade máxima, escolhe Íris; quando quer velocidade, Zezé ou Mara; quando quer um especialista, vai num dos focados (Otto/Clarice/Vera); quando quer opinião sem filtro, Caio (direto) ou Nina (reflexiva).
 
 ## Por que não X?
 
